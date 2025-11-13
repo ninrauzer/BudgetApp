@@ -84,7 +84,7 @@ Migrar completamente el frontend de HTMX a React + TypeScript, consumiendo la mi
 |------------|---------|-----------|
 | React | 18.3+ | UI library |
 | TypeScript | 5.0+ | Type safety |
-| Vite | 5.0+ | Build tool |
+| Vite | 7.0+ | Build tool (ultra-rápido) |
 | React Router | 6.20+ | Routing |
 
 ### 4.2 State Management & Data Fetching
@@ -99,13 +99,31 @@ Migrar completamente el frontend de HTMX a React + TypeScript, consumiendo la mi
 - ❌ Context API: No suficiente para server state
 - ❌ Recoil: Menor adopción, más complejo
 
+
 ### 4.3 Estilos
 
-| Tecnología | Propósito |
-|------------|-----------|
-| Tailwind CSS | Utility-first styling |
-| HeadlessUI | Componentes accesibles |
-| Lucide React | Iconos (mismo que HTMX) |
+| Tecnología | Versión | Propósito |
+|------------|---------|-----------|
+| Tailwind CSS | 3.4+ | Utility-first styling |
+| shadcn/ui | latest | Componentes UI de alta calidad (basados en Radix UI) |
+| Lucide React | latest | Iconos modernos (mismo que HTMX) |
+
+**shadcn/ui - Justificación:**
+- ✅ No es una librería NPM - copias el código a tu proyecto
+- ✅ Control total sobre los componentes
+- ✅ Basado en Radix UI (accesibilidad AAA)
+- ✅ Personalizable con Tailwind CSS
+- ✅ TypeScript nativo
+- ✅ Temas (dark mode incluido)
+- ✅ Composable y extensible
+- ✅ Usado por Vercel, Supabase, y otras empresas top
+
+**Alternativas rechazadas:**
+- ❌ HeadlessUI: Menos componentes disponibles
+- ❌ Material UI: Demasiado opinionado, bundle grande
+- ❌ Chakra UI: Performance issues con Tailwind
+- ❌ Ant Design: Estilo muy específico, difícil personalizar
+
 
 ### 4.4 Gráficos y Visualización
 
