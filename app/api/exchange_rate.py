@@ -1,0 +1,38 @@
+"""
+Exchange Rate API router
+"""
+from fastapi import APIRouter, Query
+from datetime import date
+from typing import Optional
+
+from app.services.exchange_rate import get_exchange_rate
+
+router = APIRouter(prefix="/api", tags=["exchange-rate"])
+
+
+@router.get("/exchange-rate")
+async def get_current_exchange_rate(
+    date_param: Optional[str] = Query(None, alias="date")
+):
+    """
+    Get USD/PEN exchange rate from BCRP for a specific date.
+    
+    - **date**: Date in ISO format (YYYY-MM-DD). If not provided, uses today.
+    
+    Returns the exchange rate and source information.
+    """
+    target_date = None
+    if date_param:
+        try:
+            target_date = date.fromisoformat(date_param)
+        except ValueError:
+            return {"error": "Invalid date format. Use YYYY-MM-DD"}
+    
+    rate = await get_exchange_rate(target_date)
+    
+    return {
+        "rate": rate,
+        "currency_pair": "USD/PEN",
+        "date": (target_date or date.today()).isoformat(),
+        "source": "BCRP"
+    }

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BudgetApp - Análisis</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10/dist/ext/json-enc.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        .kpi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+        }
+        
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0.5rem 0;
+        }
+        
+        .kpi-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .chart-container {
+            position: relative;
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .analysis-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            font-size: 0.875rem;
+        }
+        
+        .analysis-table th,
+        .analysis-table td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .analysis-table th {
+            background: #6366f1;
+            color: white;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .analysis-table th:first-child,
+        .analysis-table td:first-child {
+            text-align: left;
+        }
+        
+        .analysis-table tbody tr:hover {
+            background: #f8fafc;
+        }
+        
+        .section-header {
+            background: #f1f5f9;
+            font-weight: 600;
+            color: #475569;
+        }
+        
+        .positive {
+            color: #059669;
+            font-weight: 600;
+        }
+        
+        .negative {
+            color: #dc2626;
+            font-weight: 600;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #6366f1;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1><i data-lucide="wallet" style="width: 28px; height: 28px; vertical-align: middle;"></i> BudgetApp <span style="font-size: 0.875rem; font-weight: 400; opacity: 0.8;">| Tu Finanzas Personales</span></h1>
+            <nav class="nav">
+                <a href="/" class="nav-link"><i data-lucide="layout-dashboard" style="width: 16px; height: 16px; vertical-align: middle;"></i> Dashboard</a>
+                <a href="/transactions" class="nav-link"><i data-lucide="credit-card" style="width: 16px; height: 16px; vertical-align: middle;"></i> Transacciones</a>
+                <a href="/budget" class="nav-link"><i data-lucide="trending-up" style="width: 16px; height: 16px; vertical-align: middle;"></i> Presupuesto</a>
+                <a href="/analysis" class="nav-link active"><i data-lucide="bar-chart-3" style="width: 16px; height: 16px; vertical-align: middle;"></i> Análisis</a>
+                <a href="/settings" class="nav-link"><i data-lucide="settings" style="width: 16px; height: 16px; vertical-align: middle;"></i> Configuración</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container" style="max-width: 100%; padding: 1rem 1.5rem;">
+        <!-- Header Section -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <h2 class="card-title"><i data-lucide="bar-chart-3" style="width: 20px; height: 20px; vertical-align: middle;"></i> Análisis Presupuestario</h2>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <select id="analysis-year" class="form-select" style="margin: 0; min-width: 100px;" onchange="loadAnalysis()">
+                        <option value="2024">2024</option>
+                        <option value="2025" selected>2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                    <select id="analysis-month" class="form-select" style="margin: 0; min-width: 120px;" onchange="loadAnalysis()">
+                        <option value="1">Enero</option>
+                        <option value="2">Febrero</option>
+                        <option value="3">Marzo</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Mayo</option>
+                        <option value="6">Junio</option>
+                        <option value="7">Julio</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Septiembre</option>
+                        <option value="10">Octubre</option>
+                        <option value="11" selected>Noviembre</option>
+                        <option value="12">Diciembre</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPIs Row -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+            <div class="kpi-card">
+                <div class="kpi-label"><i data-lucide="target" style="width: 16px; height: 16px; vertical-align: middle;"></i> Cumplimiento del Período</div>
+                <div class="kpi-value" id="kpi-completion">0%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-completion" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label"><i data-lucide="wallet" style="width: 16px; height: 16px; vertical-align: middle;"></i> Balance de Seguimiento</div>
+                <div class="kpi-value" id="kpi-balance">S/ 0.00</div>
+                <small style="color: #64748b;">Ingresos trackeados disponibles</small>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label"><i data-lucide="piggy-bank" style="width: 16px; height: 16px; vertical-align: middle;"></i> Tasa de Ahorro</div>
+                <div class="kpi-value" id="kpi-savings">0.0%</div>
+                <small style="color: #64748b;">de tus ingresos</small>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+            <div class="chart-container">
+                <h3 style="margin: 0 0 1rem 0; font-size: 1rem; color: #1e293b;"><i data-lucide="trending-up" style="width: 18px; height: 18px; vertical-align: middle; color: #059669;"></i> Ingresos</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart-income"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3 style="margin: 0 0 1rem 0; font-size: 1rem; color: #1e293b;"><i data-lucide="trending-down" style="width: 18px; height: 18px; vertical-align: middle; color: #dc2626;"></i> Gastos</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart-expenses"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3 style="margin: 0 0 1rem 0; font-size: 1rem; color: #1e293b;"><i data-lucide="piggy-bank" style="width: 18px; height: 18px; vertical-align: middle; color: #2563eb;"></i> Ahorros</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart-savings"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Breakdown Tables -->
+        <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
+            <!-- Income Breakdown -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i data-lucide="trending-up" style="width: 18px; height: 18px; vertical-align: middle; color: #059669;"></i> Desglose - Ingresos</h3>
+                </div>
+                <div id="income-breakdown" style="overflow-x: auto;">
+                    <p style="text-align: center; padding: 2rem; color: #64748b;">Cargando...</p>
+                </div>
+            </div>
+
+            <!-- Expenses Breakdown -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i data-lucide="trending-down" style="width: 18px; height: 18px; vertical-align: middle; color: #dc2626;"></i> Desglose - Gastos</h3>
+                </div>
+                <div id="expenses-breakdown" style="overflow-x: auto;">
+                    <p style="text-align: center; padding: 2rem; color: #64748b;">Cargando...</p>
+                </div>
+            </div>
+
+            <!-- Savings Breakdown -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i data-lucide="piggy-bank" style="width: 18px; height: 18px; vertical-align: middle; color: #2563eb;"></i> Desglose - Ahorros</h3>
+                </div>
+                <div id="savings-breakdown" style="overflow-x: auto;">
+                    <p style="text-align: center; padding: 2rem; color: #64748b;">Cargando...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let incomeChart, expensesChart, savingsChart;
+
+        // Inicializar iconos de Lucide
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+            loadAnalysis();
+        });
+
+        async function loadAnalysis() {
+            const year = document.getElementById('analysis-year').value;
+            const month = document.getElementById('analysis-month').value;
+
+            try {
+                const response = await fetch(`/api/analysis/data?year=${year}&month=${month}`);
+                const data = await response.json();
+
+                // Actualizar KPIs
+                updateKPIs(data.kpis);
+
+                // Actualizar gráficos
+                updateCharts(data.charts);
+
+                // Actualizar tablas
+                updateBreakdownTables(data.breakdowns);
+
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Error cargando análisis:', error);
+            }
+        }
+
+        function updateKPIs(kpis) {
+            document.getElementById('kpi-completion').textContent = kpis.completion + '%';
+            document.getElementById('progress-completion').style.width = kpis.completion + '%';
+            document.getElementById('kpi-balance').textContent = 'S/ ' + kpis.balance.toLocaleString('es-PE', {minimumFractionDigits: 2});
+            document.getElementById('kpi-savings').textContent = kpis.savings_rate + '%';
+        }
+
+        function updateCharts(charts) {
+            // Destruir gráficos anteriores si existen
+            if (incomeChart) incomeChart.destroy();
+            if (expensesChart) expensesChart.destroy();
+            if (savingsChart) savingsChart.destroy();
+
+            // Gráfico de Ingresos
+            const incomeCtx = document.getElementById('chart-income').getContext('2d');
+            incomeChart = new Chart(incomeCtx, {
+                type: 'doughnut',
+                data: charts.income,
+                options: getChartOptions()
+            });
+
+            // Gráfico de Gastos
+            const expensesCtx = document.getElementById('chart-expenses').getContext('2d');
+            expensesChart = new Chart(expensesCtx, {
+                type: 'doughnut',
+                data: charts.expenses,
+                options: getChartOptions()
+            });
+
+            // Gráfico de Ahorros
+            const savingsCtx = document.getElementById('chart-savings').getContext('2d');
+            savingsChart = new Chart(savingsCtx, {
+                type: 'doughnut',
+                data: charts.savings,
+                options: getChartOptions()
+            });
+        }
+
+        function getChartOptions() {
+            return {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 1.2,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 10,
+                            font: {
+                                size: 12,
+                                family: "'Inter', sans-serif"
+                            },
+                            boxWidth: 15,
+                            boxHeight: 15,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 13,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += 'S/ ' + context.parsed.toLocaleString('es-PE', {minimumFractionDigits: 2});
+                                return label;
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        function updateBreakdownTables(breakdowns) {
+            document.getElementById('income-breakdown').innerHTML = generateBreakdownTable(breakdowns.income);
+            document.getElementById('expenses-breakdown').innerHTML = generateBreakdownTable(breakdowns.expenses);
+            document.getElementById('savings-breakdown').innerHTML = generateBreakdownTable(breakdowns.savings);
+        }
+
+        function generateBreakdownTable(categories) {
+            if (!categories || categories.length === 0) {
+                return '<p style="text-align: center; padding: 2rem; color: #64748b;">No hay datos disponibles</p>';
+            }
+
+            let html = `
+                <table class="analysis-table">
+                    <thead>
+                        <tr>
+                            <th>Categoría</th>
+                            <th>Trackeado</th>
+                            <th>Presupuesto</th>
+                            <th>% Cumpl.</th>
+                            <th>Restante</th>
+                            <th>Exceso</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            let totalTracked = 0, totalBudget = 0;
+
+            categories.forEach(cat => {
+                totalTracked += cat.tracked;
+                totalBudget += cat.budget;
+                
+                const completion = cat.budget > 0 ? ((cat.tracked / cat.budget) * 100).toFixed(1) : 0;
+                const remaining = cat.budget - cat.tracked;
+                const excess = cat.tracked > cat.budget ? cat.tracked - cat.budget : 0;
+
+                html += `
+                    <tr>
+                        <td><strong>${cat.name}</strong></td>
+                        <td>${cat.tracked.toLocaleString('es-PE', {minimumFractionDigits: 2})}</td>
+                        <td>${cat.budget.toLocaleString('es-PE', {minimumFractionDigits: 2})}</td>
+                        <td>${completion}%</td>
+                        <td class="${remaining >= 0 ? 'positive' : 'negative'}">${remaining.toLocaleString('es-PE', {minimumFractionDigits: 2})}</td>
+                        <td class="${excess > 0 ? 'negative' : ''}">${excess > 0 ? excess.toLocaleString('es-PE', {minimumFractionDigits: 2}) : '-'}</td>
+                    </tr>`;
+            });
+
+            const totalCompletion = totalBudget > 0 ? ((totalTracked / totalBudget) * 100).toFixed(1) : 0;
+            const totalRemaining = totalBudget - totalTracked;
+            const totalExcess = totalTracked > totalBudget ? totalTracked - totalBudget : 0;
+
+            html += `
+                    <tr class="section-header">
+                        <td><strong>TOTAL</strong></td>
+                        <td><strong>${totalTracked.toLocaleString('es-PE', {minimumFractionDigits: 2})}</strong></td>
+                        <td><strong>${totalBudget.toLocaleString('es-PE', {minimumFractionDigits: 2})}</strong></td>
+                        <td><strong>${totalCompletion}%</strong></td>
+                        <td class="${totalRemaining >= 0 ? 'positive' : 'negative'}"><strong>${totalRemaining.toLocaleString('es-PE', {minimumFractionDigits: 2})}</strong></td>
+                        <td class="${totalExcess > 0 ? 'negative' : ''}"><strong>${totalExcess > 0 ? totalExcess.toLocaleString('es-PE', {minimumFractionDigits: 2}) : '-'}</strong></td>
+                    </tr>
+                </tbody>
+            </table>`;
+
+            return html;
+        }
+    </script>
+</body>
+</html>
