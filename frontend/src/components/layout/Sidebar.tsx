@@ -5,9 +5,12 @@ import {
   PiggyBank, 
   BarChart3, 
   Settings,
-  Wallet
+  Wallet,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useSidebar } from '@/contexts/SidebarContext'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -19,33 +22,58 @@ const navigation = [
 ]
 
 export function Sidebar() {
+  const { isCollapsed, toggleCollapse } = useSidebar()
+
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 border-r bg-card">
-      <div className="flex h-16 items-center border-b px-6">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Wallet className="h-5 w-5" />
+    <aside className={cn(
+      "fixed left-0 top-0 h-full bg-surface border-r border-border shadow-lg transition-all duration-300",
+      isCollapsed ? "w-20" : "w-60"
+    )}>
+      {/* Logo/Brand */}
+      <div className="flex h-16 items-center border-b border-border px-6 justify-between">
+        <div className={cn(
+          "flex items-center gap-3 transition-opacity duration-200",
+          isCollapsed && "opacity-0"
+        )}>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-blue-600 shadow-button">
+            <Wallet className="h-5 w-5 text-white" strokeWidth={2.5} />
           </div>
-          <span className="text-lg font-semibold">BudgetApp</span>
+          {!isCollapsed && <span className="text-xl font-extrabold text-text-primary">BudgetApp</span>}
         </div>
+
+        {/* Collapse Button */}
+        <button
+          onClick={toggleCollapse}
+          className="flex h-8 w-8 items-center justify-center rounded-xl bg-surface-soft hover:bg-primary/10 text-text-secondary hover:text-primary transition-colors ml-auto"
+          title={isCollapsed ? "Expandir" : "Colapsar"}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+          ) : (
+            <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
+          )}
+        </button>
       </div>
       
-      <nav className="flex flex-col gap-1 p-4">
+      {/* Navigation */}
+      <nav className="flex flex-col gap-2 p-4">
         {navigation.map((item) => (
           <NavLink
             key={item.name}
             to={item.href}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'group relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all',
                 isActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  ? 'bg-primary text-white shadow-button'
+                  : 'text-text-secondary hover:bg-surface-soft hover:text-text-primary',
+                isCollapsed && 'justify-center'
               )
             }
+            title={isCollapsed ? item.name : undefined}
           >
-            <item.icon className="h-4 w-4" />
-            {item.name}
+            <item.icon className="h-5 w-5 flex-shrink-0" strokeWidth={2.5} />
+            {!isCollapsed && <span>{item.name}</span>}
           </NavLink>
         ))}
       </nav>

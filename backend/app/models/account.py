@@ -18,6 +18,7 @@ class Account(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String, nullable=False)
     type = Column(String, nullable=False)  # 'cash', 'bank', 'credit_card', 'debit_card', 'digital_wallet'
+    icon = Column(String, default="wallet")  # Lucide icon name
     balance = Column(Float, default=0.0)
     currency = Column(String, default="PEN")
     is_active = Column(Boolean, default=True)

@@ -43,6 +43,7 @@ class TransactionResponse(BaseModel):
     category_id: int
     category_name: str
     category_type: str
+    category_icon: Optional[str] = None
     account_id: int
     account_name: str
     amount: float
