@@ -10,13 +10,14 @@ Este documento mantiene el registro de todas las decisiones arquitectónicas del
 |----|---------|---------|--------|-----------|-------------|
 | [ADR-001](ADR-001-api-first-architecture.md) | Elección de Arquitectura API-First | Approved | 2025-11-12 | - | - |
 | [ADR-002](ADR-002-project-restructuring.md) | Reestructuración del Proyecto en Backend/Frontend/Legacy | Approved | 2025-11-13 | - | - |
+| [ADR-003](ADR-003-budget-analysis-separation.md) | Separación de Responsabilidades - Budget y Analysis | Accepted | 2025-11-14 | - | - |
 
 ---
 
 ## 📊 Estadísticas
 
-- **Total de ADRs:** 2
-- **Aprobados:** 2
+- **Total de ADRs:** 3
+- **Aprobados:** 3
 - **Propuestos:** 0
 - **Supersedidos:** 0
 - **Deprecados:** 0
@@ -44,5 +45,5 @@ Consulta [CONVENTIONS.md](../CONVENTIONS.md) para conocer los estados oficiales 
 
 ---
 
-**Última actualización:** 2025-11-13  
+**Última actualización:** 2025-11-14  
 **Mantenido por:** Ninrauzer

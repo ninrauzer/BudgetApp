@@ -4,6 +4,7 @@ import { DefaultAccountProvider } from './contexts/DefaultAccountContext'
 import { DefaultCurrencyProvider } from './contexts/DefaultCurrencyContext'
 import Dashboard from './pages/Dashboard'
 import Transactions from './pages/Transactions'
+import Budget from './pages/Budget'
 import Analysis from './pages/Analysis'
 import Settings from './pages/Settings'
 import TestAPI from './pages/TestAPI'
@@ -18,7 +19,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="test-api" element={<TestAPI />} />
               <Route path="transactions" element={<Transactions />} />
-              <Route path="budget" element={<div className="p-6">Presupuestos (próximamente)</div>} />
+              <Route path="budget" element={<Budget />} />
               <Route path="analysis" element={<Analysis />} />
               <Route path="accounts" element={<div className="p-6">Cuentas (próximamente)</div>} />
               <Route path="settings" element={<Settings />} />

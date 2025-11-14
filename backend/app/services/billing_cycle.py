@@ -97,3 +97,57 @@ def format_cycle_display(cycle: dict) -> str:
     end_str = f"{end.day} {MONTH_NAMES[end.month - 1][:3]}"
     
     return f"{cycle['cycle_name']} ({start_str} - {end_str})"
+
+
+def get_cycle_dates(cycle_name: str, db=None) -> dict | None:
+    """
+    Get start and end dates for a given cycle name.
+    
+    Args:
+        cycle_name: Month name in Spanish ("Enero", "Febrero", etc.)
+        db: Database session (to get billing_cycle_day from settings)
+    
+    Returns:
+        dict with start_date and end_date, or None if invalid cycle_name
+        
+    Example:
+        cycle_name="Enero" returns dates for the Enero cycle based on billing day
+    """
+    if cycle_name not in MONTH_NAMES:
+        return None
+    
+    # Get billing cycle start day from settings (default to 1 if not found)
+    start_day = 1
+    if db:
+        try:
+            from app.models.category import Setting
+            setting = db.query(Setting).filter(Setting.key == "billing_cycle_day").first()
+            if setting and setting.value:
+                start_day = int(setting.value)
+        except Exception:
+            start_day = 1
+    
+    # Find the month number for the cycle_name
+    month_num = MONTH_NAMES.index(cycle_name) + 1
+    
+    # Calculate dates for this cycle in current year
+    # If the cycle is in the future, use current year; otherwise, check if we need previous year
+    current_date = datetime.now()
+    year = current_date.year
+    
+    # The cycle ends in the month matching cycle_name
+    cycle_end_temp = _safe_date(year, month_num, start_day)
+    cycle_end = cycle_end_temp - timedelta(days=1)
+    
+    # Start is one month before end
+    cycle_start = cycle_end_temp - relativedelta(months=1)
+    
+    # If calculated dates are in the future and we want current/past data, adjust year
+    if cycle_start > current_date:
+        cycle_start = cycle_start - relativedelta(years=1)
+        cycle_end = cycle_end - relativedelta(years=1)
+    
+    return {
+        "start_date": cycle_start.date(),
+        "end_date": cycle_end.date()
+    }

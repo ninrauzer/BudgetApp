@@ -1,7 +1,8 @@
-import { Calendar, TrendingUp, DollarSign, ArrowUpRight, ArrowDownRight, ChevronDown } from 'lucide-react';
+import { Calendar, TrendingUp, DollarSign, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend, AreaChart, Area } from 'recharts';
 import { useCurrentCycle, useCategoryAnalysis, useTrends, useAnalysisSummary } from '../lib/hooks/useApi';
 import CategoryIcon from '../components/CategoryIcon';
+import BudgetComparisonSection from '../components/BudgetComparisonSection';
 import { Loader2 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { exchangeRateApi } from '../lib/api';
@@ -193,6 +194,19 @@ export default function Analysis() {
           </div>
         </div>
       </div>
+
+      {/* Budget Comparison Section */}
+      {cycleParams && (
+        <div className="bg-white border-2 border-border rounded-2xl p-6 shadow-md">
+          <div className="mb-6">
+            <h2 className="text-h2 font-bold text-text-primary">Presupuesto vs Real</h2>
+            <p className="text-body-sm text-text-secondary mt-1">
+              Compara tu presupuesto planificado con tus gastos e ingresos reales
+            </p>
+          </div>
+          <BudgetComparisonSection cycleName={cycleParams.cycleName} />
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

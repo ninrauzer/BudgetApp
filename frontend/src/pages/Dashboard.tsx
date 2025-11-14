@@ -1,4 +1,3 @@
-import { Progress } from '@/components/ui/progress'
 import {
   Table,
   TableBody,
@@ -8,7 +7,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ArrowUpIcon, ArrowDownIcon, DollarSign, TrendingUp, Wallet, CreditCard, Loader2, Calendar } from 'lucide-react'
-import { useDashboardStats, useRecentTransactions, useBudgetLimits, useActiveBudgetPlan, useCurrentCycle } from '@/lib/hooks/useApi'
+import { useDashboardStats, useRecentTransactions, useCurrentCycle } from '@/lib/hooks/useApi'
 import { exchangeRateApi } from '@/lib/api'
 import { useState, useEffect } from 'react'
 import CategoryIcon from '@/components/CategoryIcon'
@@ -43,10 +42,6 @@ export default function Dashboard() {
   // Fetch data from API
   const { data: stats, isLoading: statsLoading, error: statsError } = useDashboardStats()
   const { data: transactions = [], isLoading: transactionsLoading } = useRecentTransactions(5)
-  const { data: activeBudget } = useActiveBudgetPlan()
-  const { data: budgetLimits = [], isLoading: budgetsLoading } = useBudgetLimits(
-    activeBudget ? { budget_plan_id: activeBudget.id } : undefined
-  )
 
   // Debug: log data
   console.log('Dashboard Stats:', stats)
@@ -62,7 +57,7 @@ export default function Dashboard() {
   const incomeVariance = stats?.variance_percentage || 0
 
   // Loading state
-  if (statsLoading || transactionsLoading || budgetsLoading) {
+  if (statsLoading || transactionsLoading) {
     return (
       <div className="flex h-96 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -234,47 +229,30 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Budget Progress */}
-        <div className="bg-surface border border-border rounded-3xl shadow-card overflow-hidden">
-          <div className="p-6 border-b border-border">
-            <h2 className="text-xl font-extrabold text-text-primary">Presupuestos del Mes</h2>
+        {/* Budget Info Card */}
+        <div className="bg-gradient-to-br from-primary/10 to-info/10 border-2 border-primary/20 rounded-3xl shadow-card overflow-hidden">
+          <div className="p-6 border-b border-primary/20 bg-white/50">
+            <h2 className="text-xl font-extrabold text-text-primary">Presupuesto</h2>
           </div>
-          <div className="p-6 space-y-6">
-            {budgetLimits.length > 0 ? (
-              budgetLimits.map((limit) => {
-                const percentage = limit.limit_amount > 0 
-                  ? ((limit.spent_amount || 0) / limit.limit_amount) * 100 
-                  : 0
-                
-                return (
-                  <div key={limit.id} className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold text-text-primary">
-                        {limit.category_name || 'Sin categoría'}
-                      </span>
-                      <span className="text-xs font-bold text-text-secondary bg-surface-soft px-2.5 py-1 rounded-lg">
-                        {convertAmount(limit.spent_amount || 0).toFixed(2)} / {convertAmount(limit.limit_amount).toFixed(2)} {displayCurrency}
-                      </span>
-                    </div>
-                    <Progress value={percentage} className="h-3" />
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-text-secondary">
-                        {percentage.toFixed(0)}% utilizado
-                      </span>
-                      {percentage > 80 && (
-                        <span className="bg-danger text-white rounded-pill px-3 py-1 text-xs font-bold">
-                          Cerca del límite
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )
-              })
-            ) : (
-              <p className="text-sm text-text-secondary text-center py-8">
-                No hay presupuestos configurados
+          <div className="p-8 text-center space-y-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/20">
+              <Wallet className="w-8 h-8 text-primary" />
+            </div>
+            <div>
+              <p className="text-lg font-bold text-text-primary mb-2">
+                Gestiona tu presupuesto
               </p>
-            )}
+              <p className="text-sm text-text-secondary mb-4">
+                Define y controla tus ingresos y gastos planificados
+              </p>
+            </div>
+            <a 
+              href="/budget"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-info text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+            >
+              <Wallet className="w-5 h-5" />
+              Ir a Presupuestos
+            </a>
           </div>
         </div>
       </div>
