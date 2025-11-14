@@ -150,7 +150,7 @@ export default function QuickAddRow({ onSave, categories, accounts, recentTransa
   }
 
   return (
-    <tr className="border-b border-primary/20 bg-primary/5">
+    <tr className="border-b border-primary/20 bg-gradient-to-r from-primary/5 to-info/5">
       {/* Date */}
       <td className="p-3">
         <input
@@ -158,7 +158,7 @@ export default function QuickAddRow({ onSave, categories, accounts, recentTransa
           value={formData.date}
           onChange={(e) => handleChange('date', e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+          className="w-full bg-white border-2 border-border/50 rounded-2xl px-4 py-2.5 text-sm text-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
           autoFocus
         />
       </td>
@@ -172,10 +172,10 @@ export default function QuickAddRow({ onSave, categories, accounts, recentTransa
           value={formData.description}
           onChange={(e) => handleChange('description', e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+          className="w-full bg-white border-2 border-border/50 rounded-2xl px-4 py-2.5 text-sm text-text-primary placeholder-text-muted shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
         />
         {showSuggestions && (
-          <div className="absolute top-full left-0 mt-1 text-xs font-bold text-primary bg-primary/10 px-3 py-1.5 rounded-lg shadow-sm z-10 border border-primary/20">
+          <div className="absolute top-full left-0 mt-1 text-xs font-bold text-primary bg-primary/10 px-3 py-1.5 rounded-xl shadow-md z-10 border-2 border-primary/30">
             ✨ Autocompletando...
           </div>
         )}
@@ -198,7 +198,7 @@ export default function QuickAddRow({ onSave, categories, accounts, recentTransa
           value={formData.account_id || ''}
           onChange={(e) => handleChange('account_id', e.target.value ? parseInt(e.target.value) : undefined)}
           onKeyDown={handleKeyDown}
-          className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+          className="w-full bg-white border-2 border-border/50 rounded-2xl px-4 py-2.5 text-sm text-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
         >
           <option value="">Cuenta...</option>
           {accounts.map((acc) => (
@@ -218,7 +218,7 @@ export default function QuickAddRow({ onSave, categories, accounts, recentTransa
           value={formData.amount || ''}
           onChange={(e) => handleChange('amount', parseFloat(e.target.value) || 0)}
           onKeyDown={handleKeyDown}
-          className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-sm text-right text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+          className="w-full bg-white border-2 border-border/50 rounded-2xl px-4 py-2.5 text-sm text-right text-text-primary font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
         />
       </td>
 
@@ -228,7 +228,7 @@ export default function QuickAddRow({ onSave, categories, accounts, recentTransa
           value={formData.currency || 'PEN'}
           onChange={(e) => handleChange('currency', e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-sm font-bold text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+          className="w-full bg-white border-2 border-border/50 rounded-2xl px-4 py-2.5 text-sm font-bold text-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
         >
           <option value="PEN">S/</option>
           <option value="USD">$</option>
@@ -241,10 +241,10 @@ export default function QuickAddRow({ onSave, categories, accounts, recentTransa
           <button
             type="button"
             onClick={() => handleChange('type', 'income')}
-            className={`flex-1 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`flex-1 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-sm ${
               formData.type === 'income'
-                ? 'bg-emerald-500 text-white shadow-sm'
-                : 'bg-surface border border-border text-text-secondary hover:border-emerald-500 hover:text-emerald-500'
+                ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-emerald-500/30'
+                : 'bg-white border-2 border-border/50 text-text-secondary hover:border-emerald-500 hover:text-emerald-500 hover:shadow-md'
             }`}
           >
             +
@@ -252,10 +252,10 @@ export default function QuickAddRow({ onSave, categories, accounts, recentTransa
           <button
             type="button"
             onClick={() => handleChange('type', 'expense')}
-            className={`flex-1 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`flex-1 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-sm ${
               formData.type === 'expense'
-                ? 'bg-red-500 text-white shadow-sm'
-                : 'bg-surface border border-border text-text-secondary hover:border-red-500 hover:text-red-500'
+                ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-red-500/30'
+                : 'bg-white border-2 border-border/50 text-text-secondary hover:border-red-500 hover:text-red-500 hover:shadow-md'
             }`}
           >
             -
@@ -269,7 +269,7 @@ export default function QuickAddRow({ onSave, categories, accounts, recentTransa
           <button
             onClick={handleSave}
             disabled={isSaving || !formData.description || !formData.amount || !formData.category_id || !formData.account_id}
-            className="p-2 bg-success text-white rounded-xl hover:bg-success-hover disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+            className="p-2.5 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl hover:from-green-600 hover:to-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-md shadow-green-500/30 hover:shadow-lg hover:scale-105"
             title="Guardar (Enter)"
           >
             <Check className="w-4 h-4" />
@@ -277,7 +277,7 @@ export default function QuickAddRow({ onSave, categories, accounts, recentTransa
           <button
             onClick={handleCancel}
             disabled={isSaving}
-            className="p-2 bg-danger text-white rounded-xl hover:bg-danger-hover disabled:opacity-40 transition-all shadow-sm"
+            className="p-2.5 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-2xl hover:from-red-600 hover:to-red-700 disabled:opacity-40 transition-all shadow-md shadow-red-500/30 hover:shadow-lg hover:scale-105"
             title="Cancelar (Esc)"
           >
             <X className="w-4 h-4" />

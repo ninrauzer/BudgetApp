@@ -101,10 +101,17 @@ export default function FloatingActionButton({
       {/* Main FAB Button */}
       <button
         onClick={handleClick}
-        className="w-16 h-16 bg-gradient-to-br from-primary to-blue-600 text-white rounded-3xl shadow-button hover:shadow-xl hover:scale-110 transition-all duration-300 flex items-center justify-center group"
+        className="relative w-16 h-16 bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 text-white rounded-3xl shadow-lg shadow-purple-500/50 hover:shadow-2xl hover:shadow-purple-500/60 hover:scale-110 transition-all duration-300 flex items-center justify-center group overflow-hidden"
         title={hasTemplates ? "Opciones rápidas" : "Agregar transacción (Ctrl+N)"}
       >
-        <Plus className={`w-7 h-7 transition-transform ${showMenu ? 'rotate-45' : 'group-hover:scale-110'}`} />
+        {/* Animated gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Icon */}
+        <Plus className={`relative z-10 w-7 h-7 transition-transform duration-300 ${showMenu ? 'rotate-45' : 'group-hover:scale-110 group-hover:rotate-90'}`} />
+        
+        {/* Glow effect */}
+        <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-purple-400 to-indigo-500 opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-300" />
       </button>
     </div>
   );
