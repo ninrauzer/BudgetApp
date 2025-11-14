@@ -13,7 +13,9 @@ from app.models.transaction import Transaction
 from app.models.budget_plan import BudgetPlan
 from app.models.category import Category
 from app.models.account import Account
+from app.models.billing_cycle import BillingCycle
 from app.schemas.dashboard import DashboardSummary
+from app.services.billing_cycle import get_cycle_for_date, get_cycle_by_offset
 
 router = APIRouter(
     prefix="/api/dashboard",
@@ -23,71 +25,62 @@ router = APIRouter(
 
 @router.get("/summary", response_model=DashboardSummary)
 def get_dashboard_summary(
-    year: int,
-    month: int,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """
-    Obtener resumen completo del dashboard para un mes específico
+    Obtener resumen completo del dashboard para un período específico.
+    Si no se proporcionan fechas, usa el ciclo actual basado en billing_cycle configurado.
     """
-    # Calcular rango de fechas
-    start_date = date(year, month, 1)
-    if month == 12:
-        end_date = date(year + 1, 1, 1)
-    else:
-        end_date = date(year, month + 1, 1)
+    # Get billing cycle configuration
+    billing_cycle = db.query(BillingCycle).filter(BillingCycle.is_active == True).first()
     
-    # Ingresos planificados
-    income_planned_query = db.query(func.sum(BudgetPlan.amount)).join(Category).filter(
-        and_(
-            BudgetPlan.year == year,
-            BudgetPlan.month == month,
-            Category.type == "income"
-        )
-    )
-    total_income_planned = income_planned_query.scalar() or 0.0
+    if not billing_cycle:
+        # Create default if doesn't exist
+        billing_cycle = BillingCycle(name="default", start_day=1, is_active=True)
+        db.add(billing_cycle)
+        db.commit()
+    
+    # Calculate date range
+    if start_date and end_date:
+        # Use provided dates
+        period_start = datetime.strptime(start_date, "%Y-%m-%d").date()
+        period_end = datetime.strptime(end_date, "%Y-%m-%d").date()
+    else:
+        # Use current billing cycle
+        cycle_info = get_cycle_for_date(billing_cycle.start_day)
+        period_start = datetime.strptime(cycle_info["start_date"], "%Y-%m-%d").date()
+        period_end = datetime.strptime(cycle_info["end_date"], "%Y-%m-%d").date()
+    
+    # Ingresos planificados (for now, we'll keep this 0 until budget plans are updated)
+    total_income_planned = 0.0
     
     # Ingresos reales
     income_actual_query = db.query(func.sum(Transaction.amount)).filter(
         and_(
-            Transaction.date >= start_date,
-            Transaction.date < end_date,
-            Transaction.type == "income",
-            Transaction.status == "completed"
+            Transaction.date >= period_start,
+            Transaction.date <= period_end,
+            Transaction.type == "income"
         )
     )
     total_income_actual = income_actual_query.scalar() or 0.0
     
-    # Gastos planificados
-    expense_planned_query = db.query(func.sum(BudgetPlan.amount)).join(Category).filter(
-        and_(
-            BudgetPlan.year == year,
-            BudgetPlan.month == month,
-            Category.type == "expense"
-        )
-    )
-    total_expense_planned = expense_planned_query.scalar() or 0.0
+    # Gastos planificados (for now, we'll keep this 0 until budget plans are updated)
+    total_expense_planned = 0.0
     
     # Gastos reales
     expense_actual_query = db.query(func.sum(Transaction.amount)).filter(
         and_(
-            Transaction.date >= start_date,
-            Transaction.date < end_date,
-            Transaction.type == "expense",
-            Transaction.status == "completed"
+            Transaction.date >= period_start,
+            Transaction.date <= period_end,
+            Transaction.type == "expense"
         )
     )
     total_expense_actual = expense_actual_query.scalar() or 0.0
     
-    # Ahorros planificados
-    saving_planned_query = db.query(func.sum(BudgetPlan.amount)).join(Category).filter(
-        and_(
-            BudgetPlan.year == year,
-            BudgetPlan.month == month,
-            Category.type == "saving"
-        )
-    )
-    total_saving_planned = saving_planned_query.scalar() or 0.0
+    # Ahorros planificados (for now, we'll keep this 0 until budget plans are updated)
+    total_saving_planned = 0.0
     
     # Balances
     balance_planned = total_income_planned - total_expense_planned - total_saving_planned

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Filter, X, Calendar } from 'lucide-react';
 import type { TransactionFilters } from '../lib/api';
 import type { Category, Account } from '../lib/api';
+import { useCurrentCycle, useBillingCycle } from '../lib/hooks/useApi';
 
 interface TransactionFiltersProps {
   filters: TransactionFilters;
@@ -17,6 +18,61 @@ export default function TransactionFiltersComponent({
   accounts
 }: TransactionFiltersProps) {
   const [showFilters, setShowFilters] = useState(false);
+  const { data: currentCycle } = useCurrentCycle();
+  const { data: billingCycle } = useBillingCycle();
+  
+  // Helper function to calculate cycle dates
+  const getCycleDates = (offset: number = 0) => {
+    if (!billingCycle || !currentCycle) return { start_date: '', end_date: '' };
+    
+    const currentStart = new Date(currentCycle.start_date);
+    const start = new Date(currentStart);
+    start.setMonth(start.getMonth() + offset);
+    
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 1);
+    end.setDate(end.getDate() - 1);
+    
+    return {
+      start_date: start.toISOString().split('T')[0],
+      end_date: end.toISOString().split('T')[0]
+    };
+  };
+  
+  const handlePeriodChange = (period: string) => {
+    if (period === 'custom') {
+      // Don't change dates, let user pick manually
+      return;
+    }
+    
+    if (period === '') {
+      // Clear date filters
+      const newFilters = { ...filters };
+      delete newFilters.start_date;
+      delete newFilters.end_date;
+      onFiltersChange(newFilters);
+      return;
+    }
+    
+    let dates = { start_date: '', end_date: '' };
+    
+    switch(period) {
+      case 'current':
+        dates = getCycleDates(0);
+        break;
+      case 'previous':
+        dates = getCycleDates(-1);
+        break;
+      case 'last_3':
+        dates = {
+          start_date: getCycleDates(-2).start_date,
+          end_date: getCycleDates(0).end_date
+        };
+        break;
+    }
+    
+    onFiltersChange({ ...filters, ...dates });
+  };
 
   const handleSearchChange = (search: string) => {
     onFiltersChange({ ...filters, search });
@@ -83,6 +139,25 @@ export default function TransactionFiltersComponent({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Period Selector */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-bold text-text-secondary mb-2">
+                <Calendar className="w-4 h-4 inline mr-1" />
+                Período
+              </label>
+              <select
+                className="w-full bg-surface border border-border rounded-xl px-3 py-2.5 text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                onChange={(e) => handlePeriodChange(e.target.value)}
+                value={filters.start_date && filters.end_date ? 'custom' : ''}
+              >
+                <option value="">Todos</option>
+                <option value="current">📅 Este ciclo</option>
+                <option value="previous">⏮️ Ciclo anterior</option>
+                <option value="last_3">📊 Últimos 3 ciclos</option>
+                <option value="custom">🎯 Rango personalizado</option>
+              </select>
+            </div>
+            
             {/* Date Range */}
             <div>
               <label className="block text-sm font-bold text-text-secondary mb-2">

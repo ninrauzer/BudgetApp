@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Calendar, Check, X } from 'lucide-react';
 import { useBillingCycle, useCurrentCycle, useUpdateBillingCycle } from '../lib/hooks/useApi';
 
@@ -10,10 +10,11 @@ export default function BillingCycleSettings() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Initialize selected day from billing cycle data
-  if (billingCycle && selectedDay === null && !isEditing) {
-    setSelectedDay(billingCycle.start_day);
-  }
+  useEffect(() => {
+    if (billingCycle && !isEditing) {
+      setSelectedDay(billingCycle.start_day);
+    }
+  }, [billingCycle, isEditing]);
 
   const handleSave = async () => {
     if (selectedDay === null) return;
@@ -24,6 +25,41 @@ export default function BillingCycleSettings() {
       console.error('Error updating billing cycle:', error);
     }
   };
+
+  const exampleRange = useMemo(() => {
+    if (!selectedDay) return null;
+    const today = new Date();
+    const currentDay = today.getDate();
+
+    let startYear = today.getFullYear();
+    let startMonth = today.getMonth();
+
+    if (currentDay < selectedDay) {
+      startMonth -= 1;
+      if (startMonth < 0) {
+        startMonth = 11;
+        startYear -= 1;
+      }
+    }
+
+    const daysInStartMonth = new Date(startYear, startMonth + 1, 0).getDate();
+    const safeDay = Math.min(selectedDay, daysInStartMonth);
+    const start = new Date(startYear, startMonth, safeDay);
+
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 1);
+    end.setDate(end.getDate() - 1);
+
+    const formatter = new Intl.DateTimeFormat('es-PE', {
+      day: 'numeric',
+      month: 'short',
+    });
+
+    return {
+      startLabel: formatter.format(start),
+      endLabel: formatter.format(end),
+    };
+  }, [selectedDay]);
 
   const isLoading = isCycleLoading || isInfoLoading;
 
@@ -87,7 +123,10 @@ export default function BillingCycleSettings() {
           </div>
           {!isEditing && (
             <button
-              onClick={() => setIsEditing(true)}
+              onClick={() => {
+                setIsEditing(true);
+                setSelectedDay(billingCycle?.start_day ?? null);
+              }}
               className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg font-bold text-sm transition-all"
             >
               Editar
@@ -159,9 +198,11 @@ export default function BillingCycleSettings() {
                 <p className="font-bold text-text-primary">
                   Los ciclos comenzarán el día <span className="text-primary">{selectedDay}</span> de cada mes
                 </p>
-                <p className="text-sm text-text-secondary mt-2">
-                  Ejemplo: Ciclo de Enero sería del {selectedDay} de diciembre al {selectedDay - 1} de enero
-                </p>
+                {exampleRange && (
+                  <p className="text-sm text-text-secondary mt-2">
+                    Ejemplo (ciclo actual): {exampleRange.startLabel} al {exampleRange.endLabel}
+                  </p>
+                )}
               </div>
             )}
           </div>

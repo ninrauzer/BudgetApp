@@ -1,16 +1,18 @@
 """
 BudgetPlan Pydantic schemas for request/response validation.
+Updated to use billing cycles instead of year/month.
 """
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, date
 
 
 class BudgetPlanBase(BaseModel):
-    """Base schema for BudgetPlan."""
-    year: int = Field(..., ge=2000, le=2100)
-    month: int = Field(..., ge=1, le=12)
+    """Base schema for BudgetPlan (cycle-based)."""
+    cycle_name: str = Field(..., min_length=1)  # e.g., "Enero"
+    start_date: date                             # e.g., 2024-12-23
+    end_date: date                               # e.g., 2025-01-22
     category_id: int
     amount: float = Field(..., ge=0)
     notes: Optional[str] = None
@@ -21,9 +23,10 @@ class BudgetPlanCreate(BudgetPlanBase):
     pass
 
 
-class BudgetPlanUpdate(BudgetPlanBase):
+class BudgetPlanUpdate(BaseModel):
     """Schema for updating budget plan item."""
-    pass
+    amount: Optional[float] = Field(None, ge=0)
+    notes: Optional[str] = None
 
 
 class BudgetPlanResponse(BudgetPlanBase):
@@ -37,7 +40,7 @@ class BudgetPlanResponse(BudgetPlanBase):
 
 
 class BudgetPlanBulkCreate(BaseModel):
-    """Schema for bulk creating/updating budget plan for a month."""
+    """Schema for bulk creating/updating budget plan for a cycle."""
     items: list[BudgetPlanCreate]
 
 
@@ -49,9 +52,10 @@ class BudgetPlanSummary(BaseModel):
     balance: float = 0.0
 
 
-class BudgetPlanMonthResponse(BaseModel):
-    """Complete budget plan for a specific month."""
-    year: int
-    month: int
+class BudgetPlanCycleResponse(BaseModel):
+    """Complete budget plan for a specific billing cycle."""
+    cycle_name: str
+    start_date: date
+    end_date: date
     items: list[BudgetPlanResponse]
     summary: BudgetPlanSummary

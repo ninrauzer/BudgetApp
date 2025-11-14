@@ -7,8 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { ArrowUpIcon, ArrowDownIcon, DollarSign, TrendingUp, Wallet, CreditCard, Loader2 } from 'lucide-react'
-import { useDashboardStats, useRecentTransactions, useBudgetLimits, useActiveBudgetPlan } from '@/lib/hooks/useApi'
+import { ArrowUpIcon, ArrowDownIcon, DollarSign, TrendingUp, Wallet, CreditCard, Loader2, Calendar } from 'lucide-react'
+import { useDashboardStats, useRecentTransactions, useBudgetLimits, useActiveBudgetPlan, useCurrentCycle } from '@/lib/hooks/useApi'
 import { exchangeRateApi } from '@/lib/api'
 import { useState, useEffect } from 'react'
 import CategoryIcon from '@/components/CategoryIcon'
@@ -17,6 +17,9 @@ export default function Dashboard() {
   const [displayCurrency, setDisplayCurrency] = useState<'PEN' | 'USD'>('PEN')
   const [exchangeRate, setExchangeRate] = useState<number | null>(null)
   const [rateLoading, setRateLoading] = useState(false)
+  
+  // Get current billing cycle info
+  const { data: currentCycle } = useCurrentCycle()
 
   // Fetch exchange rate when switching to USD
   useEffect(() => {
@@ -73,9 +76,16 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-h1 font-bold text-text-primary">Dashboard</h1>
-          <p className="text-body-sm text-text-secondary mt-1">
-            Resumen de tus finanzas personales
-          </p>
+          {currentCycle ? (
+            <p className="text-body-sm text-text-secondary mt-1 flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Ciclo: {currentCycle.cycle_name} ({new Date(currentCycle.start_date).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })} - {new Date(currentCycle.end_date).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })})
+            </p>
+          ) : (
+            <p className="text-body-sm text-text-secondary mt-1">
+              Resumen de tus finanzas personales
+            </p>
+          )}
         </div>
         
         {/* Currency Toggle */}

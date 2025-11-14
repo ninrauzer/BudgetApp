@@ -88,7 +88,8 @@ from app.api import (
     import_data, 
     data_management,
     quick_templates,
-    billing_cycle
+    billing_cycle,
+    analysis
 )
 
 app.include_router(categories.router)
@@ -101,6 +102,7 @@ app.include_router(import_data.router)
 app.include_router(data_management.router)
 app.include_router(quick_templates.router)
 app.include_router(billing_cycle.router)
+app.include_router(analysis.router)
 app.include_router(frontend.router)  # Keep for legacy HTMX if needed
 
 

@@ -1,15 +1,19 @@
-"""
-Utility functions for calculating billing cycles.
-Handles custom billing periods that don't align with calendar months.
-"""
+"""Utility functions for calculating billing cycles."""
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from calendar import monthrange
 
 # Spanish month names
 MONTH_NAMES = [
     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
 ]
+
+def _safe_date(year: int, month: int, day: int) -> datetime:
+    """Return a date ensuring the day exists in the month."""
+    last_day = monthrange(year, month)[1]
+    return datetime(year, month, min(day, last_day))
+
 
 def get_cycle_for_date(start_day: int, reference_date: datetime = None) -> dict:
     """
@@ -35,18 +39,14 @@ def get_cycle_for_date(start_day: int, reference_date: datetime = None) -> dict:
     
     # Determine which cycle we're in
     if reference_date.day >= start_day:
-        # We're in a cycle that started this month
-        cycle_start = datetime(reference_date.year, reference_date.month, start_day)
-        cycle_end_temp = cycle_start + relativedelta(months=1)
-        cycle_end = cycle_end_temp - timedelta(days=1)
-        # Cycle name is the month when it ends
-        cycle_name = MONTH_NAMES[cycle_end.month - 1]
+        cycle_start = _safe_date(reference_date.year, reference_date.month, start_day)
     else:
-        # We're in a cycle that started last month
-        cycle_start = datetime(reference_date.year, reference_date.month, start_day) - relativedelta(months=1)
-        cycle_end = datetime(reference_date.year, reference_date.month, start_day) - timedelta(days=1)
-        # Cycle name is the month when it ends
-        cycle_name = MONTH_NAMES[cycle_end.month - 1]
+        prev_month = reference_date - relativedelta(months=1)
+        cycle_start = _safe_date(prev_month.year, prev_month.month, start_day)
+
+    cycle_end_temp = cycle_start + relativedelta(months=1)
+    cycle_end = cycle_end_temp - timedelta(days=1)
+    cycle_name = MONTH_NAMES[cycle_end.month - 1]
     
     return {
         "cycle_name": cycle_name,

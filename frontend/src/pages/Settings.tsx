@@ -228,6 +228,21 @@ export default function Settings() {
         <QuickTemplateCRUD />
       </div>
 
+      {/* Billing Cycle Section */}
+      <div className="bg-surface border border-border rounded-3xl p-8 shadow-card">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 bg-gradient-to-br from-green-400 to-green-500 rounded-2xl shadow-button">
+            <Calendar className="w-6 h-6 text-white" strokeWidth={2.5} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-text-primary">Ciclo de Facturación</h2>
+            <p className="text-sm text-text-secondary">Configura el inicio de tu ciclo de pagos personalizado</p>
+          </div>
+        </div>
+
+        <BillingCycleSettings />
+      </div>
+
       {/* About Section */}
       <div className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-3xl p-8 shadow-card">
         <div className="flex items-center gap-3 mb-4">

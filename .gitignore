@@ -53,5 +53,10 @@ htmlcov/
 # Logs
 *.log
 
+# Node modules (should only be in frontend/)
+/node_modules/
+/package.json
+/package-lock.json
+
 # Excel (keep original)
 # Presupuesto Personal_2025.xlsm

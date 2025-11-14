@@ -22,7 +22,7 @@ from app.schemas.budget_plan import (
     BudgetPlanResponse,
     BudgetPlanBulkCreate,
     BudgetPlanSummary,
-    BudgetPlanMonthResponse,
+    BudgetPlanCycleResponse,
 )
 from app.schemas.transaction import (
     TransactionBase,
@@ -67,7 +67,7 @@ __all__ = [
     "BudgetPlanResponse",
     "BudgetPlanBulkCreate",
     "BudgetPlanSummary",
-    "BudgetPlanMonthResponse",
+    "BudgetPlanCycleResponse",
     # Transaction
     "TransactionBase",
     "TransactionCreate",

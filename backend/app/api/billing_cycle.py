@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.billing_cycle import BillingCycle
@@ -8,9 +8,8 @@ from app.schemas.billing_cycle import (
     CurrentCycleInfo
 )
 from app.services.billing_cycle import get_cycle_for_date
-from datetime import datetime
 
-router = APIRouter()
+router = APIRouter(prefix="/api/settings", tags=["Billing Cycle"])
 
 @router.get("/billing-cycle", response_model=BillingCycleResponse)
 def get_billing_cycle(db: Session = Depends(get_db)):
