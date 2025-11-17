@@ -1047,7 +1047,7 @@ interface CategoryTransactionsListProps {
 }
 
 function CategoryTransactionsList({ categoryId, startDate, endDate, displayCurrency, applyDemoScale }: CategoryTransactionsListProps) {
-  const { data: transactions, isLoading } = useTransactions({
+  const { data: transactionsResponse, isLoading } = useTransactions({
     category_id: categoryId,
     start_date: startDate,
     end_date: endDate,
@@ -1064,7 +1064,9 @@ function CategoryTransactionsList({ categoryId, startDate, endDate, displayCurre
     );
   }
 
-  if (!transactions || transactions.length === 0) {
+  const transactions = transactionsResponse?.items || [];
+
+  if (transactions.length === 0) {
     return (
       <div className="p-6 bg-white border-t border-border">
         <p className="text-sm text-text-secondary text-center">No hay transacciones</p>
