@@ -9,7 +9,6 @@ import Analysis from './pages/Analysis'
 import Accounts from './pages/Accounts'
 import Settings from './pages/Settings'
 import DebtManagement from './pages/DebtManagement'
-import TestAPI from './pages/TestAPI'
 
 function App() {
   return (
@@ -19,7 +18,6 @@ function App() {
           <Routes>
             <Route path="/" element={<AppLayout />}>
               <Route index element={<Dashboard />} />
-              <Route path="test-api" element={<TestAPI />} />
               <Route path="transactions" element={<Transactions />} />
               <Route path="budget" element={<Budget />} />
               <Route path="analysis" element={<Analysis />} />
