@@ -7,7 +7,7 @@ Esta aplicación se puede ejecutar completamente con Docker Compose.
 ### 📋 Prerrequisitos
 
 - Docker Engine 20.10+
-- Docker Compose 2.0+
+- Docker Compose v2 (plugin) o docker-compose v1 (legacy)
 
 ### 🛠️ Instalación y Ejecución
 
@@ -18,6 +18,8 @@ cd BudgetApp
 ```
 
 #### 2. Iniciar aplicación
+
+**Docker Compose v2 (recomendado)**:
 ```bash
 # Construir y levantar todos los servicios
 docker compose up -d
@@ -30,6 +32,21 @@ docker compose logs -f backend
 
 # Solo frontend logs
 docker compose logs -f frontend
+```
+
+**Docker Compose v1 (legacy)**:
+```bash
+# Construir y levantar todos los servicios
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f
+
+# Solo backend logs
+docker-compose logs -f backend
+
+# Solo frontend logs
+docker-compose logs -f frontend
 ```
 
 #### 3. Acceder a la aplicación
@@ -110,6 +127,21 @@ docker compose exec frontend nginx -t
 
 # Ver logs de nginx
 docker compose logs frontend
+```
+
+#### Frontend build fails con TypeScript errors
+El proyecto usa configuraciones separadas de TypeScript:
+- **Desarrollo** (`tsconfig.app.json`): Strict mode activo
+- **Producción** (`tsconfig.build.json`): Strict mode deshabilitado
+
+El build de Docker usa `tsconfig.build.json` automáticamente para evitar errores de tipos en producción. Si necesitas debugging:
+
+```bash
+# Ver errores de TypeScript
+cd frontend && npm run build
+
+# Forzar rebuild sin caché
+docker compose build --no-cache frontend
 ```
 
 #### Base de datos corrupta
