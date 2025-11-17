@@ -89,10 +89,19 @@ function Start-Server {
     
     # Esperar a que el servidor inicie
     Write-Host "⏳ Esperando a que el servidor inicie..." -ForegroundColor Gray
-    Start-Sleep -Seconds 3
+    Start-Sleep -Seconds 5
     
-    # Verificar si inició correctamente
-    $serverProcess = Get-ServerProcess
+    # Verificar si inició correctamente (intentar varias veces)
+    $maxAttempts = 3
+    $attempt = 0
+    $serverProcess = $null
+    
+    while ($attempt -lt $maxAttempts -and -not $serverProcess) {
+        Start-Sleep -Seconds 1
+        $serverProcess = Get-ServerProcess
+        $attempt++
+    }
+    
     if ($serverProcess) {
         Write-Host "✅ Servidor iniciado correctamente" -ForegroundColor Green
         Write-Host "   📡 URL: http://localhost:$PORT" -ForegroundColor Cyan
