@@ -760,7 +760,7 @@ export default function Analysis() {
             {topExpenseCategories.length > 0 ? (
               <div className="space-y-3">
                 {topExpenseCategories.slice(0, 5).map((cat, index) => (
-                  <div key={cat.category_id} className="flex items-center justify-between p-4 bg-surface-soft rounded-xl hover:bg-background transition-colors">
+                  <div key={`expense-${cat.category_id}-${index}`} className="flex items-center justify-between p-4 bg-surface-soft rounded-xl hover:bg-background transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl" 
                           style={{ backgroundColor: COLORS[index % COLORS.length] + '20' }}>
@@ -841,9 +841,9 @@ export default function Analysis() {
               </div>
               {budgetAlerts.length > 0 ? (
                 <div className="space-y-3">
-                  {budgetAlerts.map((alert) => (
+                  {budgetAlerts.map((alert, index) => (
                     <div 
-                      key={alert.category_id}
+                      key={`alert-${alert.category_id}-${index}`}
                       className={`p-4 rounded-2xl border ${
                         alert.status === 'danger' 
                           ? 'bg-red-500/10 backdrop-blur-sm border-red-200' 
@@ -979,7 +979,7 @@ export default function Analysis() {
               {topCategories.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {topCategories.map((cat, index) => (
-                    <div key={cat.category_id} className="flex items-center justify-between p-5 bg-surface-soft rounded-2xl hover:bg-surface transition-colors border border-border shadow-sm group">
+                    <div key={`category-${cat.category_id}-${index}`} className="flex items-center justify-between p-5 bg-surface-soft rounded-2xl hover:bg-surface transition-colors border border-border shadow-sm group">
                       <div className="flex items-center gap-3 flex-1">
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl" 
                             style={{ backgroundColor: COLORS[index % COLORS.length] + '20' }}>

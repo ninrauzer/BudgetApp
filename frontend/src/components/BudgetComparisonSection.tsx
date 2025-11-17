@@ -217,8 +217,8 @@ export default function BudgetComparisonSection({ cycleName, displayCurrency = '
             {categoriesWithValues
               .filter(c => c.category_type === 'income')
               .sort((a, b) => b.actual - a.actual)
-              .map((category) => (
-                <CategoryComparisonRow key={category.category_id} category={category} displayCurrency={displayCurrency} />
+              .map((category, index) => (
+                <CategoryComparisonRow key={`income-${category.category_id}-${index}`} category={category} displayCurrency={displayCurrency} />
               ))}
           </div>
         )}
@@ -233,8 +233,8 @@ export default function BudgetComparisonSection({ cycleName, displayCurrency = '
             {categoriesWithValues
               .filter(c => c.category_type === 'expense')
               .sort((a, b) => b.actual - a.actual)
-              .map((category) => (
-                <CategoryComparisonRow key={category.category_id} category={category} displayCurrency={displayCurrency} />
+              .map((category, index) => (
+                <CategoryComparisonRow key={`expense-${category.category_id}-${index}`} category={category} displayCurrency={displayCurrency} />
               ))}
           </div>
         )}
