@@ -16,11 +16,14 @@ import {
 } from '../lib/hooks/useApi';
 import type { TransactionFilters, Transaction } from '../lib/api';
 import { exchangeRateApi } from '../lib/api';
+import { formatCurrencyISO } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useDefaultAccount } from '../contexts/DefaultAccountContext';
+import { useDemoMode } from '../lib/hooks/useDemoMode';
 
 export default function Transactions() {
   const { defaultAccountId } = useDefaultAccount();
+  const { applyDemoScale, obfuscateDescription } = useDemoMode();
   const [filters, setFilters] = useState<TransactionFilters>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>();
@@ -107,6 +110,12 @@ export default function Transactions() {
       } else {
         await createMutation.mutateAsync(transaction);
       }
+      
+      // If transaction is linked to a loan, notify loan list to refresh
+      if (transaction.loan_id) {
+        window.dispatchEvent(new CustomEvent('loanUpdated'));
+      }
+      
       setIsModalOpen(false);
       setEditingTransaction(undefined);
     } catch (error) {
@@ -122,7 +131,17 @@ export default function Transactions() {
   const handleDelete = async (id: number) => {
     if (deleteConfirm === id) {
       try {
+        // Check if transaction being deleted is linked to a loan
+        const transactionToDelete = transactions.find(t => t.id === id);
+        const hasLoanLink = transactionToDelete?.loan_id;
+        
         await deleteMutation.mutateAsync(id);
+        
+        // If transaction was linked to a loan, notify loan list to refresh
+        if (hasLoanLink) {
+          window.dispatchEvent(new CustomEvent('loanUpdated'));
+        }
+        
         setDeleteConfirm(null);
       } catch (error) {
         console.error('Error deleting transaction:', error);
@@ -247,7 +266,7 @@ export default function Transactions() {
                     : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
-                S/ PEN
+                PEN
               </button>
               <button
                 onClick={() => setDisplayCurrency('USD')}
@@ -258,7 +277,7 @@ export default function Transactions() {
                     : 'text-text-secondary hover:text-text-primary'
                 } disabled:opacity-50`}
               >
-                {rateLoading ? <Loader2 className="w-3 h-3 animate-spin inline" /> : '$ USD'}
+                {rateLoading ? <Loader2 className="w-3 h-3 animate-spin inline" /> : 'USD'}
               </button>
             </div>
 
@@ -291,7 +310,7 @@ export default function Transactions() {
               </div>
               <p className="text-white/80 text-sm mb-3 font-semibold uppercase tracking-wide">Ingresos Totales</p>
               <p className="text-4xl font-extrabold text-white tracking-tight">
-                {convertAmount(totals.income).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-2xl opacity-80">{displayCurrency}</span>
+                {formatCurrencyISO(convertAmount(applyDemoScale(totals.income)), displayCurrency)}
               </p>
             </div>
 
@@ -307,7 +326,7 @@ export default function Transactions() {
               </div>
               <p className="text-white/80 text-sm mb-3 font-semibold uppercase tracking-wide">Gastos Totales</p>
               <p className="text-4xl font-extrabold text-white tracking-tight">
-                {convertAmount(totals.expense).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-2xl opacity-80">{displayCurrency}</span>
+                {formatCurrencyISO(convertAmount(applyDemoScale(totals.expense)), displayCurrency)}
               </p>
             </div>
 
@@ -327,7 +346,7 @@ export default function Transactions() {
               </div>
               <p className="text-white/80 text-sm mb-3 font-semibold uppercase tracking-wide">Balance Neto</p>
               <p className="text-4xl font-extrabold text-white tracking-tight">
-                {balance >= 0 ? '+' : ''}{convertAmount(balance).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-2xl opacity-80">{displayCurrency}</span>
+                {balance >= 0 ? '' : '-'}{formatCurrencyISO(convertAmount(applyDemoScale(Math.abs(balance))), displayCurrency)}
               </p>
             </div>
           </div>
@@ -359,6 +378,8 @@ export default function Transactions() {
             onDelete={handleDelete}
             onDuplicate={handleDuplicate}
             deleteConfirm={deleteConfirm}
+            applyDemoScale={applyDemoScale}
+            obfuscateDescription={obfuscateDescription}
             quickAddRow={
               <QuickAddRow
                 onSave={async (transaction) => {
