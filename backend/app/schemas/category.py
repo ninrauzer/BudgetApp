@@ -14,6 +14,8 @@ class CategoryBase(BaseModel):
     parent_id: Optional[int] = None
     icon: Optional[str] = Field(None, max_length=50)
     color: Optional[str] = None
+    description: Optional[str] = Field(None, max_length=255)
+    expense_type: Optional[Literal["fixed", "variable"]] = None  # Only for expense categories
 
 
 class CategoryCreate(CategoryBase):

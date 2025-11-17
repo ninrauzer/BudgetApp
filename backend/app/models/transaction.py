@@ -26,12 +26,23 @@ class Transaction(Base):
     description = Column(String, nullable=True)
     notes = Column(String, nullable=True)
     status = Column(String, nullable=False, default="completed")  # 'pending', 'completed', 'cancelled'
+    
+    # Transfer support
+    transaction_type = Column(String, nullable=False, default="normal")  # 'normal', 'transfer', 'adjustment', 'initial_balance'
+    transfer_id = Column(String, nullable=True, index=True)  # UUID for linked transfers
+    related_transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=True)  # Link to other half of transfer
+    
+    # Loan payment tracking
+    loan_id = Column(Integer, ForeignKey("loans.id"), nullable=True)  # Link to loan if this is a loan payment
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relationships
     category = relationship("Category", back_populates="transactions")
     account = relationship("Account", back_populates="transactions")
+    related_transaction = relationship("Transaction", remote_side="Transaction.id", foreign_keys=[related_transaction_id], uselist=False)
+    loan = relationship("Loan", back_populates="payment_transactions")
 
     def __repr__(self):
         return f"<Transaction(id={self.id}, date={self.date}, type='{self.type}', amount={self.amount}, status='{self.status}')>"

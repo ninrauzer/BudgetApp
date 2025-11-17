@@ -1,10 +1,19 @@
 import { useState, useEffect } from 'react';
-import { X, Plus, Calendar, DollarSign, FileText, Tag, CreditCard } from 'lucide-react';
+import { X, Plus, Calendar, DollarSign, FileText, Tag, CreditCard, Landmark } from 'lucide-react';
 import type { Transaction, Category, Account } from '../lib/api';
 import ExchangeRateDisplay from './ExchangeRateDisplay';
 import CategorySelect from './CategorySelect';
 import { useDefaultAccount } from '../contexts/DefaultAccountContext';
 import { useDefaultCurrency } from '../contexts/DefaultCurrencyContext';
+import axios from 'axios';
+
+interface Loan {
+  id: number;
+  name: string;
+  entity: string;
+  current_debt: number;
+  monthly_payment: number;
+}
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -37,8 +46,13 @@ export default function TransactionModal({
     account_id: defaultAccountId || undefined,
     notes: '',
     currency: defaultCurrency,
-    exchange_rate: undefined
+    exchange_rate: undefined,
+    loan_id: undefined
   });
+
+  const [loans, setLoans] = useState<Loan[]>([]);
+  const [selectedLoanId, setSelectedLoanId] = useState<number | null>(null);
+  const [loansLoading, setLoansLoading] = useState(false);
 
   useEffect(() => {
     if (transaction) {
@@ -46,8 +60,10 @@ export default function TransactionModal({
         ...transaction,
         date: transaction.date.split('T')[0],
         currency: transaction.currency || defaultCurrency,
-        exchange_rate: transaction.exchange_rate
+        exchange_rate: transaction.exchange_rate,
+        loan_id: transaction.loan_id
       });
+      setSelectedLoanId(transaction.loan_id || null);
     } else {
       setFormData({
         type: 'expense',
@@ -58,21 +74,51 @@ export default function TransactionModal({
         account_id: defaultAccountId || undefined,
         notes: '',
         currency: defaultCurrency,
-        exchange_rate: undefined
+        exchange_rate: undefined,
+        loan_id: undefined
       });
+      setSelectedLoanId(null);
     }
   }, [transaction, isOpen, defaultAccountId, defaultCurrency]);
 
+  // Fetch active loans when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setLoansLoading(true);
+      axios.get<Loan[]>('/api/loans?status=active')
+        .then(response => setLoans(response.data))
+        .catch(err => console.error('Error fetching loans:', err))
+        .finally(() => setLoansLoading(false));
+    }
+  }, [isOpen]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    
+    // Add loan_id to form data if selected
+    const dataToSave = {
+      ...formData,
+      loan_id: selectedLoanId || undefined
+    };
+    
+    // Save transaction (loan_id will be automatically linked in backend)
+    onSave(dataToSave);
   };
 
   const handleChange = (field: keyof Transaction, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Reset loan selection if category changes
+    if (field === 'category_id') {
+      setSelectedLoanId(null);
+    }
   };
 
   const filteredCategories = categories.filter(cat => cat.type === formData.type);
+  
+  // Check if selected category is "Préstamos Bancarios"
+  const selectedCategory = categories.find(cat => cat.id === formData.category_id);
+  const isLoanCategory = selectedCategory?.name === 'Préstamos Bancarios';
 
   if (!isOpen) return null;
 
@@ -180,8 +226,8 @@ export default function TransactionModal({
               onChange={(e) => handleChange('currency', e.target.value)}
               className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text-primary font-bold focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             >
-              <option value="PEN">S/ Soles Peruanos (PEN)</option>
-              <option value="USD">$ Dólares Americanos (USD)</option>
+              <option value="PEN">PEN - Sol Peruano</option>
+              <option value="USD">USD - Dólar Estadounidense</option>
             </select>
           </div>
 
@@ -244,6 +290,43 @@ export default function TransactionModal({
               </select>
             </div>
           </div>
+
+          {/* Loan Selector - Only show for "Préstamos Bancarios" category */}
+          {isLoanCategory && (
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-5">
+              <label className="block text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
+                <Landmark className="w-4 h-4" />
+                Vincular a Préstamo (Opcional)
+              </label>
+              
+              {loansLoading ? (
+                <div className="text-sm text-blue-600 py-2">Cargando préstamos...</div>
+              ) : loans.length === 0 ? (
+                <div className="text-sm text-blue-600 py-2">No hay préstamos activos</div>
+              ) : (
+                <>
+                  <select
+                    value={selectedLoanId || ''}
+                    onChange={(e) => setSelectedLoanId(e.target.value ? parseInt(e.target.value) : null)}
+                    className="w-full bg-white border-2 border-blue-300 rounded-xl px-4 py-3 text-text-primary font-semibold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="">No vincular a ningún préstamo</option>
+                    {loans.map((loan) => (
+                      <option key={loan.id} value={loan.id}>
+                        {loan.name} - {loan.entity} (Deuda: S/ {loan.current_debt.toFixed(2)})
+                      </option>
+                    ))}
+                  </select>
+                  
+                  {selectedLoanId && (
+                    <div className="mt-3 text-xs text-blue-700 bg-blue-100 rounded-lg px-3 py-2">
+                      💡 <strong>Tip:</strong> Este pago se contará automáticamente como una cuota pagada del préstamo
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           {/* Notes */}
           <div>

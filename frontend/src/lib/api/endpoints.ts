@@ -16,6 +16,10 @@ import type {
   CategoryAnalysis,
   TrendData,
   AnalysisSummary,
+  BudgetCopyResult,
+  TransferCreate,
+  TransferResponse,
+  TransferDetail,
 } from './types';
 
 // Dashboard
@@ -79,13 +83,38 @@ export const transactionsApi = {
 // Accounts
 export const accountsApi = {
   getAll: async (): Promise<Account[]> => {
-    const { data } = await apiClient.get<Account[]>('/api/accounts');
-    return data;
+    // El backend actualmente devuelve cuentas con el campo 'balance' pero el frontend
+    // espera 'initial_balance' y 'current_balance'. Aquí normalizamos para evitar NaN.
+    const { data } = await apiClient.get<any[]>('/api/accounts');
+    return data.map(a => ({
+      id: a.id,
+      name: a.name,
+      type: a.type,
+      icon: a.icon,
+      currency: a.currency,
+      initial_balance: typeof a.balance === 'number' && !Number.isNaN(a.balance) ? a.balance : 0,
+      current_balance: typeof a.balance === 'number' && !Number.isNaN(a.balance) ? a.balance : 0,
+      is_active: a.is_active,
+      created_at: a.created_at,
+      // El modelo backend no expone updated_at aún; usamos created_at como fallback
+      updated_at: a.updated_at ?? a.created_at,
+    }));
   },
 
   getById: async (id: number): Promise<Account> => {
-    const { data } = await apiClient.get<Account>(`/api/accounts/${id}`);
-    return data;
+    const { data } = await apiClient.get<any>(`/api/accounts/${id}`);
+    return {
+      id: data.id,
+      name: data.name,
+      type: data.type,
+      icon: data.icon,
+      currency: data.currency,
+      initial_balance: typeof data.balance === 'number' && !Number.isNaN(data.balance) ? data.balance : 0,
+      current_balance: typeof data.balance === 'number' && !Number.isNaN(data.balance) ? data.balance : 0,
+      is_active: data.is_active,
+      created_at: data.created_at,
+      updated_at: data.updated_at ?? data.created_at,
+    };
   },
 
   create: async (account: Partial<Account>): Promise<Account> => {
@@ -177,35 +206,47 @@ export const budgetPlansApi = {
     return data;
   },
 
-  updateCell: async (cycleName: string, categoryId: number, amount: number): Promise<BudgetPlan> => {
+  updateCell: async (cycleName: string, categoryId: number, amount: number, notes?: string): Promise<BudgetPlan> => {
     const { data } = await apiClient.post<BudgetPlan>('/api/budget-plans/cell/update', {
       cycle_name: cycleName,
       category_id: categoryId,
       amount,
+      notes,
     });
     return data;
   },
 
   // Funciones de productividad
-  copyCycle: async (sourceCycle: string, targetCycles: string[]): Promise<{ message: string; created_count: number }> => {
-    const { data } = await apiClient.post<{ message: string; created_count: number }>('/api/budget-plans/copy/cycle', {
-      source_cycle: sourceCycle,
-      target_cycles: targetCycles,
+  copyCycle: async (sourceCycle: string, targetCycles: string[], overwrite: boolean = false): Promise<BudgetCopyResult> => {
+    const { data } = await apiClient.post<BudgetCopyResult>('/api/budget-plans/copy/cycle', {
+      source_cycle_name: sourceCycle,
+      target_cycle_names: targetCycles,
+      overwrite,
     });
     return data;
   },
 
-  copyCategory: async (categoryId: number, sourceCycle: string, targetCycles: string[]): Promise<{ message: string; created_count: number }> => {
-    const { data } = await apiClient.post<{ message: string; created_count: number }>('/api/budget-plans/copy/category', {
+  copyCategory: async (categoryId: number, sourceCycle: string, targetCycles: string[], overwrite: boolean = false): Promise<BudgetCopyResult> => {
+    const { data } = await apiClient.post<BudgetCopyResult>('/api/budget-plans/copy/category', {
       category_id: categoryId,
-      source_cycle: sourceCycle,
-      target_cycles: targetCycles,
+      source_cycle_name: sourceCycle,
+      target_cycle_names: targetCycles,
+      overwrite,
     });
     return data;
   },
 
   clearCycle: async (cycleName: string): Promise<{ message: string; deleted_count: number }> => {
     const { data } = await apiClient.delete<{ message: string; deleted_count: number }>(`/api/budget-plans/cycle/${cycleName}`);
+    return data;
+  },
+
+  cloneYear: async (sourceYear: number, targetYear: number, overwrite: boolean = false): Promise<BudgetCopyResult> => {
+    const { data } = await apiClient.post<BudgetCopyResult>('/api/budget-plans/clone/year', {
+      source_year: sourceYear,
+      target_year: targetYear,
+      overwrite,
+    });
     return data;
   },
 
@@ -303,6 +344,26 @@ export const analysisApi = {
     const url = `/api/analysis/summary${queryString ? '?' + queryString : ''}`;
     
     const { data } = await apiClient.get<AnalysisSummary>(url);
+    return data;
+  },
+};
+
+// Transfers
+export const transfersApi = {
+  create: async (payload: TransferCreate): Promise<TransferResponse> => {
+    const { data } = await apiClient.post<TransferResponse>('/api/transfers/', payload);
+    return data;
+  },
+  list: async (): Promise<TransferResponse[]> => {
+    const { data } = await apiClient.get<TransferResponse[]>('/api/transfers/');
+    return data;
+  },
+  getById: async (transferId: string): Promise<TransferDetail> => {
+    const { data } = await apiClient.get<TransferDetail>(`/api/transfers/${transferId}`);
+    return data;
+  },
+  delete: async (transferId: string): Promise<{ message: string; transfer_id: string; deleted_transactions: number }> => {
+    const { data } = await apiClient.delete<{ message: string; transfer_id: string; deleted_transactions: number }>(`/api/transfers/${transferId}`);
     return data;
   },
 };

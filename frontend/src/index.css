@@ -53,10 +53,30 @@
   
   body {
     @apply bg-background text-text-primary font-sans antialiased;
+    background-image: radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
   
   /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  /* Drawer animations */
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.3s ease-out;
   }
 }

@@ -1,32 +1,29 @@
-# BudgetApp - Aplicación de Gestión Presupuestal Personal# BudgetApp - Aplicación de Gestión Presupuestal Personal# BudgetApp - Aplicación de Gestión Presupuestal Personal
-
-
+# BudgetApp - Aplicación de Gestión Presupuestal Personal
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com)
-
 [![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org)
-
-[![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org)[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com)[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com)
-
+[![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5+-3178C6.svg)](https://www.typescriptlang.org)
+[![SQLite](https://img.shields.io/badge/SQLite-3-lightgrey.svg)](https://www.sqlite.org)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com)
 
-[![SQLite](https://img.shields.io/badge/SQLite-3-lightgrey.svg)](https://www.sqlite.org)[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org)[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org)
+Aplicación web moderna para gestión presupuestal personal, desarrollada con arquitectura API-First, permitiendo planificar presupuestos, registrar transacciones y visualizar análisis financieros.
 
+## 🚀 Quick Start con Docker
 
+```bash
+# Iniciar aplicación completa
+docker compose up -d
 
-Aplicación web moderna para gestión presupuestal personal, desarrollada con arquitectura API-First, permitiendo planificar presupuestos, registrar transacciones y visualizar análisis financieros.[![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org)[![SQLite](https://img.shields.io/badge/SQLite-3-lightgrey.svg)](https://www.sqlite.org)
+# Ver en navegador
+# Frontend: http://localhost
+# Backend:  http://localhost:8000
+# API Docs: http://localhost:8000/docs
+```
 
+📖 **Documentación completa**: Ver [DOCKER.md](DOCKER.md)
 
-
----[![TypeScript](https://img.shields.io/badge/TypeScript-5+-3178C6.svg)](https://www.typescriptlang.org)
-
-
-
-## ✨ CaracterísticasAplicación web para gestión presupuestal personal, desarrollada con arquitectura API-First, permitiendo planificar presupuestos, registrar transacciones y visualizar análisis financieros.
-
-
-
-### MVP (v1.0 - HTMX) ✅ CompletadoAplicación web moderna para gestión presupuestal personal, desarrollada con arquitectura API-First, permitiendo planificar presupuestos, registrar transacciones y visualizar análisis financieros.
+---
 
 - ✅ **Budget Planning** - Planificación de presupuesto mensual por categorías
 

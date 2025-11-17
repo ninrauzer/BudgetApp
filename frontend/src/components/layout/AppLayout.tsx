@@ -3,20 +3,22 @@ import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext'
 import { cn } from '@/lib/utils'
+import { ToastProvider } from '@/components/toast/ToastContext'
+import ToastViewport from '@/components/toast/ToastViewport'
 
 function AppLayoutContent() {
   const { isCollapsed } = useSidebar()
   
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Sidebar />
+      <Header />
       <div className={cn(
-        "transition-all duration-300",
+        "pt-16 transition-all duration-300",
         isCollapsed ? "pl-20" : "pl-60"
       )}>
-        <Header />
-        <main className="pt-16">
-          <div className="px-8 py-8">
+        <main className="bg-background">
+          <div className="px-8 py-6">
             <Outlet />
           </div>
         </main>
@@ -28,7 +30,10 @@ function AppLayoutContent() {
 export function AppLayout() {
   return (
     <SidebarProvider>
-      <AppLayoutContent />
+      <ToastProvider>
+        <AppLayoutContent />
+        <ToastViewport />
+      </ToastProvider>
     </SidebarProvider>
   )
 }

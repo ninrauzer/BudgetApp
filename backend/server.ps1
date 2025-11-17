@@ -10,7 +10,7 @@ param(
 
 $PORT = 8000
 $VENV_PATH = "E:\Desarrollo\BudgetApp\.venv\Scripts\Activate.ps1"
-$PROJECT_DIR = "E:\Desarrollo\BudgetApp"
+$PROJECT_DIR = "E:\Desarrollo\BudgetApp\backend"
 
 function Show-Banner {
     Write-Host ""

@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Plus, Edit2, Trash2, X, Check } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { useToast } from '@/components/toast/ToastContext';
+import { Plus, Edit2, Trash2, X, Check, Calendar, TrendingUp } from 'lucide-react';
 import type { Category } from '../lib/api';
 import CategoryIcon from './CategoryIcon';
 import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../lib/hooks/useApi';
@@ -16,9 +17,10 @@ const ICON_OPTIONS = [
 
 interface CategoryFormData {
   name: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'saving';
   icon: string;
   description?: string;
+  expense_type?: 'fixed' | 'variable';
 }
 
 export default function CategoryCRUD() {
@@ -34,11 +36,14 @@ export default function CategoryCRUD() {
     name: '',
     type: 'expense',
     icon: 'tag',
-    description: ''
+    description: '',
+    expense_type: 'variable'
   });
+  const formRef = useRef<HTMLDivElement | null>(null);
+  const { pushToast } = useToast();
 
   const handleStartAdd = () => {
-    setFormData({ name: '', type: 'expense', icon: 'tag', description: '' });
+    setFormData({ name: '', type: 'expense', icon: 'tag', description: '', expense_type: 'variable' });
     setIsAdding(true);
     setEditingId(null);
   };
@@ -46,9 +51,10 @@ export default function CategoryCRUD() {
   const handleStartEdit = (category: Category) => {
     setFormData({
       name: category.name,
-      type: category.type,
+      type: category.type as 'income' | 'expense' | 'saving',
       icon: category.icon || 'tag',
-      description: category.description || ''
+      description: (category as any).description || '',
+      expense_type: category.type === 'expense' ? (category as any).expense_type : undefined
     });
     setEditingId(category.id);
     setIsAdding(false);
@@ -58,17 +64,20 @@ export default function CategoryCRUD() {
     if (!formData.name.trim()) return;
 
     try {
+      const payload: any = { ...formData };
+      if (payload.type !== 'expense') delete payload.expense_type; // limpiar si no aplica
       if (editingId) {
-        await updateMutation.mutateAsync({
-          id: editingId,
-          data: formData
-        });
+        await updateMutation.mutateAsync({ id: editingId, data: payload });
+        pushToast({ title: 'Categoría actualizada', message: `Se guardó ${payload.name}`, type: 'success' });
       } else {
-        await createMutation.mutateAsync(formData as any);
+        await createMutation.mutateAsync(payload);
+        pushToast({ title: 'Categoría creada', message: `Se creó ${payload.name}`, type: 'success' });
       }
-      handleCancel();
+      // Pequeño delay para permitir refetch antes de cerrar
+      setTimeout(() => handleCancel(), 50);
     } catch (error) {
       console.error('Error saving category:', error);
+      pushToast({ title: 'Error', message: 'No se pudo guardar la categoría', type: 'error' });
     }
   };
 
@@ -89,12 +98,20 @@ export default function CategoryCRUD() {
   const handleCancel = () => {
     setIsAdding(false);
     setEditingId(null);
-    setFormData({ name: '', type: 'expense', icon: 'tag', description: '' });
+    setFormData({ name: '', type: 'expense', icon: 'tag', description: '', expense_type: 'variable' });
   };
 
-  if (isLoading) {
-    return <div className="text-center py-8 text-text-secondary">Cargando categorías...</div>;
-  }
+  // Auto scroll when starting add or edit (must be before any conditional returns to keep hook order stable)
+  useEffect(() => {
+    if ((isAdding || editingId) && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [isAdding, editingId]);
+
+  // Loading state rendered inline (avoid early return after hooks)
+  const loadingBlock = isLoading && (
+    <div className="text-center py-8 text-text-secondary">Cargando categorías...</div>
+  );
 
   return (
     <div>
@@ -115,10 +132,11 @@ export default function CategoryCRUD() {
       </div>
 
       {/* Add/Edit Form */}
-      {(isAdding || editingId) && (
-        <div className="bg-gradient-to-br from-primary/10 to-blue-500/10 border-2 border-primary/30 rounded-2xl p-6 mb-4">
+      {loadingBlock}
+      {(isAdding || editingId) && !isLoading && (
+        <div ref={formRef} className="bg-gradient-to-br from-primary/10 to-blue-500/10 border-2 border-primary/30 rounded-2xl p-6 mb-4">
           <h3 className="font-bold text-text-primary mb-4">
-            {editingId ? 'Editar Categoría' : 'Nueva Categoría'}
+            {editingId ? 'Editando Categoría' : 'Nueva Categoría'}
           </h3>
           
           <div className="space-y-4">
@@ -141,10 +159,10 @@ export default function CategoryCRUD() {
               <label className="block text-sm font-medium text-text-secondary mb-2">
                 Tipo *
               </label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <button
-                  onClick={() => setFormData({ ...formData, type: 'expense' })}
-                  className={`flex-1 px-4 py-3 rounded-xl font-bold transition-all ${
+                  onClick={() => setFormData(prev => ({ ...prev, type: 'expense', expense_type: prev.expense_type || 'variable' }))}
+                  className={`px-4 py-3 rounded-xl font-bold transition-all ${
                     formData.type === 'expense'
                       ? 'bg-red-500 text-white shadow-button'
                       : 'bg-surface border-2 border-border text-text-secondary hover:border-primary/50'
@@ -153,14 +171,24 @@ export default function CategoryCRUD() {
                   Gasto
                 </button>
                 <button
-                  onClick={() => setFormData({ ...formData, type: 'income' })}
-                  className={`flex-1 px-4 py-3 rounded-xl font-bold transition-all ${
+                  onClick={() => setFormData(prev => ({ ...prev, type: 'income', expense_type: undefined }))}
+                  className={`px-4 py-3 rounded-xl font-bold transition-all ${
                     formData.type === 'income'
                       ? 'bg-emerald-500 text-white shadow-button'
                       : 'bg-surface border-2 border-border text-text-secondary hover:border-primary/50'
                   }`}
                 >
                   Ingreso
+                </button>
+                <button
+                  onClick={() => setFormData(prev => ({ ...prev, type: 'saving', expense_type: undefined }))}
+                  className={`px-4 py-3 rounded-xl font-bold transition-all ${
+                    formData.type === 'saving'
+                      ? 'bg-amber-500 text-white shadow-button'
+                      : 'bg-surface border-2 border-border text-text-secondary hover:border-primary/50'
+                  }`}
+                >
+                  Ahorro
                 </button>
               </div>
             </div>
@@ -208,6 +236,49 @@ export default function CategoryCRUD() {
                 placeholder="Descripción adicional..."
               />
             </div>
+            {/* Expense Type (only for expense categories) */}
+            {formData.type === 'expense' && (
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Tipo de Gasto
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, expense_type: 'fixed' }))}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                      formData.expense_type === 'fixed'
+                        ? 'border-blue-600 bg-blue-600/10 text-blue-700'
+                        : 'border-border bg-surface hover:border-blue-400'
+                    }`}
+                  >
+                    <Calendar className="w-5 h-5" />
+                    <div className="text-center">
+                      <p className="font-semibold text-sm">Fijo</p>
+                      <p className="text-[11px] text-text-secondary">Recurrente y predecible</p>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, expense_type: 'variable' }))}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                      formData.expense_type === 'variable'
+                        ? 'border-orange-500 bg-orange-500/10 text-orange-600'
+                        : 'border-border bg-surface hover:border-orange-400'
+                    }`}
+                  >
+                    <TrendingUp className="w-5 h-5" />
+                    <div className="text-center">
+                      <p className="font-semibold text-sm">Variable</p>
+                      <p className="text-[11px] text-text-secondary">Ocasional o controlable</p>
+                    </div>
+                  </button>
+                </div>
+                <p className="mt-2 text-[11px] text-text-secondary">
+                  Esto afecta el orden y análisis en la vista anual de presupuesto.
+                </p>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-3 pt-2">
@@ -231,65 +302,107 @@ export default function CategoryCRUD() {
         </div>
       )}
 
-      {/* Categories List */}
-      <div className="space-y-2">
-        {categories.map((category) => (
-          <div
-            key={category.id}
-            className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
-              editingId === category.id
-                ? 'bg-primary/5 border-primary shadow-sm'
-                : 'bg-surface-soft border-border hover:border-primary/30'
-            }`}
-          >
-            <div className="flex items-center gap-4 flex-1">
-              <div className={`p-3 rounded-xl ${
-                category.type === 'income'
-                  ? 'bg-emerald-100 text-emerald-600'
-                  : 'bg-red-100 text-red-600'
-              }`}>
-                <CategoryIcon iconName={category.icon || 'tag'} size={24} />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-bold text-text-primary">{category.name}</h4>
-                <div className="flex items-center gap-3 text-sm text-text-secondary">
-                  <span className={`px-2 py-0.5 rounded-md font-medium ${
-                    category.type === 'income'
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-red-100 text-red-700'
-                  }`}>
-                    {category.type === 'income' ? 'Ingreso' : 'Gasto'}
-                  </span>
-                  {category.description && (
-                    <span className="italic">{category.description}</span>
-                  )}
+      {/* Categories List agrupadas */}
+      <div className="space-y-6">
+        {(() => {
+          const income = categories.filter(c => c.type === 'income');
+          const expensesFixed = categories.filter(c => c.type === 'expense' && (c as any).expense_type === 'fixed');
+          const expensesVariable = categories.filter(c => c.type === 'expense' && (c as any).expense_type === 'variable');
+          const expensesUnspecified = categories.filter(c => c.type === 'expense' && !(c as any).expense_type);
+          const savings = categories.filter(c => c.type === 'saving');
+
+          const section = (title: string, items: Category[], colorClasses: string) => (
+            items.length > 0 && (
+              <div>
+                <h3 className={`text-xs font-bold uppercase tracking-wide mb-2 ${colorClasses}`}>{title}</h3>
+                <div className="space-y-2">
+                  {items.map(category => (
+                    <div
+                      key={category.id}
+                      className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
+                        editingId === category.id
+                          ? 'bg-primary/5 border-primary shadow-sm'
+                          : 'bg-surface-soft border-border hover:border-primary/30'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className={`p-3 rounded-xl ${
+                          category.type === 'income'
+                            ? 'bg-emerald-100 text-emerald-600'
+                            : category.type === 'saving'
+                              ? 'bg-amber-100 text-amber-600'
+                              : 'bg-red-100 text-red-600'
+                        }`}>
+                          <CategoryIcon iconName={category.icon || 'tag'} size={24} />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-text-primary flex items-center gap-2">
+                            {category.name}
+                            {category.type === 'expense' && (category as any).expense_type && (
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                                (category as any).expense_type === 'fixed'
+                                  ? 'bg-blue-50 text-blue-600 border-blue-200'
+                                  : 'bg-orange-50 text-orange-600 border-orange-200'
+                              }`}>
+                                {(category as any).expense_type === 'fixed' ? 'Fijo' : 'Variable'}
+                              </span>
+                            )}
+                            {category.type === 'expense' && !(category as any).expense_type && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-slate-50 text-slate-600 border-slate-200">Sin tipo</span>
+                            )}
+                          </h4>
+                          <div className="flex items-center gap-3 text-sm text-text-secondary">
+                            <span className={`px-2 py-0.5 rounded-md font-medium ${
+                              category.type === 'income'
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : category.type === 'saving'
+                                  ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-red-100 text-red-700'
+                            }`}>
+                              {category.type === 'income' ? 'Ingreso' : category.type === 'saving' ? 'Ahorro' : 'Gasto'}
+                            </span>
+                            {(category as any).description && (
+                              <span className="italic truncate max-w-[200px]" title={(category as any).description}>{(category as any).description}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleStartEdit(category)}
+                          className="p-2 rounded-lg bg-surface hover:bg-blue-50 text-blue-600 hover:text-blue-700 border border-border hover:border-blue-300 transition-all"
+                          title="Editar"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(category.id)}
+                          className={`p-2 rounded-lg transition-all ${
+                            deleteConfirm === category.id
+                              ? 'bg-red-500 text-white shadow-button'
+                              : 'bg-surface hover:bg-red-50 text-red-600 hover:text-red-700 border border-border hover:border-red-300'
+                          }`}
+                          title={deleteConfirm === category.id ? 'Confirmar eliminación' : 'Eliminar'}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleStartEdit(category)}
-                className="p-2 rounded-lg bg-surface hover:bg-blue-50 text-blue-600 hover:text-blue-700 border border-border hover:border-blue-300 transition-all"
-                title="Editar"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleDelete(category.id)}
-                className={`p-2 rounded-lg transition-all ${
-                  deleteConfirm === category.id
-                    ? 'bg-red-500 text-white shadow-button'
-                    : 'bg-surface hover:bg-red-50 text-red-600 hover:text-red-700 border border-border hover:border-red-300'
-                }`}
-                title={deleteConfirm === category.id ? 'Confirmar eliminación' : 'Eliminar'}
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        ))}
+            )
+          );
+          return (
+            <>
+              {section('Ingresos', income, 'text-emerald-600')}
+              {section('Gastos Fijos', expensesFixed, 'text-blue-600')}
+              {section('Gastos Variables', expensesVariable, 'text-orange-600')}
+              {section('Gastos Sin Tipo', expensesUnspecified, 'text-slate-600')}
+              {section('Ahorros', savings, 'text-amber-600')}
+            </>
+          );
+        })()}
       </div>
 
       {categories.length === 0 && !isAdding && (

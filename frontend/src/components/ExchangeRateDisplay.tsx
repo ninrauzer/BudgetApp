@@ -57,11 +57,11 @@ export default function ExchangeRateDisplay({ currency, date, amount }: Exchange
           {!loading && !error && rate && (
             <div>
               <p className="font-bold text-primary">
-                💱 Tipo de cambio: S/ {rate.toFixed(4)} por dólar
+                💱 Tipo de cambio: {rate.toFixed(4)} PEN por USD
               </p>
               {amount > 0 && (
                 <p className="text-text-secondary mt-1">
-                  ${amount.toFixed(2)} USD <strong className="text-text-primary">≈ S/ {converted}</strong>
+                  {amount.toFixed(2)} USD <strong className="text-text-primary">≈ {converted} PEN</strong>
                 </p>
               )}
             </div>

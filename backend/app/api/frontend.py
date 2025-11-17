@@ -31,7 +31,7 @@ async def dashboard_summary_partial(
         end_date = date(year, month + 1, 1)
     
     # Ingresos
-    income = db.query(func.sum(Transaction.amount)).filter(
+    income = db.query(func.sum(Transaction.amount_pen)).filter(
         and_(
             Transaction.date >= start_date,
             Transaction.date < end_date,
@@ -41,7 +41,7 @@ async def dashboard_summary_partial(
     ).scalar() or 0.0
     
     # Gastos
-    expenses = db.query(func.sum(Transaction.amount)).filter(
+    expenses = db.query(func.sum(Transaction.amount_pen)).filter(
         and_(
             Transaction.date >= start_date,
             Transaction.date < end_date,
@@ -51,7 +51,7 @@ async def dashboard_summary_partial(
     ).scalar() or 0.0
     
     # Ahorros
-    savings = db.query(func.sum(Transaction.amount)).filter(
+    savings = db.query(func.sum(Transaction.amount_pen)).filter(
         and_(
             Transaction.date >= start_date,
             Transaction.date < end_date,
@@ -218,7 +218,7 @@ async def category_summary_partial(db: Session = Depends(get_db)):
     summary = db.query(
         Category.name,
         Category.type,
-        func.sum(Transaction.amount).label('total')
+        func.sum(Transaction.amount_pen).label('total')
     ).join(Transaction).filter(
         Transaction.status == 'completed'
     ).group_by(Category.id, Category.name, Category.type).all()
@@ -331,7 +331,7 @@ async def budget_load_partial(
     actual_map = {}
     transactions = db.query(
         Transaction.category_id,
-        func.sum(Transaction.amount).label('total')
+        func.sum(Transaction.amount_pen).label('total')
     ).filter(
         and_(
             Transaction.date >= start_date,
@@ -648,7 +648,7 @@ async def analysis_data(
         budget_amount = budget_plan.amount if budget_plan else 0.0
         
         # Obtener transacciones trackeadas
-        tracked_amount = db.query(func.sum(Transaction.amount)).filter(
+        tracked_amount = db.query(func.sum(Transaction.amount_pen)).filter(
             and_(
                 Transaction.category_id == cat.id,
                 Transaction.date >= start_date,

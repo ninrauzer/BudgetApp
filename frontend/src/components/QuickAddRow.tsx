@@ -41,7 +41,10 @@ export default function QuickAddRow({ onSave, categories, accounts, recentTransa
     
     const desc = description.toLowerCase();
     const similar = recentTransactions.find(t => 
-      t.description.toLowerCase().includes(desc) || desc.includes(t.description.toLowerCase())
+      t.description && (
+        t.description.toLowerCase().includes(desc) || 
+        desc.includes(t.description.toLowerCase())
+      )
     );
 
     if (similar) {
@@ -230,8 +233,8 @@ export default function QuickAddRow({ onSave, categories, accounts, recentTransa
           onKeyDown={handleKeyDown}
           className="w-full bg-white border-2 border-border/50 rounded-2xl px-4 py-2.5 text-sm font-bold text-text-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
         >
-          <option value="PEN">S/</option>
-          <option value="USD">$</option>
+          <option value="PEN">PEN</option>
+          <option value="USD">USD</option>
         </select>
       </td>
 

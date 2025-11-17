@@ -22,6 +22,8 @@ class Category(Base):
     parent_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     icon = Column(String, nullable=True)
     color = Column(String, nullable=True)
+    description = Column(String, nullable=True)  # Added: textual description
+    expense_type = Column(String, nullable=True)  # 'fixed', 'variable' (only for expense categories)
     is_active = Column(Boolean, default=True, nullable=False)  # Soft delete flag
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

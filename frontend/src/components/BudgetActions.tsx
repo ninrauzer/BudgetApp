@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Copy, Trash2, X, Loader2, Calendar } from 'lucide-react';
 import { useCopyCycle, useClearCycle } from '@/lib/hooks/useApi';
+import { useToast } from '@/components/toast/ToastContext';
 
 interface BudgetActionsProps {
   currentCycle: string;
@@ -19,22 +20,34 @@ export default function BudgetActions({ currentCycle, onSuccess }: BudgetActions
 
   const copyCycle = useCopyCycle();
   const clearCycle = useClearCycle();
+  const { pushToast } = useToast();
+  const [overwrite, setOverwrite] = useState(false);
 
   // Handle copy cycle
   const handleCopy = async () => {
     if (selectedCycles.length === 0) return;
-
-    try {
-      await copyCycle.mutateAsync({
-        sourceCycle: currentCycle,
-        targetCycles: selectedCycles,
-      });
-      setShowCopyModal(false);
-      setSelectedCycles([]);
-      onSuccess?.();
-    } catch (error) {
-      console.error('Error copying cycle:', error);
-    }
+    copyCycle.mutate(
+      { sourceCycle: currentCycle, targetCycles: selectedCycles, overwrite },
+      {
+        onSuccess: (res: any) => {
+          pushToast({
+            title: 'Ciclo copiado',
+            message: `Copiados: ${res.copied} · Omitidos: ${res.skipped} (${selectedCycles.length} destino${selectedCycles.length>1?'s':''})`,
+            type: 'success'
+          });
+          setShowCopyModal(false);
+          setSelectedCycles([]);
+          onSuccess?.();
+        },
+        onError: () => {
+          pushToast({
+            title: 'Error al copiar',
+            message: 'Revisa la conexión o intenta nuevamente.',
+            type: 'error'
+          });
+        }
+      }
+    );
   };
 
   // Handle clear cycle
@@ -104,7 +117,8 @@ export default function BudgetActions({ currentCycle, onSuccess }: BudgetActions
             {/* Content */}
             <div className="p-6 overflow-y-auto max-h-[50vh]">
               <p className="text-sm text-text-secondary mb-4">
-                Selecciona los ciclos destino donde quieres copiar el presupuesto de <strong>{currentCycle}</strong>:
+                Selecciona los ciclos destino donde quieres copiar el presupuesto de <strong>{currentCycle}</strong>.
+                Puedes elegir sobreescribir si ya existe.
               </p>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -124,13 +138,24 @@ export default function BudgetActions({ currentCycle, onSuccess }: BudgetActions
                 ))}
               </div>
 
-              {selectedCycles.length > 0 && (
-                <div className="mt-4 p-3 bg-success/5 border border-success/20 rounded-lg">
-                  <p className="text-sm text-success">
-                    ✓ {selectedCycles.length} ciclo{selectedCycles.length > 1 ? 's' : ''} seleccionado{selectedCycles.length > 1 ? 's' : ''}
-                  </p>
-                </div>
-              )}
+              <div className="mt-4 flex flex-col gap-3">
+                {selectedCycles.length > 0 && (
+                  <div className="p-3 bg-success/5 border border-success/20 rounded-lg">
+                    <p className="text-sm text-success">
+                      ✓ {selectedCycles.length} ciclo{selectedCycles.length > 1 ? 's' : ''} seleccionado{selectedCycles.length > 1 ? 's' : ''}
+                    </p>
+                  </div>
+                )}
+                <label className="flex items-center gap-2 text-sm font-semibold text-text-secondary">
+                  <input
+                    type="checkbox"
+                    checked={overwrite}
+                    onChange={e => setOverwrite(e.target.checked)}
+                    className="w-4 h-4 rounded border-border accent-info"
+                  />
+                  Sobrescribir categorías existentes en ciclos destino
+                </label>
+              </div>
             </div>
 
             {/* Footer */}

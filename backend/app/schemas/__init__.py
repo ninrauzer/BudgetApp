@@ -47,6 +47,19 @@ from app.schemas.common import (
     PaginationMeta,
     PaginatedResponse,
 )
+from app.schemas.loan import (
+    LoanBase,
+    LoanCreate,
+    LoanUpdate,
+    LoanResponse,
+    LoanSummary,
+    LoanPaymentCreate,
+    LoanPaymentResponse,
+    SimulationRequest,
+    SimulationResponse,
+    DebtDashboard,
+    AmortizationSchedule,
+)
 
 __all__ = [
     # Category
@@ -88,4 +101,16 @@ __all__ = [
     "ErrorResponse",
     "PaginationMeta",
     "PaginatedResponse",
+    # Loan
+    "LoanBase",
+    "LoanCreate",
+    "LoanUpdate",
+    "LoanResponse",
+    "LoanSummary",
+    "LoanPaymentCreate",
+    "LoanPaymentResponse",
+    "SimulationRequest",
+    "SimulationResponse",
+    "DebtDashboard",
+    "AmortizationSchedule",
 ]

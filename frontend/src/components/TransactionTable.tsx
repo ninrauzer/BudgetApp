@@ -1,4 +1,4 @@
-import { Pencil, Trash2, TrendingUp, TrendingDown, Copy } from 'lucide-react';
+import { Pencil, Trash2, TrendingUp, TrendingDown, Copy, StickyNote } from 'lucide-react';
 import type { TransactionWithDetails } from '../lib/api';
 import CategoryIcon from './CategoryIcon';
 import type { ReactNode } from 'react';
@@ -11,6 +11,8 @@ interface TransactionTableProps {
   onDuplicate?: (transaction: TransactionWithDetails) => void;
   deleteConfirm?: number | null;
   quickAddRow?: ReactNode;
+  applyDemoScale?: (amount: number) => number;
+  obfuscateDescription?: (description: string, categoryName?: string) => string;
 }
 
 export default function TransactionTable({ 
@@ -20,7 +22,9 @@ export default function TransactionTable({
   onDelete,
   onDuplicate,
   deleteConfirm,
-  quickAddRow
+  quickAddRow,
+  applyDemoScale = (amount) => amount,
+  obfuscateDescription = (desc) => desc
 }: TransactionTableProps) {
   if (isLoading) {
     return (
@@ -90,10 +94,18 @@ export default function TransactionTable({
                   })}
                 </td>
                 <td className="px-6 py-4">
-                  <div className="flex flex-col">
-                    <span className="text-text-primary font-semibold text-sm">{transaction.description}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-text-primary font-semibold text-sm">{obfuscateDescription(transaction.description, transaction.category_name)}</span>
                     {transaction.notes && (
-                      <span className="text-text-muted text-xs mt-0.5">{transaction.notes}</span>
+                      <div className="group relative">
+                        <StickyNote className="w-4 h-4 text-amber-600/70 hover:text-amber-500 cursor-help transition-colors" />
+                        <div className="absolute left-0 top-6 z-50 hidden group-hover:block">
+                          <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 shadow-lg whitespace-nowrap max-w-xs">
+                            {obfuscateDescription(transaction.notes, transaction.category_name)}
+                            <div className="absolute -top-1 left-2 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </td>
@@ -101,6 +113,22 @@ export default function TransactionTable({
                   <div className="flex items-center gap-2">
                     <CategoryIcon iconName={transaction.category_icon} className="text-purple-500" size={18} />
                     <span className="text-text-primary font-medium text-sm">{transaction.category_name || '-'}</span>
+                    {transaction.type === 'expense' && transaction.category_expense_type && (
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                          transaction.category_expense_type === 'fixed'
+                            ? 'bg-blue-50 text-blue-600 border-blue-200'
+                            : 'bg-orange-50 text-orange-600 border-orange-200'
+                        }`}
+                        title={
+                          transaction.category_expense_type === 'fixed'
+                            ? 'Gasto fijo recurrente'
+                            : 'Gasto variable / controlable'
+                        }
+                      >
+                        {transaction.category_expense_type === 'fixed' ? 'Fijo' : 'Variable'}
+                      </span>
+                    )}
                   </div>
                 </td>
                 <td className="px-6 py-4">
@@ -112,7 +140,7 @@ export default function TransactionTable({
                       ? 'text-emerald-500' 
                       : 'text-red-500'
                   }`}>
-                    {transaction.type === 'income' ? '+' : '-'} {transaction.currency === 'USD' ? '$' : 'S/'}{Math.abs(transaction.amount).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {transaction.type === 'income' ? '+' : '-'} {applyDemoScale(Math.abs(transaction.amount)).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {transaction.currency}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-center">
@@ -121,7 +149,7 @@ export default function TransactionTable({
                       ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' 
                       : 'bg-primary/10 text-primary border border-primary/20'
                   }`}>
-                    {transaction.currency === 'USD' ? '$ USD' : 'S/ PEN'}
+                    {transaction.currency === 'USD' ? 'USD' : 'PEN'}
                   </span>
                 </td>
                 <td className="px-6 py-4">

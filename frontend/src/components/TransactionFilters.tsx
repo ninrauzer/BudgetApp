@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Search, Filter, X, Calendar } from 'lucide-react';
 import type { TransactionFilters } from '../lib/api';
 import type { Category, Account } from '../lib/api';
@@ -207,10 +207,10 @@ export default function TransactionFiltersComponent({
                 value={filters.category_id || ''}
                 onChange={(e) => handleFilterChange('category_id', e.target.value ? Number(e.target.value) : undefined)}
               >
-                <option value="">Todas</option>
+                <option value="">Todas las categorías</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
-                    {cat.icon} {cat.name}
+                    {cat.name}
                   </option>
                 ))}
               </select>

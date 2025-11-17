@@ -47,6 +47,9 @@ def list_categories(
     elif parent_id == "null":  # For root categories
         query = query.filter(Category.parent_id.is_(None))
     
+    # Order alphabetically by name for consistent display
+    query = query.order_by(Category.name)
+    
     categories = query.all()
     return categories
 

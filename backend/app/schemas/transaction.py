@@ -18,6 +18,7 @@ class TransactionBase(BaseModel):
     description: Optional[str] = Field(None, max_length=200)
     notes: Optional[str] = None
     status: Literal["pending", "completed", "cancelled"] = "completed"
+    loan_id: Optional[int] = None  # Link to loan for payment tracking
 
 
 class TransactionCreate(TransactionBase):
@@ -44,6 +45,7 @@ class TransactionResponse(BaseModel):
     category_name: str
     category_type: str
     category_icon: Optional[str] = None
+    category_expense_type: Optional[Literal['fixed','variable']] = None  # Derived from category.expense_type for expense categories
     account_id: int
     account_name: str
     amount: float
@@ -54,6 +56,7 @@ class TransactionResponse(BaseModel):
     description: Optional[str] = None
     notes: Optional[str] = None
     status: Literal["pending", "completed", "cancelled"]
+    loan_id: Optional[int] = None  # Link to loan for payment tracking
     created_at: datetime
     updated_at: datetime
 

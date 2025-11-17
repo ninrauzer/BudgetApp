@@ -28,10 +28,15 @@ app = FastAPI(
 )
 
 # Configure CORS (Allow React dev server and production)
-origins = os.getenv(
-    "ALLOWED_ORIGINS", 
-    "http://localhost:3000,http://localhost:5173,http://localhost:8000"
-).split(",")
+# Default local origins
+default_origins = "http://localhost:3000,http://localhost:5173,http://localhost:5174,http://localhost:8000,http://localhost"
+
+# Add Render.com frontend if deployed
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    default_origins += f",{frontend_url},https://budgetapp-frontend.onrender.com"
+
+origins = os.getenv("ALLOWED_ORIGINS", default_origins).split(",")
 
 app.add_middleware(
     CORSMiddleware,
@@ -43,10 +48,12 @@ app.add_middleware(
 
 
 # Health check endpoint
+@app.get("/api/health", tags=["Health"])
 @app.get("/health", tags=["Health"])
 async def health_check():
     """
     Health check endpoint to verify API is running.
+    Available at both /health and /api/health for Docker compatibility.
     """
     return JSONResponse(
         content={
@@ -89,12 +96,15 @@ from app.api import (
     data_management,
     quick_templates,
     billing_cycle,
-    analysis
+    analysis,
+    transfers,
+    loans
 )
 
 app.include_router(categories.router)
 app.include_router(accounts.router)
 app.include_router(transactions.router)
+app.include_router(transfers.router)
 app.include_router(budget_plans.router)
 app.include_router(dashboard.router)
 app.include_router(exchange_rate.router)
@@ -103,8 +113,34 @@ app.include_router(data_management.router)
 app.include_router(quick_templates.router)
 app.include_router(billing_cycle.router)
 app.include_router(analysis.router)
+app.include_router(loans.router)  # Debt management
 app.include_router(frontend.router)  # Keep for legacy HTMX if needed
 
+
+from fastapi.staticfiles import StaticFiles
+
+# Safe static mounting: only mount first existing candidate to prevent runtime crash
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+STATIC_CANDIDATES = [
+    os.path.join(os.path.dirname(__file__), 'static'),                 # backend/app/static
+    os.path.join(PROJECT_ROOT, 'frontend', 'dist'),                    # vite build output
+    os.path.join(PROJECT_ROOT, 'frontend', 'public'),                  # public assets
+    os.path.join(PROJECT_ROOT, 'app', 'static'),                       # legacy root/app/static
+]
+
+for static_dir in STATIC_CANDIDATES:
+    if os.path.isdir(static_dir):
+        try:
+            app.mount('/static', StaticFiles(directory=static_dir), name='static')
+            if DEBUG:
+                print(f"[static] Mounted from {static_dir}")
+        except Exception as e:
+            if DEBUG:
+                print(f"[static] Failed to mount {static_dir}: {e}")
+        break
+else:
+    if DEBUG:
+        print(f"[static] No static directory found. Candidates: {STATIC_CANDIDATES}")
 
 if __name__ == "__main__":
     import uvicorn

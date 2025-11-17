@@ -53,7 +53,7 @@ def get_analysis_by_category(
         Category.name,
         Category.icon,
         Category.type,
-        func.sum(Transaction.amount).label('total'),
+        func.sum(Transaction.amount_pen).label('total'),
         func.count(Transaction.id).label('count')
     ).join(
         Transaction, Transaction.category_id == Category.id
@@ -69,7 +69,7 @@ def get_analysis_by_category(
         query = query.filter(Transaction.type == transaction_type)
     
     # Group and order
-    results = query.group_by(Category.id).order_by(func.sum(Transaction.amount).desc()).all()
+    results = query.group_by(Category.id).order_by(func.sum(Transaction.amount_pen).desc()).all()
     
     return [
         {
@@ -107,7 +107,7 @@ def get_trends(
         period_end = datetime.strptime(cycle_info["end_date"], "%Y-%m-%d").date()
         
         # Get income total
-        income_total = db.query(func.sum(Transaction.amount)).filter(
+        income_total = db.query(func.sum(Transaction.amount_pen)).filter(
             and_(
                 Transaction.date >= period_start,
                 Transaction.date <= period_end,
@@ -116,7 +116,7 @@ def get_trends(
         ).scalar() or 0.0
         
         # Get expense total
-        expense_total = db.query(func.sum(Transaction.amount)).filter(
+        expense_total = db.query(func.sum(Transaction.amount_pen)).filter(
             and_(
                 Transaction.date >= period_start,
                 Transaction.date <= period_end,
@@ -161,7 +161,7 @@ def get_analysis_summary(
         period_end = datetime.strptime(cycle_info["end_date"], "%Y-%m-%d").date()
     
     # Total income
-    total_income = db.query(func.sum(Transaction.amount)).filter(
+    total_income = db.query(func.sum(Transaction.amount_pen)).filter(
         and_(
             Transaction.date >= period_start,
             Transaction.date <= period_end,
@@ -170,7 +170,7 @@ def get_analysis_summary(
     ).scalar() or 0.0
     
     # Total expense
-    total_expense = db.query(func.sum(Transaction.amount)).filter(
+    total_expense = db.query(func.sum(Transaction.amount_pen)).filter(
         and_(
             Transaction.date >= period_start,
             Transaction.date <= period_end,

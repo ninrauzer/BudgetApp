@@ -8,6 +8,7 @@ export interface Transaction {
   category_id: number;
   account_id: number;
   budget_plan_id?: number;
+  loan_id?: number;
   notes?: string;
   currency?: 'PEN' | 'USD';
   exchange_rate?: number;
@@ -20,6 +21,7 @@ export interface TransactionWithDetails extends Transaction {
   account_name: string;
   category_type?: string;
   category_icon?: string;
+  category_expense_type?: 'fixed' | 'variable';
 }
 
 export interface Account {
@@ -35,16 +37,58 @@ export interface Account {
   updated_at: string;
 }
 
+// Transfers
+export interface TransferCreate {
+  from_account_id: number;
+  to_account_id: number;
+  amount: number;
+  date: string; // YYYY-MM-DD
+  description?: string;
+}
+
+export interface TransferResponse {
+  transfer_id: string;
+  from_transaction_id: number;
+  to_transaction_id: number;
+  from_account_name: string;
+  to_account_name: string;
+  amount: number;
+  date: string;
+  description?: string;
+}
+
+export interface TransferDetail {
+  transfer_id: string;
+  from_account: { id: number; name: string; currency: string };
+  to_account: { id: number; name: string; currency: string };
+  amount: number;
+  date: string;
+  description?: string;
+  withdrawal_transaction: { id: number; amount: number; date: string };
+  deposit_transaction: { id: number; amount: number; date: string };
+}
+
 export interface Category {
   id: number;
   name: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'saving';
   icon?: string;
   color?: string;
+  expense_type?: 'fixed' | 'variable';
   description?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface BudgetCopyResult {
+  success: boolean;
+  copied?: number;
+  skipped?: number;
+  created?: number;
+  updated?: number;
+  source_year?: number;
+  target_year?: number;
 }
 
 export interface QuickTemplate {
@@ -78,6 +122,7 @@ export interface BudgetCellUpdate {
   cycle_name: string;
   category_id: number;
   amount: number;
+  notes?: string;
 }
 
 export interface BulkBudgetUpdate {
@@ -85,6 +130,7 @@ export interface BulkBudgetUpdate {
   budgets: Array<{
     category_id: number;
     amount: number;
+    notes?: string;
   }>;
 }
 
@@ -126,8 +172,15 @@ export interface BudgetComparison {
 }
 
 export interface AnnualBudgetGrid {
-  [cycleName: string]: {
-    [categoryId: string]: number;
+  amounts: {
+    [cycleName: string]: {
+      [categoryId: string]: number;
+    };
+  };
+  notes: {
+    [cycleName: string]: {
+      [categoryId: string]: string;
+    };
   };
 }
 

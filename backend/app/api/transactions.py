@@ -13,6 +13,7 @@ from app.db.database import get_db
 from app.models.transaction import Transaction
 from app.models.category import Category
 from app.models.account import Account
+from app.models.loan import Loan
 from app.schemas.transaction import (
     TransactionCreate,
     TransactionUpdate,
@@ -86,6 +87,7 @@ def list_transactions(
             "category_name": tx.category.name,
             "category_type": tx.category.type,
             "category_icon": tx.category.icon,
+            "category_expense_type": getattr(tx.category, 'expense_type', None),
             "account_id": tx.account_id,
             "account_name": tx.account.name,
             "amount": tx.amount,
@@ -96,6 +98,7 @@ def list_transactions(
             "description": tx.description,
             "notes": tx.notes,
             "status": tx.status,
+            "loan_id": tx.loan_id,
             "created_at": tx.created_at,
             "updated_at": tx.updated_at,
         }
@@ -122,6 +125,7 @@ def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
         category_name=transaction.category.name,
         category_type=transaction.category.type,
         category_icon=transaction.category.icon,
+        category_expense_type=getattr(transaction.category, 'expense_type', None),
         account_id=transaction.account_id,
         account_name=transaction.account.name,
         amount=transaction.amount,
@@ -132,6 +136,7 @@ def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
         description=transaction.description,
         notes=transaction.notes,
         status=transaction.status,
+        loan_id=transaction.loan_id,
         created_at=transaction.created_at,
         updated_at=transaction.updated_at,
     )
@@ -186,6 +191,19 @@ async def create_transaction(transaction: TransactionCreate, db: Session = Depen
         exchange_rate = await get_exchange_rate(transaction.date)
         amount_pen = convert_to_pen(transaction.amount, exchange_rate)
     
+    # Validate loan_id if provided and update loan's current_debt
+    if transaction.loan_id is not None:
+        loan = db.query(Loan).filter(Loan.id == transaction.loan_id).first()
+        if not loan:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Loan with id {transaction.loan_id} not found"
+            )
+        
+        # Decrease current_debt by the payment amount (in PEN)
+        # Assuming the payment reduces the debt directly
+        loan.current_debt = max(0, loan.current_debt - amount_pen)
+    
     # Create transaction with all fields
     db_transaction = Transaction(
         date=transaction.date,
@@ -199,6 +217,7 @@ async def create_transaction(transaction: TransactionCreate, db: Session = Depen
         description=transaction.description,
         notes=transaction.notes,
         status=transaction.status,
+        loan_id=transaction.loan_id,
     )
     
     db.add(db_transaction)
@@ -212,6 +231,7 @@ async def create_transaction(transaction: TransactionCreate, db: Session = Depen
         category_name=category.name,
         category_type=category.type,
         category_icon=category.icon,
+        category_expense_type=getattr(category, 'expense_type', None),
         account_id=db_transaction.account_id,
         account_name=account.name,
         amount=db_transaction.amount,
@@ -222,6 +242,7 @@ async def create_transaction(transaction: TransactionCreate, db: Session = Depen
         description=db_transaction.description,
         notes=db_transaction.notes,
         status=db_transaction.status,
+        loan_id=db_transaction.loan_id,
         created_at=db_transaction.created_at,
         updated_at=db_transaction.updated_at,
     )
@@ -272,6 +293,36 @@ def update_transaction(
         exchange_rate = db_transaction.exchange_rate or 1.0
         amount_pen = transaction.amount * exchange_rate
     
+    # Handle loan_id changes
+    old_loan_id = db_transaction.loan_id
+    old_amount_pen = db_transaction.amount_pen
+    
+    # If loan_id changed, revert old loan's debt and update new loan's debt
+    if old_loan_id != transaction.loan_id:
+        # Revert old loan's debt
+        if old_loan_id is not None:
+            old_loan = db.query(Loan).filter(Loan.id == old_loan_id).first()
+            if old_loan:
+                old_loan.current_debt += old_amount_pen  # Add back the old payment
+        
+        # Apply new loan's debt reduction
+        if transaction.loan_id is not None:
+            new_loan = db.query(Loan).filter(Loan.id == transaction.loan_id).first()
+            if not new_loan:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Loan with id {transaction.loan_id} not found"
+                )
+            new_loan.current_debt = max(0, new_loan.current_debt - amount_pen)
+    
+    # If loan_id didn't change but amount changed
+    elif old_loan_id is not None and old_amount_pen != amount_pen:
+        loan = db.query(Loan).filter(Loan.id == old_loan_id).first()
+        if loan:
+            # Revert old amount and apply new amount
+            loan.current_debt += old_amount_pen
+            loan.current_debt = max(0, loan.current_debt - amount_pen)
+    
     # Update fields
     db_transaction.date = transaction.date
     db_transaction.category_id = transaction.category_id
@@ -284,6 +335,7 @@ def update_transaction(
     db_transaction.description = transaction.description
     db_transaction.notes = transaction.notes
     db_transaction.status = transaction.status
+    db_transaction.loan_id = transaction.loan_id
     
     db.commit()
     db.refresh(db_transaction)
@@ -295,6 +347,7 @@ def update_transaction(
         category_name=category.name,
         category_type=category.type,
         category_icon=category.icon,
+        category_expense_type=getattr(category, 'expense_type', None),
         account_id=db_transaction.account_id,
         account_name=account.name,
         amount=db_transaction.amount,
@@ -305,6 +358,7 @@ def update_transaction(
         description=db_transaction.description,
         notes=db_transaction.notes,
         status=db_transaction.status,
+        loan_id=db_transaction.loan_id,
         created_at=db_transaction.created_at,
         updated_at=db_transaction.updated_at,
     )
@@ -320,6 +374,13 @@ def delete_transaction(transaction_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Transaction with id {transaction_id} not found"
         )
+    
+    # If transaction is linked to a loan, revert the debt reduction
+    if db_transaction.loan_id is not None:
+        loan = db.query(Loan).filter(Loan.id == db_transaction.loan_id).first()
+        if loan:
+            # Add back the payment amount to current_debt
+            loan.current_debt += db_transaction.amount_pen
     
     db.delete(db_transaction)
     db.commit()
@@ -362,7 +423,7 @@ def get_transaction_summary(
         Category.id,
         Category.name,
         Category.type,
-        func.sum(Transaction.amount).label("total"),
+        func.sum(Transaction.amount_pen).label("total"),
         func.count(Transaction.id).label("count")
     ).join(Transaction).filter(
         and_(

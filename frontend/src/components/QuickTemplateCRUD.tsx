@@ -256,7 +256,7 @@ export default function QuickTemplateCRUD() {
                 <p className="text-sm text-text-secondary">{template.description}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-sm font-bold text-text-primary">
-                    S/ {template.amount.toFixed(2)}
+                    {template.amount.toFixed(2)} PEN
                   </span>
                   <span className="text-xs text-text-secondary">•</span>
                   <span className="text-xs text-text-secondary">{template.category_name}</span>

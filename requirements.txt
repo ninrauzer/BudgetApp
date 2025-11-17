@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+python-dotenv
+python-dateutil
+jinja2
+pytest
+httpx==0.25.2  # Pin httpx to version compatible with starlette TestClient

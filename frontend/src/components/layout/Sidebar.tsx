@@ -6,8 +6,9 @@ import {
   BarChart3, 
   Settings,
   Wallet,
-  ChevronLeft,
-  ChevronRight
+  PanelLeftClose,
+  PanelLeftOpen,
+  CreditCard
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/contexts/SidebarContext'
@@ -17,6 +18,7 @@ const navigation = [
   { name: 'Transacciones', href: '/transactions', icon: Receipt },
   { name: 'Presupuestos', href: '/budget', icon: PiggyBank },
   { name: 'Análisis', href: '/analysis', icon: BarChart3 },
+  { name: 'Deudas', href: '/debts', icon: CreditCard },
   { name: 'Cuentas', href: '/accounts', icon: Wallet },
   { name: 'Configuración', href: '/settings', icon: Settings },
 ]
@@ -26,33 +28,26 @@ export function Sidebar() {
 
   return (
     <aside className={cn(
-      "fixed left-0 top-0 h-full bg-surface border-r border-border shadow-lg transition-all duration-300",
+      "fixed left-0 top-0 h-screen bg-surface border-r border-border shadow-lg transition-all duration-300",
       isCollapsed ? "w-20" : "w-60"
     )}>
-      {/* Logo/Brand */}
-      <div className="flex h-16 items-center border-b border-border px-6 justify-between">
-        <div className={cn(
-          "flex items-center gap-3 transition-opacity duration-200",
-          isCollapsed && "opacity-0"
-        )}>
+      {/* Logo/Brand Header */}
+      <div className={cn(
+        "flex h-16 items-center justify-between border-b border-border px-4 transition-all duration-300",
+        isCollapsed ? "px-2" : "px-6"
+      )}>
+        {isCollapsed ? (
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-blue-600 shadow-button">
             <Wallet className="h-5 w-5 text-white" strokeWidth={2.5} />
           </div>
-          {!isCollapsed && <span className="text-xl font-extrabold text-text-primary">BudgetApp</span>}
-        </div>
-
-        {/* Collapse Button */}
-        <button
-          onClick={toggleCollapse}
-          className="flex h-8 w-8 items-center justify-center rounded-xl bg-surface-soft hover:bg-primary/10 text-text-secondary hover:text-primary transition-colors ml-auto"
-          title={isCollapsed ? "Expandir" : "Colapsar"}
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
-          ) : (
-            <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
-          )}
-        </button>
+        ) : (
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-blue-600 shadow-button">
+              <Wallet className="h-5 w-5 text-white" strokeWidth={2.5} />
+            </div>
+            <span className="text-xl font-extrabold text-text-primary">BudgetApp</span>
+          </div>
+        )}
       </div>
       
       {/* Navigation */}
@@ -77,6 +72,28 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      {/* Collapse Button */}
+      <div className="absolute bottom-4 left-4 right-4">
+        <button
+          onClick={toggleCollapse}
+          className={cn(
+            "w-full flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition-all",
+            "bg-surface-soft text-text-secondary hover:bg-primary/10 hover:text-primary",
+            isCollapsed && 'justify-center px-2'
+          )}
+          title={isCollapsed ? "Expandir" : "Colapsar"}
+        >
+          {isCollapsed ? (
+            <PanelLeftOpen className="h-5 w-5" strokeWidth={2.5} />
+          ) : (
+            <>
+              <PanelLeftClose className="h-5 w-5" strokeWidth={2.5} />
+              <span>Colapsar</span>
+            </>
+          )}
+        </button>
+      </div>
     </aside>
   )
 }

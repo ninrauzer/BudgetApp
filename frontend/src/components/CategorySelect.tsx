@@ -5,18 +5,33 @@ import CategoryIcon from './CategoryIcon';
 
 interface CategorySelectProps {
   categories: Category[];
-  value?: number;
-  onChange: (categoryId: number) => void;
+  value?: number | null;
+  onChange: (categoryId: number | undefined) => void;
   placeholder?: string;
   className?: string;
+  allowClear?: boolean;
 }
+
+const getCategoryColor = (type?: string) => {
+  switch (type) {
+    case 'income':
+      return 'text-emerald-600';
+    case 'fixed_expense':
+      return 'text-rose-600';
+    case 'variable_expense':
+      return 'text-pink-600';
+    default:
+      return 'text-text-secondary';
+  }
+};
 
 export default function CategorySelect({ 
   categories, 
   value, 
   onChange, 
   placeholder = 'Seleccionar categoría',
-  className = ''
+  className = '',
+  allowClear = false
 }: CategorySelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -35,7 +50,7 @@ export default function CategorySelect({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSelect = (categoryId: number) => {
+  const handleSelect = (categoryId: number | undefined) => {
     onChange(categoryId);
     setIsOpen(false);
   };
@@ -50,7 +65,11 @@ export default function CategorySelect({
       >
         {selectedCategory ? (
           <div className="flex items-center gap-2">
-            <CategoryIcon iconName={selectedCategory.icon} className="text-purple-500" size={18} />
+            <CategoryIcon 
+              iconName={selectedCategory.icon} 
+              className={getCategoryColor(selectedCategory.type)} 
+              size={18} 
+            />
             <span className="text-text-primary font-medium">{selectedCategory.name}</span>
           </div>
         ) : (
@@ -62,6 +81,17 @@ export default function CategorySelect({
       {/* Dropdown Menu */}
       {isOpen && (
         <div className="absolute z-50 w-full mt-2 bg-surface border border-border rounded-xl shadow-lg max-h-64 overflow-y-auto">
+          {allowClear && (
+            <button
+              type="button"
+              onClick={() => handleSelect(undefined)}
+              className={`w-full px-4 py-3 flex items-center gap-2 hover:bg-surface-soft transition-colors text-left font-medium text-sm ${
+                !value ? 'bg-primary/10 text-primary' : 'text-text-primary'
+              }`}
+            >
+              Todas las categorías
+            </button>
+          )}
           {categories.length === 0 ? (
             <div className="px-4 py-3 text-text-muted text-sm">No hay categorías disponibles</div>
           ) : (
@@ -74,7 +104,11 @@ export default function CategorySelect({
                   cat.id === value ? 'bg-primary/10' : ''
                 }`}
               >
-                <CategoryIcon iconName={cat.icon} className="text-purple-500" size={18} />
+                <CategoryIcon 
+                  iconName={cat.icon} 
+                  className={getCategoryColor(cat.type)} 
+                  size={18} 
+                />
                 <span className="text-text-primary font-medium text-sm">{cat.name}</span>
               </button>
             ))

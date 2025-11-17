@@ -28,9 +28,10 @@ class BudgetPlan(Base):
     # Relationships
     category = relationship("Category", back_populates="budget_plans")
 
-    # Constraints - cycle_name + category must be unique
+    # Constraints - cycle_name + category + start_date must be unique
+    # This allows the same cycle name (e.g., "Febrero") for different years
     __table_args__ = (
-        UniqueConstraint('cycle_name', 'category_id', name='uix_cycle_category'),
+        UniqueConstraint('cycle_name', 'category_id', 'start_date', name='uix_cycle_category_date'),
     )
 
     def __repr__(self):

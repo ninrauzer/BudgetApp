@@ -3,7 +3,7 @@ Budget Plans Router
 Endpoints para gestión de planes presupuestarios basados en ciclos de facturación
 """
 from typing import List, Dict, Any
-from datetime import date
+from datetime import date, datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, func, extract
@@ -18,7 +18,8 @@ from app.schemas.budget_plan import (
     BudgetPlanUpdate,
     BudgetPlanResponse
 )
-from app.services.billing_cycle import get_cycle_dates
+from app.services.billing_cycle import get_cycle_dates, get_cycle_for_date, MONTH_NAMES, _safe_date
+from dateutil.relativedelta import relativedelta
 
 router = APIRouter(
     prefix="/api/budget-plans",
@@ -56,6 +57,13 @@ class CopyCategoryRequest(BaseModel):
     category_id: int
     source_cycle_name: str
     target_cycle_names: List[str]
+    overwrite: bool = False
+
+
+class CloneYearRequest(BaseModel):
+    """Schema para clonar todos los presupuestos de un año a otro"""
+    source_year: int
+    target_year: int
     overwrite: bool = False
 
 
@@ -297,7 +305,10 @@ def get_annual_budget(
 ):
     """
     Obtener presupuesto de todo un año (12 ciclos) en formato grid
-    Retorna: { cycle_name: { category_id: amount } }
+    Retorna: { 
+        amounts: { cycle_name: { category_id: amount } },
+        notes: { cycle_name: { category_id: note } }
+    }
     """
     # Obtener todos los ciclos del año
     cycle_names = [
@@ -306,24 +317,29 @@ def get_annual_budget(
     ]
     
     # Obtener todos los planes del año
+    # Filtramos por end_date porque el ciclo "Enero 2026" termina en 2026
+    # aunque comience en diciembre 2025
     plans = db.query(BudgetPlan).filter(
-        extract('year', BudgetPlan.start_date) == year
+        extract('year', BudgetPlan.end_date) == year
     ).all()
     
     # Organizar en estructura de grid
-    annual_data = {}
+    amounts_data = {}
+    notes_data = {}
     for cycle_name in cycle_names:
-        annual_data[cycle_name] = {}
+        amounts_data[cycle_name] = {}
+        notes_data[cycle_name] = {}
     
     for plan in plans:
-        if plan.cycle_name in annual_data:
-            annual_data[plan.cycle_name][plan.category_id] = {
-                "id": plan.id,
-                "amount": plan.amount,
-                "notes": plan.notes
-            }
+        if plan.cycle_name in amounts_data:
+            amounts_data[plan.cycle_name][str(plan.category_id)] = plan.amount
+            if plan.notes:
+                notes_data[plan.cycle_name][str(plan.category_id)] = plan.notes
     
-    return annual_data
+    return {
+        "amounts": amounts_data,
+        "notes": notes_data
+    }
 
 
 @router.post("/cell/update")
@@ -530,6 +546,86 @@ def clear_cycle(
     }
 
 
+@router.post("/clone/year")
+def clone_year_budget(
+    data: CloneYearRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Clonar todos los presupuestos de un año a otro año
+    """
+    # Obtener todos los planes del año origen
+    # Filtramos por end_date porque el ciclo "Enero" termina en ese año
+    source_plans = db.query(BudgetPlan).filter(
+        extract('year', BudgetPlan.end_date) == data.source_year
+    ).all()
+    
+    if not source_plans:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No budget data found for year {data.source_year}"
+        )
+    
+    created_count = 0
+    updated_count = 0
+    skipped_count = 0
+    
+    # Procesar cada plan del año origen
+    for source_plan in source_plans:
+        # Calcular las fechas del ciclo en el año destino
+        cycle_dates = get_cycle_dates(source_plan.cycle_name, db)
+        if not cycle_dates:
+            continue
+        
+        # Ajustar las fechas al año destino
+        year_diff = data.target_year - data.source_year
+        target_start_date = source_plan.start_date + relativedelta(years=year_diff)
+        target_end_date = source_plan.end_date + relativedelta(years=year_diff)
+        
+        # Buscar si ya existe un presupuesto para ese ciclo/categoría en el año destino
+        # Usamos end_date para la comparación de año
+        existing_plan = db.query(BudgetPlan).filter(
+            and_(
+                BudgetPlan.cycle_name == source_plan.cycle_name,
+                BudgetPlan.category_id == source_plan.category_id,
+                extract('year', BudgetPlan.end_date) == data.target_year
+            )
+        ).first()
+        
+        if existing_plan:
+            if data.overwrite:
+                existing_plan.amount = source_plan.amount
+                existing_plan.notes = source_plan.notes
+                existing_plan.start_date = target_start_date
+                existing_plan.end_date = target_end_date
+                updated_count += 1
+            else:
+                skipped_count += 1
+        else:
+            # Crear nuevo plan en el año destino
+            new_plan = BudgetPlan(
+                cycle_name=source_plan.cycle_name,
+                start_date=target_start_date,
+                end_date=target_end_date,
+                category_id=source_plan.category_id,
+                amount=source_plan.amount,
+                notes=source_plan.notes
+            )
+            db.add(new_plan)
+            created_count += 1
+    
+    db.commit()
+    
+    return {
+        "success": True,
+        "source_year": data.source_year,
+        "target_year": data.target_year,
+        "created": created_count,
+        "updated": updated_count,
+        "skipped": skipped_count
+    }
+
+
 # ============================================================================
 # COMPARACIÓN CON REAL (PARA ANALYSIS PAGE)
 # ============================================================================
@@ -547,47 +643,165 @@ def get_budget_vs_actual(
     plans = db.query(BudgetPlan).filter(
         BudgetPlan.cycle_name == cycle_name
     ).all()
+
+    # (debug logs removidos)
     
     if not plans:
-        return []
+        return {
+            "cycle_name": cycle_name,
+            "start_date": None,
+            "end_date": None,
+            "categories": [],
+            "summary": {
+                "total_budgeted_income": 0,
+                "total_actual_income": 0,
+                "total_budgeted_expense": 0,
+                "total_actual_expense": 0,
+                "total_budgeted_saving": 0,
+                "total_actual_saving": 0,
+                "overall_compliance": 0
+            }
+        }
     
     # Obtener fechas del ciclo
-    cycle_dates = get_cycle_dates(cycle_name, db)
-    if not cycle_dates:
-        return []
+    # Obtener el billing cycle de la BD
+    from app.models.billing_cycle import BillingCycle
+    billing_cycle = db.query(BillingCycle).filter(BillingCycle.is_active == True).first()
+    
+    if not billing_cycle:
+        # Default to day 1 if no billing cycle found
+        billing_cycle_start_day = 1
+    else:
+        billing_cycle_start_day = billing_cycle.start_day
+    
+    # Validar nombre del ciclo
+    if cycle_name not in MONTH_NAMES:
+        return {
+            "cycle_name": cycle_name,
+            "start_date": None,
+            "end_date": None,
+            "categories": [],
+            "summary": {
+                "total_budgeted_income": 0,
+                "total_actual_income": 0,
+                "total_budgeted_expense": 0,
+                "total_actual_expense": 0,
+                "total_budgeted_saving": 0,
+                "total_actual_saving": 0,
+                "overall_compliance": 0
+            }
+        }
+    
+    # Calcular fechas del ciclo usando el billing_cycle_start_day
+    month_num = MONTH_NAMES.index(cycle_name) + 1
+    current_date = datetime.now()
+    year = current_date.year
+    
+    # El ciclo termina en el mes del cycle_name, el día antes del start_day
+    from dateutil.relativedelta import relativedelta
+    cycle_end_temp = _safe_date(year, month_num, billing_cycle_start_day)
+    cycle_end = cycle_end_temp - timedelta(days=1)
+    
+    # El inicio es un mes antes del end_temp
+    cycle_start = cycle_end_temp - relativedelta(months=1)
+    
+    # Si las fechas están en el futuro, ajustar al año pasado (normalizando tipos)
+    if cycle_start.date() > current_date.date():
+        cycle_start = (cycle_start - relativedelta(years=1))
+        cycle_end = (cycle_end - relativedelta(years=1))
+    
+    cycle_dates = {
+        "start_date": cycle_start,
+        "end_date": cycle_end
+    }
+    
+    # (debug cycle dates removidos)
     
     # Calcular gastos/ingresos reales por categoría
+    # Importante: Transaction.date es Date (sin tiempo); las fechas del ciclo son datetimes.
+    # Usar .date() para evitar exclusión silenciosa por comparación datetime vs date.
+    _start_date = cycle_dates["start_date"].date() if hasattr(cycle_dates["start_date"], "date") else cycle_dates["start_date"]
+    _end_date = cycle_dates["end_date"].date() if hasattr(cycle_dates["end_date"], "date") else cycle_dates["end_date"]
     actual_transactions = db.query(
         Transaction.category_id,
-        func.sum(Transaction.amount).label('total_amount')
+        func.sum(Transaction.amount_pen).label('total_amount')
     ).filter(
         and_(
-            Transaction.date >= cycle_dates["start_date"],
-            Transaction.date <= cycle_dates["end_date"]
+            Transaction.date >= _start_date,
+                Transaction.date <= _end_date,
+                Transaction.transaction_type != 'transfer'
         )
     ).group_by(Transaction.category_id).all()
+    # (debug salario removido)
+    
+    # (debug transacciones removido)
     
     # Crear mapa de reales
     actual_map = {t.category_id: t.total_amount for t in actual_transactions}
+
+    # (debug actual_map removido)
+    plan_ids = {p.category_id for p in plans}
+    missing_actual = plan_ids - set(actual_map.keys())
+    # (debug missing_actual removido)
+    
+    # Inicializar sumarios
+    total_budgeted_income = 0
+    total_actual_income = 0
+    total_budgeted_expense = 0
+    total_actual_expense = 0
     
     # Combinar datos
-    comparison_data = []
+    categories_data = []
     for plan in plans:
         budgeted = plan.amount
         actual = actual_map.get(plan.category_id, 0)
-        difference = budgeted - actual
-        percentage = (actual / budgeted * 100) if budgeted > 0 else 0
+        variance = budgeted - actual
+        variance_percentage = (variance / budgeted * 100) if budgeted != 0 else 0
+        compliance_percentage = (actual / budgeted * 100) if budgeted != 0 else 0
         
-        comparison_data.append({
+        category_type = plan.category.type if plan.category else "expense"
+        
+        # Acumular en sumarios según tipo
+        if category_type == "income":
+            total_budgeted_income += budgeted
+            total_actual_income += actual
+        else:
+            total_budgeted_expense += budgeted
+            total_actual_expense += actual
+        
+        categories_data.append({
             "category_id": plan.category_id,
             "category_name": plan.category.name if plan.category else "Unknown",
             "category_icon": plan.category.icon if plan.category else "help-circle",
-            "category_type": plan.category.type if plan.category else "expense",
+            "category_type": category_type,
             "budgeted": budgeted,
             "actual": actual,
-            "difference": difference,
-            "percentage": round(percentage, 1),
-            "status": "exceeded" if actual > budgeted else "within" if actual > budgeted * 0.8 else "good"
+            "variance": variance,
+            "variance_percentage": round(variance_percentage, 1),
+            "compliance_percentage": round(compliance_percentage, 1)
         })
     
-    return comparison_data
+    # Calcular ahorros
+    total_budgeted_saving = total_budgeted_income - total_budgeted_expense
+    total_actual_saving = total_actual_income - total_actual_expense
+    
+    # Calcular compliance general
+    total_budgeted = total_budgeted_income + total_budgeted_expense
+    total_actual = total_actual_income + total_actual_expense
+    overall_compliance = (total_actual / total_budgeted * 100) if total_budgeted != 0 else 0
+    
+    return {
+        "cycle_name": cycle_name,
+        "start_date": cycle_dates["start_date"].isoformat(),
+        "end_date": cycle_dates["end_date"].isoformat(),
+        "categories": categories_data,
+        "summary": {
+            "total_budgeted_income": total_budgeted_income,
+            "total_actual_income": total_actual_income,
+            "total_budgeted_expense": total_budgeted_expense,
+            "total_actual_expense": total_actual_expense,
+            "total_budgeted_saving": total_budgeted_saving,
+            "total_actual_saving": total_actual_saving,
+            "overall_compliance": round(overall_compliance, 1)
+        }
+    }

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { dashboardApi, transactionsApi, accountsApi, categoriesApi, budgetPlansApi, quickTemplatesApi, billingCycleApi, analysisApi } from '../api';
+import { dashboardApi, transactionsApi, accountsApi, categoriesApi, budgetPlansApi, quickTemplatesApi, billingCycleApi, analysisApi, exchangeRateApi, transfersApi } from '../api';
 import type { TransactionFilters } from '../api';
+import type { TransferCreate, TransferResponse } from '../api';
 
 // Dashboard Hooks
 export const useDashboardStats = (startDate?: string, endDate?: string) => {
@@ -30,6 +31,46 @@ export const useTransaction = (id: number) => {
     queryKey: ['transactions', id],
     queryFn: () => transactionsApi.getById(id),
     enabled: !!id,
+  });
+};
+
+// Transfers Hooks
+export const useTransfers = () => {
+  return useQuery({
+    queryKey: ['transfers'],
+    queryFn: () => transfersApi.list(),
+  });
+};
+
+export const useTransfer = (transferId: string) => {
+  return useQuery({
+    queryKey: ['transfers', transferId],
+    queryFn: () => transfersApi.getById(transferId),
+    enabled: !!transferId,
+  });
+};
+
+export const useCreateTransfer = () => {
+  const queryClient = useQueryClient();
+  return useMutation<TransferResponse, unknown, TransferCreate>({
+    mutationFn: (payload) => transfersApi.create(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transfers'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
+  });
+};
+
+export const useDeleteTransfer = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ message: string; transfer_id: string; deleted_transactions: number }, unknown, string>({
+    mutationFn: (transferId) => transfersApi.delete(transferId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transfers'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
   });
 };
 
@@ -260,37 +301,43 @@ export const useUpdateBudgetCell = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ cycleName, categoryId, amount }: { cycleName: string; categoryId: number; amount: number }) => 
-      budgetPlansApi.updateCell(cycleName, categoryId, amount),
+    mutationFn: ({ cycleName, categoryId, amount, notes }: { cycleName: string; categoryId: number; amount: number; notes?: string }) => 
+      budgetPlansApi.updateCell(cycleName, categoryId, amount, notes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgetPlans'] });
-      queryClient.invalidateQueries({ queryKey: ['budgetPlans', 'annual'] });
+      // Invalidate all annual grids using predicate to match any year
+      queryClient.invalidateQueries({
+        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'budgetPlans' && query.queryKey[1] === 'annual'
+      });
     },
   });
 };
 
 export const useCopyCycle = () => {
   const queryClient = useQueryClient();
-  
   return useMutation({
-    mutationFn: ({ sourceCycle, targetCycles }: { sourceCycle: string; targetCycles: string[] }) => 
-      budgetPlansApi.copyCycle(sourceCycle, targetCycles),
+    mutationFn: ({ sourceCycle, targetCycles, overwrite = false }: { sourceCycle: string; targetCycles: string[]; overwrite?: boolean }) => 
+      budgetPlansApi.copyCycle(sourceCycle, targetCycles, overwrite),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgetPlans'] });
-      queryClient.invalidateQueries({ queryKey: ['budgetPlans', 'annual'] });
+      // Invalidate all annual grids (different years) using predicate
+      queryClient.invalidateQueries({
+        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'budgetPlans' && query.queryKey[1] === 'annual'
+      });
     },
   });
 };
 
 export const useCopyCategory = () => {
   const queryClient = useQueryClient();
-  
   return useMutation({
-    mutationFn: ({ categoryId, sourceCycle, targetCycles }: { categoryId: number; sourceCycle: string; targetCycles: string[] }) => 
-      budgetPlansApi.copyCategory(categoryId, sourceCycle, targetCycles),
+    mutationFn: ({ categoryId, sourceCycle, targetCycles, overwrite = false }: { categoryId: number; sourceCycle: string; targetCycles: string[]; overwrite?: boolean }) => 
+      budgetPlansApi.copyCategory(categoryId, sourceCycle, targetCycles, overwrite),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgetPlans'] });
-      queryClient.invalidateQueries({ queryKey: ['budgetPlans', 'annual'] });
+      queryClient.invalidateQueries({
+        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'budgetPlans' && query.queryKey[1] === 'annual'
+      });
     },
   });
 };
@@ -303,6 +350,19 @@ export const useClearCycle = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgetPlans'] });
       queryClient.invalidateQueries({ queryKey: ['budgetPlans', 'annual'] });
+    },
+  });
+};
+
+export const useCloneYear = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ sourceYear, targetYear, overwrite }: { sourceYear: number; targetYear: number; overwrite?: boolean }) => 
+      budgetPlansApi.cloneYear(sourceYear, targetYear, overwrite || false),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['budgetPlans'] });
+      queryClient.invalidateQueries({ queryKey: ['budgetPlans', 'annual', variables.targetYear] });
     },
   });
 };
@@ -402,5 +462,14 @@ export const useAnalysisSummary = (startDate?: string, endDate?: string) => {
   return useQuery({
     queryKey: ['analysis', 'summary', startDate, endDate],
     queryFn: () => analysisApi.getSummary(startDate, endDate),
+  });
+};
+
+// Exchange Rate Hook
+export const useExchangeRate = (date?: string) => {
+  return useQuery({
+    queryKey: ['exchangeRate', date],
+    queryFn: () => exchangeRateApi.getRate(date),
+    staleTime: 1000 * 60 * 60, // 1 hour
   });
 };

@@ -28,9 +28,18 @@ class AccountUpdate(AccountBase):
 
 
 class AccountResponse(AccountBase):
-    """Schema for account response."""
+    """Schema for account response returned to frontend.
+
+    Fields initial_balance/current_balance are computed, not stored separately.
+    updated_at is currently mirrored from created_at until an explicit column exists.
+    """
     id: int
     created_at: datetime
+    updated_at: datetime
+    # Stored balance is exposed as initial_balance for clarity with frontend model
+    initial_balance: float = Field(default=0.0)
+    current_balance: float = Field(default=0.0)
+    balance: float = Field(default=0.0)  # keep for backward compatibility
 
     class Config:
         from_attributes = True

@@ -40,11 +40,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+# Mount static files safely (only if directory exists)
+_STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+if os.path.isdir(_STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
+elif DEBUG:
+    print(f"[static] Directory not found, skipping mount: {_STATIC_DIR}")
 
-# Setup templates
-templates = Jinja2Templates(directory="app/templates")
+_TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "templates")
+templates = Jinja2Templates(directory=_TEMPLATES_DIR) if os.path.isdir(_TEMPLATES_DIR) else None
 
 
 # Health check endpoint
@@ -69,6 +73,8 @@ async def root(request: Request):
     """
     Main frontend dashboard page.
     """
+    if not templates:
+        return HTMLResponse("<h1>Dashboard</h1><p>Templates directory missing.</p>")
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
 
@@ -78,6 +84,8 @@ async def transactions_page(request: Request):
     """
     Transactions management page.
     """
+    if not templates:
+        return HTMLResponse("<h1>Transactions</h1><p>Templates directory missing.</p>")
     return templates.TemplateResponse("transactions.html", {"request": request})
 
 
@@ -87,6 +95,8 @@ async def budget_page(request: Request):
     """
     Budget planning page.
     """
+    if not templates:
+        return HTMLResponse("<h1>Budget</h1><p>Templates directory missing.</p>")
     return templates.TemplateResponse("budget.html", {"request": request})
 
 
@@ -96,6 +106,8 @@ async def analysis_page(request: Request):
     """
     Budget analysis page - Compare planned vs actual spending.
     """
+    if not templates:
+        return HTMLResponse("<h1>Analysis</h1><p>Templates directory missing.</p>")
     return templates.TemplateResponse("analysis.html", {"request": request})
 
 
@@ -105,6 +117,8 @@ async def settings_page(request: Request):
     """
     Settings and preferences page.
     """
+    if not templates:
+        return HTMLResponse("<h1>Settings</h1><p>Templates directory missing.</p>")
     return templates.TemplateResponse("settings.html", {"request": request})
 
 
