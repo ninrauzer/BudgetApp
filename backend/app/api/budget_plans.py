@@ -750,9 +750,16 @@ def get_budget_vs_actual(
     total_budgeted_expense = 0
     total_actual_expense = 0
     
-    # Combinar datos
+    # Combinar datos (deduplicate by category_id)
     categories_data = []
+    seen_categories = set()
+    
     for plan in plans:
+        # Skip duplicates (same category_id)
+        if plan.category_id in seen_categories:
+            continue
+        seen_categories.add(plan.category_id)
+        
         budgeted = plan.amount
         actual = actual_map.get(plan.category_id, 0)
         variance = budgeted - actual
