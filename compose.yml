@@ -1,4 +1,15 @@
 services:
+  # IPv4 → IPv6 proxy for Supabase connection
+  socat-proxy:
+    image: alpine/socat:latest
+    container_name: budgetapp-socat
+    restart: unless-stopped
+    ports:
+      - "6543:6543"
+    command: TCP-LISTEN:6543,reuseaddr,fork TCP:db.ohleydwbqagxwyfdtiny.supabase.co:6543
+    networks:
+      - budgetapp-network
+
   # Backend service - FastAPI
   backend:
     build:
