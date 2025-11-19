@@ -30,7 +30,7 @@ export const dashboardApi = {
     if (endDate) params.append('end_date', endDate);
     
     const queryString = params.toString();
-    const url = `/api/dashboard/summary${queryString ? '?' + queryString : ''}`;
+    const url = `/dashboard/summary${queryString ? '?' + queryString : ''}`;
     
     const { data } = await apiClient.get<DashboardStats>(url);
     return data;
@@ -40,7 +40,7 @@ export const dashboardApi = {
 // Transactions
 export const transactionsApi = {
   getAll: async (filters?: TransactionFilters): Promise<PaginatedResponse<TransactionWithDetails>> => {
-    const { data } = await apiClient.get<TransactionWithDetails[]>('/api/transactions', {
+    const { data } = await apiClient.get<TransactionWithDetails[]>('/transactions', {
       params: filters,
     });
     // El backend no devuelve paginación, así que lo simulamos
@@ -54,26 +54,26 @@ export const transactionsApi = {
   },
 
   getById: async (id: number): Promise<TransactionWithDetails> => {
-    const { data } = await apiClient.get<TransactionWithDetails>(`/api/transactions/${id}`);
+    const { data } = await apiClient.get<TransactionWithDetails>(`/transactions/${id}`);
     return data;
   },
 
   create: async (transaction: Partial<Transaction>): Promise<Transaction> => {
-    const { data } = await apiClient.post<Transaction>('/api/transactions', transaction);
+    const { data } = await apiClient.post<Transaction>('/transactions', transaction);
     return data;
   },
 
   update: async (id: number, transaction: Partial<Transaction>): Promise<Transaction> => {
-    const { data } = await apiClient.put<Transaction>(`/api/transactions/${id}`, transaction);
+    const { data } = await apiClient.put<Transaction>(`/transactions/${id}`, transaction);
     return data;
   },
 
   delete: async (id: number): Promise<void> => {
-    await apiClient.delete(`/api/transactions/${id}`);
+    await apiClient.delete(`/transactions/${id}`);
   },
 
   getRecent: async (limit: number = 10): Promise<TransactionWithDetails[]> => {
-    const { data } = await apiClient.get<TransactionWithDetails[]>('/api/transactions', {
+    const { data } = await apiClient.get<TransactionWithDetails[]>('/transactions', {
       params: { limit },
     });
     return data;
@@ -85,7 +85,7 @@ export const accountsApi = {
   getAll: async (): Promise<Account[]> => {
     // El backend actualmente devuelve cuentas con el campo 'balance' pero el frontend
     // espera 'initial_balance' y 'current_balance'. Aquí normalizamos para evitar NaN.
-    const { data } = await apiClient.get<any[]>('/api/accounts');
+    const { data } = await apiClient.get<any[]>('/accounts');
     return data.map(a => ({
       id: a.id,
       name: a.name,
@@ -102,7 +102,7 @@ export const accountsApi = {
   },
 
   getById: async (id: number): Promise<Account> => {
-    const { data } = await apiClient.get<any>(`/api/accounts/${id}`);
+    const { data } = await apiClient.get<any>(`/accounts/${id}`);
     return {
       id: data.id,
       name: data.name,
@@ -118,44 +118,44 @@ export const accountsApi = {
   },
 
   create: async (account: Partial<Account>): Promise<Account> => {
-    const { data } = await apiClient.post<Account>('/api/accounts', account);
+    const { data } = await apiClient.post<Account>('/accounts', account);
     return data;
   },
 
   update: async (id: number, account: Partial<Account>): Promise<Account> => {
-    const { data } = await apiClient.put<Account>(`/api/accounts/${id}`, account);
+    const { data } = await apiClient.put<Account>(`/accounts/${id}`, account);
     return data;
   },
 
   delete: async (id: number): Promise<void> => {
-    await apiClient.delete(`/api/accounts/${id}`);
+    await apiClient.delete(`/accounts/${id}`);
   },
 };
 
 // Categories
 export const categoriesApi = {
   getAll: async (): Promise<Category[]> => {
-    const { data } = await apiClient.get<Category[]>('/api/categories');
+    const { data } = await apiClient.get<Category[]>('/categories');
     return data;
   },
 
   getById: async (id: number): Promise<Category> => {
-    const { data } = await apiClient.get<Category>(`/api/categories/${id}`);
+    const { data } = await apiClient.get<Category>(`/categories/${id}`);
     return data;
   },
 
   create: async (category: Partial<Category>): Promise<Category> => {
-    const { data } = await apiClient.post<Category>('/api/categories', category);
+    const { data } = await apiClient.post<Category>('/categories', category);
     return data;
   },
 
   update: async (id: number, category: Partial<Category>): Promise<Category> => {
-    const { data } = await apiClient.put<Category>(`/api/categories/${id}`, category);
+    const { data } = await apiClient.put<Category>(`/categories/${id}`, category);
     return data;
   },
 
   delete: async (id: number): Promise<void> => {
-    await apiClient.delete(`/api/categories/${id}`);
+    await apiClient.delete(`/categories/${id}`);
   },
 };
 
@@ -163,37 +163,37 @@ export const categoriesApi = {
 export const budgetPlansApi = {
   // CRUD básico
   getAll: async (): Promise<BudgetPlan[]> => {
-    const { data } = await apiClient.get<BudgetPlan[]>('/api/budget-plans/');
+    const { data } = await apiClient.get<BudgetPlan[]>('/budget-plans/');
     return data;
   },
 
   getById: async (id: number): Promise<BudgetPlan> => {
-    const { data } = await apiClient.get<BudgetPlan>(`/api/budget-plans/${id}`);
+    const { data } = await apiClient.get<BudgetPlan>(`/budget-plans/${id}`);
     return data;
   },
 
   create: async (plan: Partial<BudgetPlan>): Promise<BudgetPlan> => {
-    const { data } = await apiClient.post<BudgetPlan>('/api/budget-plans/', plan);
+    const { data } = await apiClient.post<BudgetPlan>('/budget-plans/', plan);
     return data;
   },
 
   update: async (id: number, plan: Partial<BudgetPlan>): Promise<BudgetPlan> => {
-    const { data } = await apiClient.put<BudgetPlan>(`/api/budget-plans/${id}`, plan);
+    const { data } = await apiClient.put<BudgetPlan>(`/budget-plans/${id}`, plan);
     return data;
   },
 
   delete: async (id: number): Promise<void> => {
-    await apiClient.delete(`/api/budget-plans/${id}`);
+    await apiClient.delete(`/budget-plans/${id}`);
   },
 
   // Vista por ciclo
   getByCycle: async (cycleName: string): Promise<BudgetPlan[]> => {
-    const { data } = await apiClient.get<BudgetPlan[]>(`/api/budget-plans/cycle/${cycleName}`);
+    const { data } = await apiClient.get<BudgetPlan[]>(`/budget-plans/cycle/${cycleName}`);
     return data;
   },
 
   saveBulk: async (cycleName: string, budgets: Array<{ category_id: number; amount: number }>): Promise<BudgetPlan[]> => {
-    const { data } = await apiClient.post<BudgetPlan[]>(`/api/budget-plans/cycle/bulk`, {
+    const { data } = await apiClient.post<BudgetPlan[]>(`/budget-plans/cycle/bulk`, {
       cycle_name: cycleName,
       budgets,
     });
@@ -202,12 +202,12 @@ export const budgetPlansApi = {
 
   // Vista anual (grid de 12 meses)
   getAnnualGrid: async (year: number): Promise<AnnualBudgetGrid> => {
-    const { data } = await apiClient.get<AnnualBudgetGrid>(`/api/budget-plans/annual/${year}`);
+    const { data } = await apiClient.get<AnnualBudgetGrid>(`/budget-plans/annual/${year}`);
     return data;
   },
 
   updateCell: async (cycleName: string, categoryId: number, amount: number, notes?: string): Promise<BudgetPlan> => {
-    const { data } = await apiClient.post<BudgetPlan>('/api/budget-plans/cell/update', {
+    const { data } = await apiClient.post<BudgetPlan>('/budget-plans/cell/update', {
       cycle_name: cycleName,
       category_id: categoryId,
       amount,
@@ -218,7 +218,7 @@ export const budgetPlansApi = {
 
   // Funciones de productividad
   copyCycle: async (sourceCycle: string, targetCycles: string[], overwrite: boolean = false): Promise<BudgetCopyResult> => {
-    const { data } = await apiClient.post<BudgetCopyResult>('/api/budget-plans/copy/cycle', {
+    const { data } = await apiClient.post<BudgetCopyResult>('/budget-plans/copy/cycle', {
       source_cycle_name: sourceCycle,
       target_cycle_names: targetCycles,
       overwrite,
@@ -227,7 +227,7 @@ export const budgetPlansApi = {
   },
 
   copyCategory: async (categoryId: number, sourceCycle: string, targetCycles: string[], overwrite: boolean = false): Promise<BudgetCopyResult> => {
-    const { data } = await apiClient.post<BudgetCopyResult>('/api/budget-plans/copy/category', {
+    const { data } = await apiClient.post<BudgetCopyResult>('/budget-plans/copy/category', {
       category_id: categoryId,
       source_cycle_name: sourceCycle,
       target_cycle_names: targetCycles,
@@ -237,12 +237,12 @@ export const budgetPlansApi = {
   },
 
   clearCycle: async (cycleName: string): Promise<{ message: string; deleted_count: number }> => {
-    const { data } = await apiClient.delete<{ message: string; deleted_count: number }>(`/api/budget-plans/cycle/${cycleName}`);
+    const { data } = await apiClient.delete<{ message: string; deleted_count: number }>(`/budget-plans/cycle/${cycleName}`);
     return data;
   },
 
   cloneYear: async (sourceYear: number, targetYear: number, overwrite: boolean = false): Promise<BudgetCopyResult> => {
-    const { data } = await apiClient.post<BudgetCopyResult>('/api/budget-plans/clone/year', {
+    const { data } = await apiClient.post<BudgetCopyResult>('/budget-plans/clone/year', {
       source_year: sourceYear,
       target_year: targetYear,
       overwrite,
@@ -252,7 +252,7 @@ export const budgetPlansApi = {
 
   // Comparación con real (para Analysis)
   getComparison: async (cycleName: string): Promise<BudgetComparison> => {
-    const { data } = await apiClient.get<BudgetComparison>(`/api/budget-plans/comparison/${cycleName}`);
+    const { data } = await apiClient.get<BudgetComparison>(`/budget-plans/comparison/${cycleName}`);
     return data;
   },
 };
@@ -261,7 +261,7 @@ export const budgetPlansApi = {
 export const exchangeRateApi = {
   getRate: async (date?: string): Promise<{ rate: number; currency_pair: string; date: string; source: string }> => {
     const params = date ? { date } : {};
-    const { data } = await apiClient.get('/api/exchange-rate', { params });
+    const { data } = await apiClient.get('/exchange-rate', { params });
     return data;
   },
 };
@@ -269,46 +269,46 @@ export const exchangeRateApi = {
 // Quick Templates
 export const quickTemplatesApi = {
   getAll: async (): Promise<QuickTemplate[]> => {
-    const { data } = await apiClient.get<QuickTemplate[]>('/api/quick-templates');
+    const { data } = await apiClient.get<QuickTemplate[]>('/quick-templates');
     return data;
   },
 
   getById: async (id: number): Promise<QuickTemplate> => {
-    const { data } = await apiClient.get<QuickTemplate>(`/api/quick-templates/${id}`);
+    const { data } = await apiClient.get<QuickTemplate>(`/quick-templates/${id}`);
     return data;
   },
 
   create: async (template: Partial<QuickTemplate>): Promise<QuickTemplate> => {
-    const { data } = await apiClient.post<QuickTemplate>('/api/quick-templates/', template);
+    const { data } = await apiClient.post<QuickTemplate>('/quick-templates/', template);
     return data;
   },
 
   update: async (id: number, template: Partial<QuickTemplate>): Promise<QuickTemplate> => {
-    const { data } = await apiClient.put<QuickTemplate>(`/api/quick-templates/${id}`, template);
+    const { data } = await apiClient.put<QuickTemplate>(`/quick-templates/${id}`, template);
     return data;
   },
 
   delete: async (id: number): Promise<void> => {
-    await apiClient.delete(`/api/quick-templates/${id}`);
+    await apiClient.delete(`/quick-templates/${id}`);
   },
 };
 
 // Billing Cycle Settings
 export const billingCycleApi = {
   get: async (): Promise<BillingCycle> => {
-    const { data } = await apiClient.get<BillingCycle>('/api/settings/billing-cycle');
+    const { data } = await apiClient.get<BillingCycle>('/settings/billing-cycle');
     return data;
   },
 
   update: async (startDay: number): Promise<BillingCycle> => {
-    const { data } = await apiClient.put<BillingCycle>('/api/settings/billing-cycle', {
+    const { data } = await apiClient.put<BillingCycle>('/settings/billing-cycle', {
       start_day: startDay,
     });
     return data;
   },
 
   getCurrentCycle: async (): Promise<CurrentCycleInfo> => {
-    const { data } = await apiClient.get<CurrentCycleInfo>('/api/settings/billing-cycle/current');
+    const { data } = await apiClient.get<CurrentCycleInfo>('/settings/billing-cycle/current');
     return data;
   },
 };
@@ -322,14 +322,14 @@ export const analysisApi = {
     if (transactionType) params.append('transaction_type', transactionType);
     
     const queryString = params.toString();
-    const url = `/api/analysis/by-category${queryString ? '?' + queryString : ''}`;
+    const url = `/analysis/by-category${queryString ? '?' + queryString : ''}`;
     
     const { data } = await apiClient.get<CategoryAnalysis[]>(url);
     return data;
   },
 
   getTrends: async (cycles: number = 6): Promise<TrendData[]> => {
-    const { data } = await apiClient.get<TrendData[]>('/api/analysis/trends', {
+    const { data } = await apiClient.get<TrendData[]>('/analysis/trends', {
       params: { cycles },
     });
     return data;
@@ -341,7 +341,7 @@ export const analysisApi = {
     if (endDate) params.append('end_date', endDate);
     
     const queryString = params.toString();
-    const url = `/api/analysis/summary${queryString ? '?' + queryString : ''}`;
+    const url = `/analysis/summary${queryString ? '?' + queryString : ''}`;
     
     const { data } = await apiClient.get<AnalysisSummary>(url);
     return data;
@@ -351,19 +351,19 @@ export const analysisApi = {
 // Transfers
 export const transfersApi = {
   create: async (payload: TransferCreate): Promise<TransferResponse> => {
-    const { data } = await apiClient.post<TransferResponse>('/api/transfers/', payload);
+    const { data } = await apiClient.post<TransferResponse>('/transfers/', payload);
     return data;
   },
   list: async (): Promise<TransferResponse[]> => {
-    const { data } = await apiClient.get<TransferResponse[]>('/api/transfers/');
+    const { data } = await apiClient.get<TransferResponse[]>('/transfers/');
     return data;
   },
   getById: async (transferId: string): Promise<TransferDetail> => {
-    const { data } = await apiClient.get<TransferDetail>(`/api/transfers/${transferId}`);
+    const { data } = await apiClient.get<TransferDetail>(`/transfers/${transferId}`);
     return data;
   },
   delete: async (transferId: string): Promise<{ message: string; transfer_id: string; deleted_transactions: number }> => {
-    const { data } = await apiClient.delete<{ message: string; transfer_id: string; deleted_transactions: number }>(`/api/transfers/${transferId}`);
+    const { data } = await apiClient.delete<{ message: string; transfer_id: string; deleted_transactions: number }>(`/transfers/${transferId}`);
     return data;
   },
 };
