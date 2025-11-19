@@ -13,12 +13,12 @@ services:
       - ./data:/app/data
       # Mount backend code for development (hot reload)
       - ./backend:/app:delegated
-    env_file: .env
+    env_file:
+      - .env
     environment:
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=info
-      # WSL gateway IP - allows container to reach Windows/Internet
-      - WSL_HOST=host.docker.internal
+      - DATABASE_URL=postgresql://postgres:postgres@192.168.126.127:5432/budgetapp_prod
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s

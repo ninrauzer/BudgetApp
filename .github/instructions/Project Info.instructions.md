@@ -44,9 +44,9 @@ git push origin master
 
 📖 Ver [RENDER.md](../../RENDER.md) para documentación completa
 
-### Opción 2: Docker (Local/Self-Hosted)
+### Opción 2: Docker (Local - Production-like)
 ```bash
-# Iniciar aplicación completa
+# Iniciar aplicación completa (usa budgetapp_prod)
 docker compose up -d
 
 # Ver logs
@@ -57,13 +57,12 @@ docker compose down
 ```
 
 **URLs**:
-- Frontend: http://localhost
-- Backend: http://localhost:8000
-- API Docs: http://localhost:8000/docs
+- Frontend: http://192.168.126.127:8080
+- Backend: http://192.168.126.127:8000
+- API Docs: http://192.168.126.127:8000/docs
+- **Database**: budgetapp_prod (⚠️ NUNCA TOCAR ESTA BD)
 
-📖 Ver [DOCKER.md](../../DOCKER.md) para documentación completa
-
-### Opción 3: Desarrollo Local
+### Opción 3: Desarrollo Local (VSCode)
 
 #### Frontend (Puerto 5173/5174)
 ```bash
@@ -75,43 +74,107 @@ npm run build        # Build producción
 #### Backend (Puerto 8000)
 ```bash
 cd E:\Desarrollo\BudgetApp\backend
-
-# Desarrollo (SQLite local)
-.\switch-env.ps1 dev
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-
-# Producción (Supabase)
-.\switch-env.ps1 prod
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
+
+**URLs**:
+- Frontend: http://localhost:5173
+- Backend: http://localhost:8000
+- API Docs: http://localhost:8000/docs
+- **Database**: budgetapp_dev (OK para testing)
+
+### Opción 4: Render.com (Producción CLOUD - Futuro)
+```bash
+# Push a GitHub
+git add .
+git commit -m "deploy: production release"
+git push origin master
+
+# Render despliega automáticamente
+```
+
+**URLs**:
+- Frontend: https://budgetapp-frontend.onrender.com
+- Backend: https://budgetapp-backend.onrender.com
+- API Docs: https://budgetapp-backend.onrender.com/docs
+
+📖 Ver [RENDER.md](../../RENDER.md) para documentación completa
 
 ## 🗄️ Base de Datos
 
-### Producción (Supabase PostgreSQL)
-- **Host**: db.ohleydwbqagxwyfdtiny.supabase.co:6543
-- **Tipo**: PostgreSQL 17.6
-- **Datos**: 43 transacciones, 35 categorías, 3 cuentas
-- **Backups**: Automáticos diarios (7 días)
-- **Migración**: 19 Nov 2024 desde SQLite
+### Arquitectura Actual (19 Nov 2025)
+**Se migró completamente de Supabase a PostgreSQL local en WSL2**
 
-### Desarrollo (SQLite local)
-- **Ubicación**: `E:\Desarrollo\BudgetApp\backend\dev_budget.db`
-- **Tipo**: SQLite 3.x
-- **Uso**: Testing y desarrollo local
+#### Docker (Aplicación en Producción-like)
+- **Database**: `budgetapp_prod` en PostgreSQL WSL2
+- **Host**: 192.168.126.127:5432
+- **User**: postgres
+- **Password**: postgres
+- **⚠️ CRÍTICO**: NUNCA modificar datos de producción directamente
 
-### Alternar Entornos
-```powershell
-# Cambiar a desarrollo
-cd backend
-.\switch-env.ps1 dev
+#### Desarrollo Local (VSCode)
+- **Database**: `budgetapp_dev` en PostgreSQL WSL2
+- **Host**: 192.168.126.127:5432
+- **User**: postgres
+- **Password**: postgres
+- **Uso**: Testing, desarrollo, experimentación
+- ✅ Está OK modificar datos aquí sin restricciones
 
-# Cambiar a producción
-.\switch-env.ps1 prod
+### Datos Migrados (19 Nov 2024)
+**Origen**: Supabase PostgreSQL (db.ohleydwbqagxwyfdtiny.supabase.co)
+**Destino**: WSL PostgreSQL (192.168.126.127:5432)
+
+- ✅ **11 tablas** migradas con schema completo
+- ✅ **43 transacciones** (desde Supabase)
+- ✅ **35 categorías**
+- ✅ **3 cuentas** (Efectivo, BCP, BBVA)
+- ✅ **2 ciclos de facturación**
+- ✅ Datos copiados a ambas databases: `budgetapp_dev` y `budgetapp_prod`
+
+### Configuración de Conexión
+
+**Docker (compose.yml)**:
+```yaml
+environment:
+  - DATABASE_URL=postgresql://postgres:postgres@192.168.126.127:5432/budgetapp_prod
 ```
 
-📖 Ver [SUPABASE.md](../../SUPABASE.md) para documentación completa
+**Desarrollo Local (backend/.env)**:
+```
+DATABASE_URL=postgresql://postgres:postgres@192.168.126.127:5432/budgetapp_dev
+```
 
-**Modelos principales**: Account, Category, Transaction, BudgetPlan, Loan, CreditCard, QuickTemplate, BillingCycle
+### ⚠️ POLÍTICA DE DATOS - CRÍTICO
+
+**`budgetapp_prod` - PRODUCCIÓN (INTOCABLE)**
+- Usada exclusivamente por Docker (http://192.168.126.127:8080)
+- Simula ambiente de producción
+- **NUNCA hacer queries, updates, deletes directos**
+- **NUNCA resetear esta database**
+- Cambios SOLO a través de la aplicación web
+- Considerarla como espejo de Render.com
+
+**`budgetapp_dev` - DESARROLLO (LIBRE)**
+- Usada SOLO por VSCode/desarrollo local
+- OK para experimentar, resetear, modificar
+- Usar para testing y prototipos
+- Puedes hacer queries directas sin problemas
+
+### Diferencia de Datos
+Ambas databases tienen **exactamente los mismos datos** actualmente (copiados de Supabase el 19 Nov 2025). Divergirán con el tiempo conforme uses la app.
+
+### Resincronizar Prod ↔ Dev
+Si necesitas copiar datos entre ambas (NO hacer sin razón):
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe copy_dev_to_prod.py  # DEV → PROD (cuidado!)
+```
+
+**O invertido**:
+```python
+# Crear copy_prod_to_dev.py si es necesario
+```
 
 ## 🎨 Stack Tecnológico
 - **Frontend**: React 18, TypeScript, Vite 7, Tailwind CSS 3
