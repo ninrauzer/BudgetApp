@@ -11,12 +11,22 @@ export default defineConfig({
       "~": path.resolve(__dirname, "./src"),
     },
     extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
-    mainFields: ['module', 'main'],
+    mainFields: ['browser', 'module', 'main'],
   },
   build: {
     commonjsOptions: {
       transformMixedEsModules: true,
     },
+    rollupOptions: {
+      external: [],
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
+  optimizeDeps: {
+    exclude: [],
+    include: ['axios'],
   },
   server: {
     proxy: {
