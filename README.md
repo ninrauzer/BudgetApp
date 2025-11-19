@@ -16,12 +16,13 @@ Aplicación web moderna para gestión presupuestal personal, desarrollada con ar
 
 ## 🚀 Quick Start
 
+> **⚡ Para empezar en 30 segundos, ver [QUICKSTART.md](QUICKSTART.md)**
+
 ### Opción 1: Desarrollo Local (Recomendado)
 
 ```bash
-# Backend (SQLite local)
+# Backend
 cd backend
-.\switch-env.ps1 dev
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
 
 # Frontend (en otra terminal)
@@ -41,12 +42,12 @@ npm run dev
 docker compose up -d
 
 # URLs:
-# Frontend: http://localhost
-# Backend:  http://localhost:8000
-# API Docs: http://localhost:8000/docs
+# Frontend: http://192.168.126.127:8080
+# Backend:  http://192.168.126.127:8000
+# API Docs: http://192.168.126.127:8000/docs
 ```
 
-### Opción 3: Producción (Supabase)
+### Opción 3: Render.com (Producción Cloud)
 
 ```bash
 # Backend (PostgreSQL en Supabase)
