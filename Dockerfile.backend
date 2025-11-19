@@ -25,9 +25,8 @@ RUN mkdir -p /app/data
 # Expose port
 EXPOSE 8000
 
-# Health check - increased timeout and start period for database initialization
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8000/api/health || exit 1
+# Health check disabled in Dockerfile - managed by docker-compose
+# The curl health check is implemented in compose.yml
 
 # Run uvicorn without --reload for production Docker
 # Note: To enable reload in development, use docker-compose with volumes
