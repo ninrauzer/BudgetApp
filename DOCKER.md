@@ -19,9 +19,9 @@ cd BudgetApp
 
 #### 2. Iniciar aplicación
 
-**Docker Compose v2 (recomendado)**:
+**Docker Compose v2 (recomendado) - Producción:**
 ```bash
-# Construir y levantar todos los servicios
+# Construir y levantar todos los servicios (sin hot reload)
 docker compose up -d
 
 # Ver logs
@@ -34,7 +34,19 @@ docker compose logs -f backend
 docker compose logs -f frontend
 ```
 
-**Docker Compose v1 (legacy)**:
+**Desarrollo con Hot Reload (Uvicorn --reload):**
+```bash
+# Primero, reconstruir con caché limpio
+docker compose build --no-cache
+
+# Luego iniciar con override de desarrollo
+docker compose -f compose.yml -f docker-compose.dev.yml up -d
+
+# Ver logs
+docker compose logs -f backend
+```
+
+**Docker Compose v1 (legacy):**
 ```bash
 # Construir y levantar todos los servicios
 docker-compose up -d
