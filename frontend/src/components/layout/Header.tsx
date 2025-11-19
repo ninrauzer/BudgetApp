@@ -1,7 +1,7 @@
 import { Bell, Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import ThemeToggle from '../ThemeToggle'
 import {
   DropdownMenu,
@@ -44,7 +44,6 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
                 <Avatar className="h-10 w-10 ring-2 ring-border">
-                  <AvatarImage src="/avatar.jpg" alt="User" />
                   <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white font-bold">
                     U
                   </AvatarFallback>
