@@ -4,7 +4,10 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:5173/api/dashboard';
+// Use relative paths so requests go through the nginx proxy in production
+// In production/docker: /api/dashboard/... goes through nginx to backend
+// In development: set VITE_API_URL to http://localhost:8000
+const API_BASE = '/api/dashboard';
 
 // Types
 export interface MonthlyAvailable {
