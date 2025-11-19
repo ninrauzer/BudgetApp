@@ -1,8 +1,8 @@
-import { Calendar, TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, BarChart3, PieChart as PieChartIcon, ListChecks, Target, AlertTriangle, Clock, Zap } from 'lucide-react';
-import { 
-  PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
-  AreaChart, Area, BarChart, Bar, LineChart, Line, Treemap, RadialBarChart, RadialBar 
-} from 'recharts';
+import { Calendar, TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, BarChart3, PieChart as PieChartIcon, ListChecks, AlertTriangle, Clock, Zap, Eye, EyeOff } from 'lucide-react';
+import { ResponsiveContainer, Treemap, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
+import { ResponsivePie } from '@nivo/pie';
+import { ResponsiveBar } from '@nivo/bar';
+import { ResponsiveLine } from '@nivo/line';
 import { useCurrentCycle, useCategoryAnalysis, useTrends, useAnalysisSummary, useBudgetComparison, useTransactions } from '../lib/hooks/useApi';
 import CategoryIcon from '../components/CategoryIcon';
 import BudgetComparisonSection from '../components/BudgetComparisonSection';
@@ -16,9 +16,10 @@ import type { DragEndEvent } from '@dnd-kit/core';
 import { useDemoMode } from '../lib/hooks/useDemoMode';
 import { formatCurrencyISO, formatBudget } from '@/lib/format';
 
-const COLORS = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444', '#14B8A6', '#F97316', '#6366F1', '#8B5CF6'];
+const COLORS = ['#10B981', '#F43F5E', '#EC4899', '#8B5CF6', '#3B82F6', '#F59E0B', '#06B6D4', '#84CC16'];
 
 type TabType = 'summary' | 'charts' | 'details';
+
 
 
 export default function Analysis() {
@@ -30,10 +31,11 @@ export default function Analysis() {
   const [activeTab, setActiveTab] = useState<TabType>('summary');
   const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
   const { applyDemoScale } = useDemoMode();
+  const [animatedPieData, setAnimatedPieData] = useState<Array<{ id: string; label: string; value: number }>>([]);
   
 
   // Required chart ids (ensure new charts get appended if missing in saved order)
-  const REQUIRED_CHART_IDS = ['gauge', 'savings', 'budgetVsReal', 'treemap', 'pie', 'trends'];
+  const REQUIRED_CHART_IDS = ['pie', 'budgetVsReal', 'treemap', 'trends'];
 
   // Chart order state with localStorage persistence (auto-adding missing ids)
   const [chartOrder, setChartOrder] = useState<string[]>(() => {
@@ -103,24 +105,24 @@ export default function Analysis() {
     }
     
     // Calculate offset cycle dates
-    const startDate = new Date(currentCycle.start_date);
-    const endDate = new Date(currentCycle.end_date);
+    const currentStartDate = new Date(currentCycle.start_date);
+    const currentEndDate = new Date(currentCycle.end_date);
     
-    // Move back by number of months (each cycle is approximately 1 month)
+    // Move back/forward by number of cycles
     const monthsOffset = selectedCycleOffset;
-    startDate.setMonth(startDate.getMonth() + monthsOffset);
-    endDate.setMonth(endDate.getMonth() + monthsOffset);
+    currentStartDate.setMonth(currentStartDate.getMonth() + monthsOffset);
+    currentEndDate.setMonth(currentEndDate.getMonth() + monthsOffset);
     
-    // Calculate cycle name (month of end date)
+    // Calculate cycle name - use the month where the cycle ENDS
     const monthNames = [
       "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
       "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
     ];
-    const cycleName = monthNames[endDate.getMonth()];
+    const cycleName = monthNames[currentEndDate.getMonth()];
     
     return {
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0],
+      startDate: currentStartDate.toISOString().split('T')[0],
+      endDate: currentEndDate.toISOString().split('T')[0],
       cycleName: cycleName
     };
   }, [currentCycle, selectedCycleOffset]);
@@ -146,14 +148,55 @@ export default function Analysis() {
     return diffDays;
   }, [cycleParams]);
 
+  // Prepare expense data (sorted) - memoized to prevent infinite loop
+  const expenseData = useMemo(() => {
+    return categoryData?.filter(c => c.category_type === 'expense')
+      .sort((a, b) => b.total - a.total) || [];
+  }, [categoryData]);
+
   // Prepare pie chart data (only expenses, top 10)
-  const expenseData = categoryData?.filter(c => c.category_type === 'expense')
-    .sort((a, b) => b.total - a.total) || [];
-  const pieData = expenseData.slice(0, 10).map(c => ({
-    name: c.category_name,
-    value: c.total,
-    icon: c.category_icon,
-  }));
+  const pieData = useMemo(() => {
+    return expenseData.slice(0, 10).map(c => ({
+      name: c.category_name,
+      value: c.total,
+      icon: c.category_icon,
+    }));
+  }, [expenseData]);
+
+  // Prepare top 5 expenses for ranking display
+  const topExpenses = useMemo(() => {
+    return expenseData.slice(0, 5);
+  }, [expenseData]);
+
+  // Animate pie chart on data change OR when switching to charts tab
+  useEffect(() => {
+    // Only animate when on charts tab
+    if (activeTab !== 'charts') return;
+    
+    if (pieData.length === 0) {
+      setAnimatedPieData([]);
+      return;
+    }
+    
+    // Start with 0 values
+    const initialData = pieData.map(item => ({
+      id: item.name,
+      label: item.name,
+      value: 0,
+    }));
+    setAnimatedPieData(initialData);
+
+    // Transition to real values after 30ms
+    const timer = setTimeout(() => {
+      setAnimatedPieData(pieData.map(item => ({
+        id: item.name,
+        label: item.name,
+        value: item.value,
+      })));
+    }, 30);
+
+    return () => clearTimeout(timer);
+  }, [pieData, activeTab]); // Added activeTab dependency
 
   // Prepare line chart data
   const lineData = trendsData?.map(t => ({
@@ -172,7 +215,8 @@ export default function Analysis() {
   // Prepare Budget vs Real Bar Chart data
   const budgetVsRealData = budgetComparison?.categories
     ?.filter(c => c.budgeted > 0 || c.actual > 0)
-    .slice(0, 8)
+    .sort((a, b) => (b.budgeted + b.actual) - (a.budgeted + a.actual)) // Mayor a menor
+    .slice(0, 5) // Solo top 5
     .map(c => ({
       name: c.category_name.length > 15 ? c.category_name.substring(0, 15) + '...' : c.category_name,
       Presupuesto: convertAmount(c.budgeted),
@@ -193,11 +237,6 @@ export default function Analysis() {
     size: c.total,
     fill: COLORS[index % COLORS.length],
   }));
-
-  // Calculate budget compliance percentage for gauge
-  const budgetCompliance = budgetComparison?.summary 
-    ? (budgetComparison.summary.total_actual_expense / budgetComparison.summary.total_budgeted_expense) * 100 
-    : 0;
 
   // Projections and Alerts calculations
   const projections = useMemo(() => {
@@ -289,102 +328,95 @@ export default function Analysis() {
     return formatBudget(amount, displayCurrency);
   };
 
-  // Chart components mapping
+  // Nivo theme matching design system
+  const nivoTheme = {
+    fontSize: 12,
+    fontFamily: 'inherit',
+    textColor: '#1a1a1a',
+    tooltip: {
+      container: {
+        background: 'white',
+        border: '1px solid #E5E7EB',
+        borderRadius: '8px',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        padding: '12px',
+      },
+    },
+  };
+
+  // Chart components mapping (now with Nivo)
   const chartComponents: Record<string, React.ReactElement> = {
-    gauge: (
-      <ChartCard key="gauge" id="gauge">
-        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-3xl shadow-card overflow-hidden">
-          <div className="p-6 border-b border-purple-200 bg-white/50">
-            <div className="flex items-center gap-2">
-              <Target className="w-5 h-5 text-purple-600" />
-              <h2 className="text-xl font-extrabold text-text-primary">Cumplimiento de Presupuesto</h2>
-            </div>
-            <p className="text-sm text-text-secondary mt-1">Porcentaje del presupuesto utilizado</p>
+    pie: (
+      <ChartCard key="pie" id="pie">
+        <div className="bg-white/90 backdrop-blur-md border border-border/50 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200">
+          <div className="p-6 border-b-2 border-border">
+            <h2 className="text-xl font-extrabold text-text-primary">Distribución de Gastos</h2>
+            <p className="text-xs text-text-secondary mt-1">Top 10 categorías de gastos</p>
           </div>
-          <div className="p-6">
-            {budgetComparison?.summary ? (
-              <div className="flex flex-col items-center">
-                <div className={budgetCompliance > 100 ? "animate-pulse" : ""}>
-                  <div 
-                    className="relative"
-                    style={budgetCompliance > 100 ? {
-                      filter: 'drop-shadow(0 0 20px rgba(251, 146, 60, 0.6)) drop-shadow(0 0 40px rgba(251, 146, 60, 0.4))'
-                    } : {}}
-                  >
-                    <ResponsiveContainer width="100%" height={280}>
-                      <RadialBarChart 
-                        cx="50%" 
-                        cy="50%" 
-                        innerRadius="80%" 
-                        outerRadius="100%" 
-                        barSize={30}
-                        data={[{ name: 'Uso', value: Math.min(budgetCompliance, 150), fill: budgetCompliance > 100 ? '#FB923C' : budgetCompliance > 80 ? '#F97316' : '#10B981' }]}
-                        startAngle={180}
-                        endAngle={0}
-                      >
-                        <RadialBar background dataKey="value" cornerRadius={15} />
-                        <text x="50%" y="45%" textAnchor="middle" dominantBaseline="middle" className="text-5xl font-black fill-text-primary">
-                          {budgetCompliance.toFixed(0)}%
-                        </text>
-                        <text x="50%" y="60%" textAnchor="middle" dominantBaseline="middle" className="text-sm fill-text-secondary font-semibold">
-                          {budgetCompliance > 100 ? 'Sobre presupuesto' : budgetCompliance > 80 ? 'Cerca del límite' : 'Dentro del presupuesto'}
-                        </text>
-                      </RadialBarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4 w-full mt-4">
-                  <div className="text-center p-3 bg-white/70 rounded-xl">
-                    <p className="text-xs text-text-secondary font-semibold">Presupuestado</p>
-                    <p className="text-lg font-bold text-text-primary">{formatBudgetAmount(budgetComparison.summary.total_budgeted_expense)}</p>
-                  </div>
-                  <div className="text-center p-3 bg-white/70 rounded-xl">
-                    <p className="text-xs text-text-secondary font-semibold">Gastado</p>
-                    <p className="text-lg font-bold text-orange-600">{formatAmount(budgetComparison.summary.total_actual_expense)}</p>
-                  </div>
-                </div>
+          <div className="p-6 bg-white/50 backdrop-blur-sm">
+            {animatedPieData.length > 0 ? (
+              <div style={{ height: '420px' }}>
+                <ResponsivePie
+                  data={animatedPieData}
+                  margin={{ top: 40, right: 100, bottom: 40, left: 100 }}
+                  startAngle={-104}
+                  innerRadius={0.5}
+                  padAngle={2}
+                  cornerRadius={0}
+                  activeOuterRadiusOffset={8}
+                  colors={COLORS}
+                  defs={[
+                    { id: 'gradientGreen', type: 'radialGradient', colors: [{ offset: 0, color: '#6EE7B7' }, { offset: 100, color: '#10B981' }] },
+                    { id: 'gradientRose', type: 'radialGradient', colors: [{ offset: 0, color: '#FDA4AF' }, { offset: 100, color: '#F43F5E' }] },
+                    { id: 'gradientPink', type: 'radialGradient', colors: [{ offset: 0, color: '#F9A8D4' }, { offset: 100, color: '#EC4899' }] },
+                    { id: 'gradientPurple', type: 'radialGradient', colors: [{ offset: 0, color: '#C4B5FD' }, { offset: 100, color: '#8B5CF6' }] },
+                    { id: 'gradientBlue', type: 'radialGradient', colors: [{ offset: 0, color: '#93C5FD' }, { offset: 100, color: '#3B82F6' }] },
+                    { id: 'gradientAmber', type: 'radialGradient', colors: [{ offset: 0, color: '#FCD34D' }, { offset: 100, color: '#F59E0B' }] },
+                    { id: 'gradientCyan', type: 'radialGradient', colors: [{ offset: 0, color: '#67E8F9' }, { offset: 100, color: '#06B6D4' }] },
+                    { id: 'gradientLime', type: 'radialGradient', colors: [{ offset: 0, color: '#BEF264' }, { offset: 100, color: '#84CC16' }] },
+                  ]}
+                  fill={[
+                    { match: (d) => d.data.id === animatedPieData[0]?.id, id: 'gradientGreen' },
+                    { match: (d) => d.data.id === animatedPieData[1]?.id, id: 'gradientRose' },
+                    { match: (d) => d.data.id === animatedPieData[2]?.id, id: 'gradientPink' },
+                    { match: (d) => d.data.id === animatedPieData[3]?.id, id: 'gradientPurple' },
+                    { match: (d) => d.data.id === animatedPieData[4]?.id, id: 'gradientBlue' },
+                    { match: (d) => d.data.id === animatedPieData[5]?.id, id: 'gradientAmber' },
+                    { match: (d) => d.data.id === animatedPieData[6]?.id, id: 'gradientCyan' },
+                    { match: (d) => d.data.id === animatedPieData[7]?.id, id: 'gradientLime' },
+                  ]}
+                  borderColor={{ from: 'color', modifiers: [['opacity', 0.3]] }}
+                  arcLinkLabelsSkipAngle={10}
+                  arcLinkLabelsTextColor="#333333"
+                  arcLinkLabelsThickness={2}
+                  arcLinkLabelsColor={{ from: 'color' }}
+                  arcLabelsSkipAngle={10}
+                  arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
+                  arcLabel={(d) => `${((d.value / animatedPieData.reduce((sum, item) => sum + item.value, 0)) * 100).toFixed(1)}%`}
+                  theme={nivoTheme}
+                  tooltip={({ datum }) => (
+                    <div className="bg-white/95 backdrop-blur-md border border-border/50 rounded-lg p-3 shadow-xl">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div 
+                          className="w-3 h-3 rounded-full shadow-sm" 
+                          style={{ backgroundColor: datum.color }}
+                        />
+                        <span className="font-bold text-text-primary">{datum.label}</span>
+                      </div>
+                      <div className="text-sm text-text-secondary">
+                        {formatAmount(datum.value)} ({((datum.value / animatedPieData.reduce((sum, d) => sum + d.value, 0)) * 100).toFixed(1)}%)
+                      </div>
+                    </div>
+                  )}
+                  animate={true}
+                  motionConfig="wobbly"
+                  transitionMode="pushIn"
+                  activeInnerRadiusOffset={8}
+                />
               </div>
             ) : (
-              <div className="h-[350px] flex items-center justify-center text-text-secondary">
-                No hay datos de presupuesto
-              </div>
-            )}
-          </div>
-        </div>
-      </ChartCard>
-    ),
-    savings: (
-      <ChartCard key="savings" id="savings">
-        <div className="bg-surface border border-border rounded-3xl shadow-card overflow-hidden">
-          <div className="p-6 border-b border-border">
-            <h2 className="text-xl font-extrabold text-text-primary">Evolución del Ahorro</h2>
-            <p className="text-sm text-text-secondary mt-1">Comparación con meta del 20%</p>
-          </div>
-          <div className="p-6">
-            {savingsEvolutionData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={350}>
-                <LineChart data={savingsEvolutionData}>
-                  <defs>
-                    <linearGradient id="colorAhorro" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                  <XAxis dataKey="name" stroke="#6B7280" fontSize={12} />
-                  <YAxis stroke="#6B7280" fontSize={12} />
-                  <Tooltip 
-                    formatter={(value) => formatAmount(value as number)}
-                    contentStyle={{ backgroundColor: '#fff', border: '2px solid #E5E7EB', borderRadius: '12px' }}
-                  />
-                  <Legend />
-                  <Line type="monotone" dataKey="Ahorro" stroke="#3B82F6" strokeWidth={3} dot={{ fill: '#3B82F6', r: 5 }} activeDot={{ r: 7 }} />
-                  <Line type="monotone" dataKey="Meta" stroke="#F59E0B" strokeWidth={2} strokeDasharray="5 5" dot={{ fill: '#F59E0B', r: 4 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[350px] flex items-center justify-center text-text-secondary">
-                No hay datos de tendencias
+              <div className="h-[400px] flex items-center justify-center text-text-secondary">
+                No hay datos disponibles
               </div>
             )}
           </div>
@@ -393,27 +425,108 @@ export default function Analysis() {
     ),
     budgetVsReal: (
       <ChartCard key="budgetVsReal" id="budgetVsReal">
-        <div className="bg-surface border border-border rounded-3xl shadow-card overflow-hidden">
-          <div className="p-6 border-b border-border">
+        <div className="bg-white/90 backdrop-blur-md border border-border/50 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200">
+          <div className="p-6 border-b-2 border-border">
             <h2 className="text-xl font-extrabold text-text-primary">Presupuesto vs Real</h2>
-            <p className="text-sm text-text-secondary mt-1">Top 8 categorías</p>
+            <p className="text-xs text-text-secondary mt-1">Comparación por categoría</p>
           </div>
-          <div className="p-6">
-            {budgetVsRealData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={budgetVsRealData} margin={{ left: 10, right: 10, top: 10, bottom: 30 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                  <XAxis dataKey="name" stroke="#6B7280" fontSize={11} angle={-45} textAnchor="end" height={80} />
-                  <YAxis stroke="#6B7280" fontSize={12} />
-                  <Tooltip 
-                    formatter={(value, name) => name === 'Presupuesto' ? formatBudgetAmount(value as number) : formatAmount(value as number)}
-                    contentStyle={{ backgroundColor: '#fff', border: '2px solid #E5E7EB', borderRadius: '12px' }}
-                  />
-                  <Legend />
-                  <Bar dataKey="Presupuesto" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="Real" fill="#EC4899" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+          <div className="p-6 bg-white/50 backdrop-blur-sm">
+            {budgetVsRealData && budgetVsRealData.length > 0 ? (
+              <div style={{ height: '400px' }}>
+                <ResponsiveBar
+                  data={budgetVsRealData}
+                  keys={['Presupuesto', 'Real']}
+                  indexBy="name"
+                  margin={{ top: 20, right: 140, bottom: 50, left: 150 }}
+                  padding={0.3}
+                  groupMode="grouped"
+                  layout="horizontal"
+                  valueScale={{ type: 'linear' }}
+                  indexScale={{ type: 'band', round: true }}
+                  colors={['#06B6D4', '#EC4899']}
+                  borderRadius={0}
+                  defs={[
+                    {
+                      id: 'gradientPresupuestado',
+                      type: 'linearGradient',
+                      colors: [
+                        { offset: 0, color: '#22D3EE' },
+                        { offset: 100, color: '#0891B2' }
+                      ],
+                    },
+                    {
+                      id: 'gradientReal',
+                      type: 'linearGradient',
+                      colors: [
+                        { offset: 0, color: '#F9A8D4' },
+                        { offset: 100, color: '#EC4899' }
+                      ],
+                    },
+                  ]}
+                  fill={[
+                    { match: { id: 'Presupuesto' }, id: 'gradientPresupuestado' },
+                    { match: { id: 'Real' }, id: 'gradientReal' },
+                  ]}
+                  borderColor={{ from: 'color', modifiers: [['darker', 0.3]] }}
+                  axisTop={null}
+                  axisRight={null}
+                  axisBottom={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: 0,
+                    legendPosition: 'middle',
+                    legendOffset: 40,
+                    format: (value) => `${(value / 1000).toFixed(0)}k`,
+                  }}
+                  axisLeft={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: 0,
+                    legendPosition: 'middle',
+                    legendOffset: -140,
+                  }}
+                  enableLabel={true}
+                  label={(d) => `${((d.value || 0) / 1000).toFixed(1)}k`}
+                  labelSkipWidth={12}
+                  labelSkipHeight={12}
+                  labelTextColor="#ffffff"
+                  legends={[
+                    {
+                      dataFrom: 'keys',
+                      anchor: 'right',
+                      direction: 'column',
+                      justify: false,
+                      translateX: 120,
+                      translateY: 0,
+                      itemsSpacing: 2,
+                      itemWidth: 100,
+                      itemHeight: 20,
+                      itemDirection: 'left-to-right',
+                      itemOpacity: 0.85,
+                      symbolSize: 20,
+                      effects: [{ on: 'hover', style: { itemOpacity: 1 } }],
+                    },
+                  ]}
+                  theme={nivoTheme}
+                  tooltip={({ id, value, indexValue }) => (
+                    <div className="bg-white/95 backdrop-blur-md border border-border/50 rounded-lg p-3 shadow-xl">
+                      <div className="font-bold text-text-primary mb-1">{indexValue}</div>
+                      <div className="text-sm text-text-secondary">
+                        {id}: {formatAmount(value)}
+                      </div>
+                    </div>
+                  )}
+                  animate={true}
+                  motionConfig={{
+                    mass: 1,
+                    tension: 170,
+                    friction: 26,
+                    clamp: false,
+                    precision: 0.01,
+                    velocity: 0,
+                  }}
+                />
+              </div>
             ) : (
               <div className="h-[400px] flex items-center justify-center text-text-secondary">
                 No hay datos de comparación
@@ -472,74 +585,95 @@ export default function Analysis() {
         </div>
       </ChartCard>
     ),
-    pie: (
-      <ChartCard key="pie" id="pie">
-        <div className="bg-surface border border-border rounded-3xl shadow-card overflow-hidden">
-          <div className="p-6 border-b border-border">
-            <h2 className="text-xl font-extrabold text-text-primary">Top 10 Categorías</h2>
-          </div>
-          <div className="p-6">
-            {pieData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={400}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="45%"
-                    labelLine={false}
-                    label={(entry: any) => `${(entry.percent * 100).toFixed(0)}%`}
-                    outerRadius={110}
-                    innerRadius={70}
-                    fill="#8884d8"
-                    dataKey="value"
-                    paddingAngle={2}
-                  >
-                    {pieData.map((_entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => formatAmount(value as number)} />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[400px] flex items-center justify-center text-text-secondary">
-                No hay datos de gastos
-              </div>
-            )}
-          </div>
-        </div>
-      </ChartCard>
-    ),
     trends: (
       <ChartCard key="trends" id="trends">
-        <div className="bg-surface border border-border rounded-3xl shadow-card overflow-hidden">
-          <div className="p-6 border-b border-border">
+        <div className="bg-white/90 backdrop-blur-md border border-border/50 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200">
+          <div className="p-6 border-b-2 border-border">
             <h2 className="text-xl font-extrabold text-text-primary">Tendencias por Ciclo</h2>
+            <p className="text-xs text-text-secondary mt-1">Últimos 6 ciclos</p>
           </div>
-          <div className="p-6">
+          <div className="p-6 bg-white/50 backdrop-blur-sm">
             {lineData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={400}>
-                <AreaChart data={lineData}>
-                  <defs>
-                    <linearGradient id="colorIngresos" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
-                    </linearGradient>
-                    <linearGradient id="colorGastos" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#EF4444" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#EF4444" stopOpacity={0.1}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => formatAmount(value as number)} />
-                  <Legend verticalAlign="bottom" height={36} />
-                  <Area type="monotone" dataKey="Ingresos" stackId="1" stroke="#10B981" fill="url(#colorIngresos)" strokeWidth={2} />
-                  <Area type="monotone" dataKey="Gastos" stackId="1" stroke="#EF4444" fill="url(#colorGastos)" strokeWidth={2} />
-                </AreaChart>
-              </ResponsiveContainer>
+              <div style={{ height: '400px' }}>
+                <ResponsiveLine
+                  data={[
+                    {
+                      id: 'Ingresos',
+                      color: '#10B981',
+                      data: lineData.map(d => ({ x: d.name, y: d.Ingresos }))
+                    },
+                    {
+                      id: 'Gastos',
+                      color: '#F43F5E',
+                      data: lineData.map(d => ({ x: d.name, y: d.Gastos }))
+                    }
+                  ]}
+                  margin={{ top: 20, right: 140, bottom: 60, left: 70 }}
+                  xScale={{ type: 'point' }}
+                  yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: false, reverse: false }}
+                  curve="catmullRom"
+                  axisTop={null}
+                  axisRight={null}
+                  axisBottom={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: -45,
+                    legendOffset: 50,
+                    legendPosition: 'middle',
+                  }}
+                  axisLeft={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: 0,
+                    legendOffset: -50,
+                    legendPosition: 'middle',
+                    format: (value) => `${(value / 1000).toFixed(0)}k`,
+                  }}
+                  colors={{ datum: 'color' }}
+                  pointSize={8}
+                  pointColor={{ from: 'color' }}
+                  pointBorderWidth={2}
+                  pointBorderColor={{ from: 'serieColor' }}
+                  pointLabelYOffset={-12}
+                  useMesh={true}
+                  enableArea={true}
+                  areaOpacity={0.1}
+                  legends={[
+                    {
+                      anchor: 'right',
+                      direction: 'column',
+                      justify: false,
+                      translateX: 120,
+                      translateY: 0,
+                      itemsSpacing: 2,
+                      itemDirection: 'left-to-right',
+                      itemWidth: 100,
+                      itemHeight: 20,
+                      itemOpacity: 0.85,
+                      symbolSize: 12,
+                      symbolShape: 'circle',
+                      effects: [{ on: 'hover', style: { itemOpacity: 1 } }],
+                    },
+                  ]}
+                  theme={nivoTheme}
+                  tooltip={({ point }) => (
+                    <div className="bg-white/95 backdrop-blur-md border border-border/50 rounded-lg p-3 shadow-xl">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div 
+                          className="w-3 h-3 rounded-full shadow-sm" 
+                          style={{ backgroundColor: point.color }}
+                        />
+                        <span className="font-bold text-text-primary">{point.serieId}</span>
+                      </div>
+                      <div className="text-sm text-text-secondary">
+                        {point.data.x}: {formatAmount(Number(point.data.y))}
+                      </div>
+                    </div>
+                  )}
+                  animate={true}
+                  motionConfig="gentle"
+                />
+              </div>
             ) : (
               <div className="h-[400px] flex items-center justify-center text-text-secondary">
                 No hay datos de tendencias
@@ -795,7 +929,7 @@ export default function Analysis() {
                 <div className="space-y-4">
                   <div className="p-5 bg-blue-500/10 backdrop-blur-md border border-blue-200 rounded-2xl">
                     <div className="flex items-center gap-2 mb-2">
-                      <Target className="w-5 h-5 text-primary" strokeWidth={2.5} />
+                      <TrendingUp className="w-5 h-5 text-primary" strokeWidth={2.5} />
                       <span className="text-sm font-bold text-text-secondary uppercase tracking-wider">Proyección Fin de Ciclo</span>
                     </div>
                     <p className="text-3xl font-extrabold text-text-primary">{formatAmount(projections.projectedTotal)}</p>
@@ -935,13 +1069,74 @@ export default function Analysis() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={chartOrder} strategy={rectSortingStrategy}>
-              <div className="grid gap-6 md:grid-cols-2">
-                {chartOrder.map(chartId => chartComponents[chartId])}
+            <>
+              <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+                {/* 1. Nivo Pie Chart */}
+                {chartComponents['pie']}
+
+                {/* 2. Nivo Bar Chart */}
+                {chartComponents['budgetVsReal']}
               </div>
-            </SortableContext>
-          </DndContext>
+
+              {/* 3. Nivo Line Chart */}
+              {chartComponents['trends']}
+
+              {/* 4. Top 5 Categorías de Gasto */}
+              <div className="bg-white/90 backdrop-blur-md border border-border/50 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200">
+                <div className="p-6 border-b border-border/50 bg-gradient-to-r from-orange-50/80 to-amber-50/80 backdrop-blur-sm">
+                  <h3 className="text-lg font-extrabold text-text-primary flex items-center gap-2">
+                    <span className="text-2xl">🏆</span>
+                    Top 5 Categorías de Gasto
+                  </h3>
+                  <p className="text-xs text-text-secondary mt-1">Ranking visual de las categorías con mayor gasto</p>
+                </div>
+                <div className="p-6 bg-white/50 backdrop-blur-sm">
+                  {topExpenses.length > 0 ? (
+                    <div className="grid md:grid-cols-5 gap-4">
+                      {topExpenses.map((cat, index) => (
+                        <div 
+                          key={cat.category_id}
+                          className="bg-gradient-to-br from-white/80 to-gray-50/80 backdrop-blur-sm rounded-xl border border-border/30 p-4 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1"
+                          style={{ 
+                            borderTopColor: COLORS[index % COLORS.length],
+                            borderTopWidth: '4px'
+                          }}
+                        >
+                          <div className="text-center space-y-3">
+                            <div className="flex items-center justify-center">
+                              <div 
+                                className="w-16 h-16 rounded-full flex items-center justify-center text-3xl font-black text-white shadow-lg"
+                                style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                              >
+                                #{index + 1}
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-text-primary truncate">{cat.category_name}</p>
+                              <p className="text-lg font-extrabold mt-1" style={{ color: COLORS[index % COLORS.length] }}>
+                                {formatAmount(cat.total)}
+                              </p>
+                              <p className="text-[10px] text-text-secondary mt-1">
+                                {cat.count} {cat.count === 1 ? 'transacción' : 'transacciones'}
+                              </p>
+                            </div>
+                            <div className="pt-2 border-t border-border/20">
+                              <p className="text-xs text-text-secondary">
+                                {((cat.total / topExpenses.reduce((sum, c) => sum + c.total, 0)) * 100).toFixed(1)}% del top 5
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="h-[200px] flex items-center justify-center text-text-secondary">
+                      No hay datos de categorías
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -978,49 +1173,104 @@ export default function Analysis() {
             </div>
             <div className="p-8">
               {topCategories.length > 0 ? (
-                <div className="space-y-3">
-                  {topCategories.map((cat, index) => (
-                    <div key={`category-${cat.category_id}-${index}`} className="border border-border rounded-2xl overflow-hidden">
-                      {/* Category Header - Clickeable */}
-                      <div 
-                        className="flex items-center justify-between p-5 bg-surface-soft hover:bg-surface transition-colors cursor-pointer group"
-                        onClick={() => setExpandedCategory(expandedCategory === cat.category_id ? null : cat.category_id)}
-                      >
-                        <div className="flex items-center gap-3 flex-1">
-                          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl" 
-                              style={{ backgroundColor: COLORS[index % COLORS.length] + '20' }}>
-                            <CategoryIcon iconName={cat.category_icon} size={24} />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-text-primary tracking-tight">{cat.category_name}</p>
-                            <button 
-                              className="text-xs text-primary font-bold hover:underline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setExpandedCategory(expandedCategory === cat.category_id ? null : cat.category_id);
-                              }}
+                <div className="space-y-6">
+                  {/* Income Categories */}
+                  {topCategories.filter(cat => cat.category_type === 'income').length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-bold text-emerald-600 uppercase tracking-wider mb-3 px-2">Ingresos</h3>
+                      <div className="space-y-3">
+                        {topCategories.filter(cat => cat.category_type === 'income').map((cat, index) => (
+                          <div key={`category-${cat.category_id}-${index}`} className="border border-border rounded-2xl overflow-hidden">
+                            {/* Category Header - Clickeable */}
+                            <div 
+                              className="flex items-center justify-between p-5 bg-surface-soft hover:bg-surface transition-colors cursor-pointer group"
+                              onClick={() => setExpandedCategory(expandedCategory === cat.category_id ? null : cat.category_id)}
                             >
-                              {expandedCategory === cat.category_id ? '▼' : '▶'} {cat.count} transacciones
-                            </button>
+                              <div className="flex items-center gap-3 flex-1">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                                  <CategoryIcon iconName={cat.category_icon} size={24} className="text-emerald-600" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-text-primary tracking-tight">{cat.category_name}</p>
+                                  <p className="text-xs text-text-secondary mt-0.5">
+                                    {cat.count} {cat.count === 1 ? 'transacción' : 'transacciones'}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <p className="font-extrabold text-emerald-600 text-lg">{formatAmount(cat.total)}</p>
+                                {expandedCategory === cat.category_id ? (
+                                  <EyeOff className="w-5 h-5 text-text-secondary group-hover:text-emerald-600 transition-colors" />
+                                ) : (
+                                  <Eye className="w-5 h-5 text-text-secondary group-hover:text-emerald-600 transition-colors" />
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Transactions List - Expandible */}
+                            {expandedCategory === cat.category_id && (
+                              <CategoryTransactionsList 
+                                categoryId={cat.category_id}
+                                startDate={cycleParams?.startDate}
+                                endDate={cycleParams?.endDate}
+                                displayCurrency={displayCurrency}
+                                applyDemoScale={applyDemoScale}
+                              />
+                            )}
                           </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <p className="font-extrabold text-text-primary text-lg">{formatAmount(cat.total)}</p>
-                        </div>
+                        ))}
                       </div>
-                      
-                      {/* Transactions List - Expandible */}
-                      {expandedCategory === cat.category_id && (
-                        <CategoryTransactionsList 
-                          categoryId={cat.category_id}
-                          startDate={cycleParams?.startDate}
-                          endDate={cycleParams?.endDate}
-                          displayCurrency={displayCurrency}
-                          applyDemoScale={applyDemoScale}
-                        />
-                      )}
                     </div>
-                  ))}
+                  )}
+
+                  {/* Expense Categories */}
+                  {topCategories.filter(cat => cat.category_type === 'expense').length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-bold text-orange-600 uppercase tracking-wider mb-3 px-2">Gastos</h3>
+                      <div className="space-y-3">
+                        {topCategories.filter(cat => cat.category_type === 'expense').map((cat, index) => (
+                          <div key={`category-${cat.category_id}-${index}`} className="border border-border rounded-2xl overflow-hidden">
+                            {/* Category Header - Clickeable */}
+                            <div 
+                              className="flex items-center justify-between p-5 bg-surface-soft hover:bg-surface transition-colors cursor-pointer group"
+                              onClick={() => setExpandedCategory(expandedCategory === cat.category_id ? null : cat.category_id)}
+                            >
+                              <div className="flex items-center gap-3 flex-1">
+                                <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
+                                  <CategoryIcon iconName={cat.category_icon} size={24} className="text-orange-600" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-text-primary tracking-tight">{cat.category_name}</p>
+                                  <p className="text-xs text-text-secondary mt-0.5">
+                                    {cat.count} {cat.count === 1 ? 'transacción' : 'transacciones'}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <p className="font-extrabold text-orange-600 text-lg">{formatAmount(cat.total)}</p>
+                                {expandedCategory === cat.category_id ? (
+                                  <EyeOff className="w-5 h-5 text-text-secondary group-hover:text-orange-600 transition-colors" />
+                                ) : (
+                                  <Eye className="w-5 h-5 text-text-secondary group-hover:text-orange-600 transition-colors" />
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Transactions List - Expandible */}
+                            {expandedCategory === cat.category_id && (
+                              <CategoryTransactionsList 
+                                categoryId={cat.category_id}
+                                startDate={cycleParams?.startDate}
+                                endDate={cycleParams?.endDate}
+                                displayCurrency={displayCurrency}
+                                applyDemoScale={applyDemoScale}
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-8 text-text-secondary">No hay categorías</div>
@@ -1095,7 +1345,7 @@ function CategoryTransactionsList({ categoryId, startDate, endDate, displayCurre
                 <p className={`font-bold text-sm ${
                   tx.type === 'income' ? 'text-emerald-600' : 'text-orange-600'
                 }`}>
-                  {tx.type === 'income' ? '+' : '-'} {formatCurrencyISO(applyDemoScale(tx.amount_pen), displayCurrency, { decimals: 2 })}
+                  {tx.type === 'income' ? '+' : '-'} {formatCurrencyISO(applyDemoScale(tx.amount), displayCurrency, { decimals: 2 })}
                 </p>
               </div>
             </div>

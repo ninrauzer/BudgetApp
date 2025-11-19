@@ -47,6 +47,23 @@ from app.schemas.common import (
     PaginationMeta,
     PaginatedResponse,
 )
+from app.schemas.credit_card import (
+    CreditCardBase,
+    CreditCardCreate,
+    CreditCardUpdate,
+    CreditCard,
+    InstallmentBase,
+    InstallmentCreate,
+    InstallmentUpdate,
+    Installment,
+    StatementBase,
+    StatementCreate,
+    Statement,
+    CreditCardSummary,
+    DebtEvolutionPoint,
+    PayoffProjection,
+    StatementUploadResponse,
+)
 from app.schemas.loan import (
     LoanBase,
     LoanCreate,

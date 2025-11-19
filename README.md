@@ -4,24 +4,61 @@
 [![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org)
 [![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5+-3178C6.svg)](https://www.typescriptlang.org)
-[![SQLite](https://img.shields.io/badge/SQLite-3-lightgrey.svg)](https://www.sqlite.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-336791.svg)](https://www.postgresql.org)
+[![Supabase](https://img.shields.io/badge/Supabase-Ready-3ECF8E.svg)](https://supabase.com)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com)
 
 Aplicación web moderna para gestión presupuestal personal, desarrollada con arquitectura API-First, permitiendo planificar presupuestos, registrar transacciones y visualizar análisis financieros.
 
-## 🚀 Quick Start con Docker
+**🆕 Migración a Supabase PostgreSQL completada (19 Nov 2024)**
+
+**🆕 Migración a Supabase PostgreSQL completada (19 Nov 2024)**
+
+## 🚀 Quick Start
+
+### Opción 1: Desarrollo Local (Recomendado)
+
+```bash
+# Backend (SQLite local)
+cd backend
+.\switch-env.ps1 dev
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+
+# Frontend (en otra terminal)
+cd frontend
+npm run dev
+
+# URLs:
+# Frontend: http://localhost:5173
+# Backend:  http://localhost:8000
+# API Docs: http://localhost:8000/docs
+```
+
+### Opción 2: Docker (Todo-en-uno)
 
 ```bash
 # Iniciar aplicación completa
 docker compose up -d
 
-# Ver en navegador
+# URLs:
 # Frontend: http://localhost
 # Backend:  http://localhost:8000
 # API Docs: http://localhost:8000/docs
 ```
 
-📖 **Documentación completa**: Ver [DOCKER.md](DOCKER.md)
+### Opción 3: Producción (Supabase)
+
+```bash
+# Backend (PostgreSQL en Supabase)
+cd backend
+.\switch-env.ps1 prod
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+```
+
+📖 **Documentación**: 
+- [DOCKER.md](DOCKER.md) - Despliegue con Docker
+- [SUPABASE.md](SUPABASE.md) - Base de datos PostgreSQL en la nube
+- [RENDER.md](RENDER.md) - Deploy en Render.com
 
 ---
 

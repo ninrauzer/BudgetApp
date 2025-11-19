@@ -98,7 +98,8 @@ from app.api import (
     billing_cycle,
     analysis,
     transfers,
-    loans
+    loans,
+    credit_cards
 )
 
 app.include_router(categories.router)
@@ -114,6 +115,7 @@ app.include_router(quick_templates.router)
 app.include_router(billing_cycle.router)
 app.include_router(analysis.router)
 app.include_router(loans.router)  # Debt management
+app.include_router(credit_cards.router)  # Credit card management (ADR-004)
 app.include_router(frontend.router)  # Keep for legacy HTMX if needed
 
 

@@ -739,10 +739,20 @@ def get_budget_vs_actual(
     # Crear mapa de reales
     actual_map = {t.category_id: t.total_amount for t in actual_transactions}
 
-    # (debug actual_map removido)
-    plan_ids = {p.category_id for p in plans}
-    missing_actual = plan_ids - set(actual_map.keys())
-    # (debug missing_actual removido)
+    # Obtener TODAS las categorías activas para calcular totales correctos
+    from app.models.category import Category
+    all_active_categories = db.query(Category).filter(Category.is_active == True).all()
+    
+    # Crear mapa de categorías (para acceso rápido)
+    category_map = {cat.id: cat for cat in all_active_categories}
+    
+    # Crear mapa de planes (para acceso rápido)
+    plan_map = {}
+    seen_plan_categories = set()
+    for plan in plans:
+        if plan.category_id not in seen_plan_categories:
+            plan_map[plan.category_id] = plan
+            seen_plan_categories.add(plan.category_id)
     
     # Inicializar sumarios
     total_budgeted_income = 0
@@ -750,10 +760,36 @@ def get_budget_vs_actual(
     total_budgeted_expense = 0
     total_actual_expense = 0
     
-    # Combinar datos (deduplicate by category_id)
+    # Calcular totales presupuestados usando TODAS las categorías activas
+    for category in all_active_categories:
+        plan = plan_map.get(category.id)
+        budgeted_amount = plan.amount if plan else 0
+        
+        if category.type == "income":
+            total_budgeted_income += budgeted_amount
+        else:  # expense
+            total_budgeted_expense += budgeted_amount
+    
+    # Debug log (temporal)
+    print(f"DEBUG: Total categorías activas: {len(all_active_categories)}")
+    print(f"DEBUG: Categorías con plan: {len(plan_map)}")
+    print(f"DEBUG: Total budgeted expense: {total_budgeted_expense}")
+    print(f"DEBUG: Total budgeted income: {total_budgeted_income}")
+    
+    # Calcular totales reales usando el mapa de categorías
+    for category_id, actual_amount in actual_map.items():
+        category = category_map.get(category_id)
+        if category:
+            if category.type == "income":
+                total_actual_income += actual_amount
+            else:  # expense
+                total_actual_expense += actual_amount
+    
+    # Combinar datos para retornar (solo categorías con plan o con transacciones)
     categories_data = []
     seen_categories = set()
     
+    # Primero agregar categorías que tienen plan
     for plan in plans:
         # Skip duplicates (same category_id)
         if plan.category_id in seen_categories:
@@ -768,13 +804,7 @@ def get_budget_vs_actual(
         
         category_type = plan.category.type if plan.category else "expense"
         
-        # Acumular en sumarios según tipo
-        if category_type == "income":
-            total_budgeted_income += budgeted
-            total_actual_income += actual
-        else:
-            total_budgeted_expense += budgeted
-            total_actual_expense += actual
+        # No acumular en totales aquí - ya se calcularon arriba
         
         categories_data.append({
             "category_id": plan.category_id,

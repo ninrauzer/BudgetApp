@@ -18,18 +18,42 @@ Actualmente la app solo maneja transacciones individuales, sin visibilidad de:
 - Proyecciones de pago
 
 ### Caso de Uso Real
-Usuario con BBVA Visa Signature:
-- Línea de crédito: S/ 10,000
-- Deuda actual: S/ 6,245 (62%)
-- **Deuda en cuotas**: 
-  - Compra BM: S/ 7,305 (14/36 cuotas) TEA 17.63% → S/ 258.80/mes
-  - Hindu Ananda 1: S/ 1,200 (8/12 cuotas) TEA 35.99% → S/ 118.25/mes
-  - Hindu Ananda 2: S/ 899 (5/12 cuotas) TEA 35.99% → S/ 88.56/mes
-- **Deuda revolvente**: S/ 3,750.87 (TEA 44.99%)
-- **Pago mínimo**: S/ 703.08
-- **Pago total**: S/ 4,424.05
+Usuario con BBVA Visa Signature (Estado de Cuenta Noviembre 2025):
 
-**Problema crítico**: Si solo paga mínimo → 81 meses (6.75 años), pagará S/ 4,627 en intereses + S/ 3,240 en comisiones = casi 3x la deuda original.
+**Información de Tarjeta:**
+- Titular: RUIZ CALISAYA RENAN OMAR
+- Tipo: VISA SIGNATURE C
+- Número: 4147-21**-****-0265
+- Línea de crédito: S/ 13,000.00
+- Crédito utilizado: S/ 5,738.68 (44.1%)
+- Crédito disponible: S/ 7,261.32
+
+**Fechas Clave:**
+- Fecha de Cierre: 10/11/2025
+- Último día de Pago: 05/12/2025
+
+**Resumen Financiero:**
+- Saldo anterior: S/ 8,077
+- Capital disponible: S/ 4,633.98
+- Pago Total Mes: S/ 74.84
+
+**Compras en Cuotas Activas:**
+- **BM Ferretería**: S/ 14,610 (4/6 cuotas) TEA 17.63% → S/ 258.80/mes (Capital: S/ 234.61, Interés: S/ 24.19)
+- **Hindu Ananda 1**: S/ 1,200 (8/12 cuotas) TEA 35.99% → S/ 118.25/mes (Capital: S/ 104.06, Interés: S/ 14.19)
+- **Store Retail**: S/ 899 (5/12 cuotas) TEA 35.99% → S/ 88.56/mes (Capital: S/ 77.68, Interés: S/ 10.88)
+- **Netflix**: S/ 539 (1/12 cuotas) TEA 0.00% → S/ 44.90/mes (Sin intereses)
+
+**Datos Financieros:**
+- Deuda Total (inc. cuotas por vencer): S/ 12,563.09
+- TEA MORAT: S/ 14,343
+- Total cuotas mensuales: S/ 510.51
+
+**Problema Detectado en PDF**: 
+El banco **NO separa claramente** la deuda revolvente de las cuotas. El usuario debe calcular manualmente:
+- Deuda revolvente = Crédito Utilizado - Suma de saldos de cuotas
+- Los intereses aparecen agregados, no por línea
+- "Pago Mínimo" a veces muestra "---" en lugar de un valor
+- Las compras con cuotas (ej: "NETFLIX (01/12)") se mezclan con consumos normales en la tabla de movimientos
 
 ## Decisión
 
@@ -900,16 +924,17 @@ def downgrade():
 - Sanitizar datos parseados del PDF
 
 ## Referencias
-- Estado de cuenta real BBVA Visa Signature (Junio 2024)
+- Estado de cuenta real BBVA Visa Signature (Noviembre 2025) - Capturas de pantalla analizadas
 - Modelo de deuda de tarjeta de crédito estándar
 - Cálculo de intereses compuestos (TEA)
 - Estrategias de pago: Avalancha vs Bola de Nieve
+- ADR-006: PDF Parser AI (complementa con parseo automático)
 
 ## Fecha
-2024-11-14
+2025-11-18 (Actualizado con datos reales de estado de cuenta)
 
 ## Autor
-GitHub Copilot + Usuario
+GitHub Copilot + Usuario (RUIZ CALISAYA RENAN OMAR)
 
 ## Estado de Revisión
 - [ ] Revisado por equipo

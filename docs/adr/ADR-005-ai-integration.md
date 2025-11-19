@@ -1,674 +1,1441 @@
-# ADR-005: Integración de Funcionalidades de IA con OpenAI
+# ADR-005: Integración de Funcionalidades de IA con OpenAI# ADR-005: Integración de Funcionalidades de IA con OpenAI
 
-## Estado
-Propuesto
 
-## Contexto
-La aplicación de presupuesto personal puede beneficiarse enormemente de capacidades de inteligencia artificial para:
-- Reducir fricción al registrar transacciones (categorización automática)
-- Proporcionar insights personalizados sobre patrones de gasto
-- Predecir comportamientos financieros futuros
-- Ofrecer asesoramiento financiero contextual
-- Automatizar tareas repetitivas (OCR de recibos, detección de duplicados)
 
-El usuario cuenta con suscripción pagada a OpenAI API, lo que permite implementar estas funcionalidades sin costo adicional significativo para el proyecto.
+## Estado## Estado
 
-### Modelos Disponibles (OpenAI - Noviembre 2024)
-- **GPT-4 Turbo**: Razonamiento avanzado, contexto de 128k tokens
-- **GPT-4 Vision**: Análisis de imágenes (recibos, facturas)
-- **GPT-3.5 Turbo**: Más rápido y económico para tareas simples
+Propuesto - Versión 2.0 (Revisado y Reducido)Propuesto - Versión 2.0 (Revisado y Reducido)
+
+
+
+## Contexto## Contexto
+
+
+
+### Problema a Resolver### Problema a Resolver
+
+La aplicación necesita reducir fricción en la gestión diaria de finanzas personales y proporcionar valor diferencial mediante inteligencia artificial, pero debe hacerlo de forma **pragmática y medible**, no implementando todas las funcionalidades posibles.La aplicación necesita reducir fricción en la gestión diaria de finanzas personales y proporcionar valor diferencial mediante inteligencia artificial, pero debe hacerlo de forma **pragmática y medible**, no implementando todas las funcionalidades posibles.
+
+
+
+**Principio rector**: La IA solo se usa cuando la regla simple es insuficiente o cuando genera un cambio medible en comportamiento del usuario.**Principio rector**: La IA solo se usa cuando la regla simple es insuficiente o cuando genera un cambio medible en comportamiento del usuario.
+
+
+
+### Necesidades Específicas del Usuario### Necesidades Específicas del Usuario
+
+1. **Categorización rápida** de transacciones (reduce tiempo de registro)1. **Categorización rápida** de transacciones (reduce tiempo de registro)
+
+2. **✨ Análisis de PDFs bancarios** (banco no tiene API, solo provee estado de cuenta en PDF) - **CRÍTICO**2. **Análisis de PDFs bancarios** (banco no tiene API, solo provee estado de cuenta en PDF)
+
+3. **Insights accionables** (no genéricos) que mejoren decisiones financieras3. **Insights accionables** (no genéricos) que mejoren decisiones financieras
+
+4. **OCR de recibos** para reducir entrada manual4. **OCR de recibos** para reducir entrada manual
+
+
+
+### Modelos Disponibles (OpenAI - Noviembre 2025)### Modelos Disponibles (OpenAI - Noviembre 2025)
+
+- **GPT-4o**: Modelo unificado con vision, más rápido y económico que GPT-4 Turbo- **GPT-4o**: Modelo unificado con vision, más rápido y económico que GPT-4 Turbo
+
+- **GPT-3.5 Turbo**: Más económico para tareas simples y deterministas- **GPT-4 Turbo**: Razonamiento avanzado, contexto de 128k tokens
+
+- **Function Calling**: Integración estructurada con APIs- **GPT-3.5 Turbo**: Más económico para tareas simples y deterministas
+
 - **Function Calling**: Integración estructurada con APIs
 
-### Costos Estimados
-- GPT-4 Turbo: $0.01/1K tokens input, $0.03/1K tokens output
-- GPT-4 Vision: $0.01 por imagen
-- **Estimación mensual por usuario activo**: ~$3.60/mes
-  - Categorizaciones: $0.50
-  - Asistente chat: $2.00
-  - OCR recibos: $0.10
-  - Insights: $1.00
+### Costos Estimados (Versión Reducida)
+
+- GPT-3.5 Turbo: $0.0005/1K tokens input, $0.0015/1K tokens output### Costos Estimados (Versión Reducida)
+
+- GPT-4o: $0.0025/1K tokens input, $0.010/1K tokens output- GPT-3.5 Turbo: $0.0005/1K tokens input, $0.0015/1K tokens output
+
+- **Estimación mensual por usuario activo**: ~$1.60/mes- GPT-4o: $0.0025/1K tokens input, $0.010/1K tokens output
+
+  - Categorizaciones (GPT-3.5): $0.30- **Estimación mensual por usuario activo**: ~$1.60/mes
+
+  - Insight diario (GPT-3.5): $0.20  - Categorizaciones (GPT-3.5): $0.30
+
+  - OCR recibos (GPT-4o): $0.10  - Insight diario (GPT-3.5): $0.20
+
+  - **Análisis PDF bancario (GPT-4o): $0.50/mes** (1-2 PDFs)  - OCR recibos (GPT-4o): $0.10
+
+  - Asistente mini (GPT-3.5): $0.50  - Análisis PDF bancario (GPT-4o): $0.50/mes (1-2 PDFs)
+
+  - Asistente mini (GPT-3.5): $0.50
+
+**Reducción de 55% vs estimación original** mediante:
+
+- Uso de GPT-3.5 para tareas simples**Reducción de 55% vs estimación original** mediante:
+
+- Caching agresivo (24h para insights, 7 días para categorizaciones)- Uso de GPT-3.5 para tareas simples
+
+- Rate limiting (evita abuso)- Caching agresivo (24h para insights, 7 días para categorizaciones)
+
+- Análisis PDF solo cuando usuario sube archivo (no automático)- Rate limiting (evita abuso)
+
+- Análisis PDF solo cuando usuario sube archivo (no automático)
+
+---
 
 ## Decisión
 
-### Fase 1: Funcionalidades Core (MVP)
+## Decisión
 
-#### 1.1 Categorización Automática de Transacciones
+**Implementar IA en 4 funcionalidades core con alto ROI**, priorizando reducción de fricción y casos de uso sin alternativa (como PDF bancario).
+
+**Implementar IA en 4 funcionalidades core con alto ROI**, priorizando reducción de fricción y casos de uso sin alternativa (como PDF bancario).
+
+### Jerarquía de Funcionalidades
+
+### Jerarquía de Funcionalidades
+
+```
+
+```┌─────────────────────────────────────────────────────────┐
+
+┌─────────────────────────────────────────────────────────┐│              ALTO ROI / BAJO ESFUERZO                   │
+
+│              ALTO ROI / BAJO ESFUERZO                   ││  1. Categorización Automática (GPT-3.5)                │
+
+│  1. Categorización Automática (GPT-3.5)                ││  2. Insight Diario Simple (GPT-3.5)                     │
+
+│  2. Insight Diario Simple (GPT-3.5)                     │└─────────────────────────────────────────────────────────┘
+
+└─────────────────────────────────────────────────────────┘                         ↓
+
+                         ↓┌─────────────────────────────────────────────────────────┐
+
+┌─────────────────────────────────────────────────────────┐│           ALTO VALOR / ESFUERZO MEDIO                   │
+
+│           ALTO VALOR / ESFUERZO MEDIO                   ││  3. Análisis de PDF Bancario (GPT-4o) ⭐ CRÍTICO        │
+
+│  3. ⭐ Análisis de PDF Bancario (GPT-4o) - CRÍTICO     ││  4. OCR de Recibos (GPT-4o)                             │
+
+│  4. OCR de Recibos (GPT-4o)                             │└─────────────────────────────────────────────────────────┘
+
+└─────────────────────────────────────────────────────────┘                         ↓
+
+                         ↓┌─────────────────────────────────────────────────────────┐
+
+┌─────────────────────────────────────────────────────────┐│              NICE-TO-HAVE (Fase 2)                      │
+
+│              NICE-TO-HAVE (Fase 2)                      ││  5. Asistente Mini (3 preguntas fijas)                  │
+
+│  5. Asistente Mini (3 preguntas fijas)                  ││  6. Detector de Gastos Anormales                        │
+
+│  6. Detector de Gastos Anormales                        │└─────────────────────────────────────────────────────────┘
+
+└─────────────────────────────────────────────────────────┘                         ↓
+
+                         ↓┌─────────────────────────────────────────────────────────┐
+
+┌─────────────────────────────────────────────────────────┐│           FUERA DE SCOPE (Ahora)                        │
+
+│           FUERA DE SCOPE (Por Ahora)                    ││  ❌ Predictor de fin de mes                             │
+
+│  ❌ Predictor de fin de mes                             ││  ❌ Chat financiero completo                            │
+
+│  ❌ Chat financiero completo                            ││  ❌ Detección de duplicados con IA                      │
+
+│  ❌ Detección de duplicados con IA                      ││  ❌ Análisis multi-mes con ML                           │
+
+│  ❌ Análisis multi-mes con ML                           │└─────────────────────────────────────────────────────────┘
+
+└─────────────────────────────────────────────────────────┘```
+
+```
+
+---
+
+**Nota sobre PDF Bancario**: Este es el caso de uso MÁS CRÍTICO porque el banco del usuario no provee API ni exportación estructurada. Es la única forma de importar las transacciones de tarjeta de crédito sin entrada manual de 20-50 transacciones por mes.
+
+## Funcionalidades Implementadas
+
+---
+
+### Fase 1: MVP de IA (4 semanas)
+
+## Discusión Pendiente: Integración con Tarjetas de Crédito
+
+#### 1.1 Categorización Automática de Transacciones ⚡ QUICK WIN
+
+**IMPORTANTE**: Antes de implementar las funcionalidades de IA, necesitamos **discutir y diseñar el sistema de tarjetas de crédito** primero, ya que el análisis de PDF bancario depende de esta infraestructura.
 
 **Objetivo**: Sugerir categoría apropiada basándose en descripción y monto.
 
-**Arquitectura**:
-```python
-# app/services/ai_categorizer.py
+### Preguntas Clave a Resolver
+
+**ROI**: Alto - Reduce tiempo de registro en 70%
+
+1. **Modelo de Datos de Tarjetas**:
+
+   - ¿Usamos la tabla `accounts` existente o creamos `credit_cards` separada?**Arquitectura Simplificada**:
+
+   - ¿Cómo modelamos cuotas/installments?```python
+
+   - ¿Necesitamos tracking de ciclo de facturación?# app/services/ai_categorizer.py
+
 from openai import OpenAI
-from typing import Dict, List
-from app.models.category import Category
 
-class TransactionCategorizer:
+2. **Relación con Wishlist/Sprint (ADR-002)**:from typing import Dict, List
+
+   - ¿El análisis PDF debe integrarse con el sistema de Sprint Planning?from app.models.category import Category
+
+   - ¿Las cuotas detectadas en PDF se vinculan a compras del Wishlist?
+
+   - ¿Cómo sincronizamos compras planificadas vs estado de cuenta real?class TransactionCategorizer:
+
     def __init__(self, api_key: str):
-        self.client = OpenAI(api_key=api_key)
-        self.cache = {}  # Cache simple para descripciones repetitivas
-    
-    async def suggest_category(
+
+3. **Flujo de Usuario**:        self.client = OpenAI(api_key=api_key)
+
+   - ¿Usuario importa PDF antes o después de registrar compras manualmente?        self.cache = {}  # Cache simple para descripciones repetitivas
+
+   - ¿Qué hacer con duplicados (compra manual + PDF)?    
+
+   - ¿Permitir edición de transacciones importadas?    async def suggest_category(
+
         self, 
-        description: str, 
+
+### Propuesta de Orden de Implementación        description: str, 
+
         amount: float,
-        available_categories: List[Category]
-    ) -> Dict:
-        """
-        Sugiere categoría usando GPT-4 con Function Calling
-        
-        Returns:
+
+```        available_categories: List[Category]
+
+1. 📋 Diseñar sistema de Tarjetas de Crédito    ) -> Dict:
+
+   ├─ Modelo de datos        """
+
+   ├─ CRUD de tarjetas        Sugiere categoría usando GPT-4 con Function Calling
+
+   ├─ Tracking de deuda y cuotas        
+
+   └─ Integración con presupuesto        Returns:
+
             {
-                'category_id': 5,
-                'category_name': 'Alimentación - Delivery',
-                'confidence': 0.95,
-                'reasoning': 'Mención de PedidosYa indica delivery de comida'
-            }
+
+2. 🤖 Implementar Análisis de PDF (IA)                'category_id': 5,
+
+   ├─ Extracción de transacciones                'category_name': 'Alimentación - Delivery',
+
+   ├─ Detección de cuotas                'confidence': 0.95,
+
+   ├─ Categorización automática                'reasoning': 'Mención de PedidosYa indica delivery de comida'
+
+   └─ Manejo de duplicados            }
+
         """
-        # Check cache primero
-        cache_key = f"{description.lower()}:{amount}"
-        if cache_key in self.cache:
-            return self.cache[cache_key]
-        
+
+3. 🎯 Integrar con Wishlist/Sprint (ADR-002)        # Check cache primero
+
+   ├─ Vincular compras planificadas con PDF        cache_key = f"{description.lower()}:{amount}"
+
+   ├─ Tracking de cuotas de Sprint activo        if cache_key in self.cache:
+
+   └─ Reconciliación automática            return self.cache[cache_key]
+
+```        
+
         # Preparar lista de categorías
-        category_options = [
-            {
-                "id": cat.id,
-                "name": cat.name,
-                "type": cat.type,
-                "icon": cat.icon
-            }
+
+**Acción requerida**: Antes de continuar con este ADR, debemos:        category_options = [
+
+- [ ] Crear ADR-003: Sistema de Tarjetas de Crédito            {
+
+- [ ] Definir modelo de datos de `credit_cards` y `installments`                "id": cat.id,
+
+- [ ] Decidir integración con Wishlist/Sprint (ADR-002)                "name": cat.name,
+
+- [ ] Revisar y aprobar diseño completo                "type": cat.type,
+
+- [ ] Implementar infraestructura de tarjetas                "icon": cat.icon
+
+- [ ] Volver a este ADR para implementar IA sobre base sólida            }
+
             for cat in available_categories
-        ]
+
+---        ]
+
         
-        response = self.client.chat.completions.create(
+
+## Funcionalidades de IA (Implementación Pendiente)        response = self.client.chat.completions.create(
+
             model="gpt-4-turbo-preview",
-            messages=[
+
+Las siguientes funcionalidades se implementarán DESPUÉS de resolver la discusión sobre tarjetas de crédito:            messages=[
+
                 {
-                    "role": "system",
+
+### Fase 1: MVP de IA (4 semanas)                    "role": "system",
+
                     "content": """Eres un experto en categorización de transacciones financieras.
-                    Analiza la descripción y monto para sugerir la categoría más apropiada.
+
+#### 1.1 Categorización Automática de Transacciones ⚡ QUICK WIN                    Analiza la descripción y monto para sugerir la categoría más apropiada.
+
                     Considera patrones comunes:
-                    - Uber/taxi/Cabify → Transporte
+
+**Estado**: ✅ Diseño completo - Listo para implementar                    - Uber/taxi/Cabify → Transporte
+
                     - Netflix/Spotify/HBO → Entretenimiento - Suscripciones
-                    - Wong/Plaza Vea/Metro → Alimentación - Supermercado
+
+**Objetivo**: Sugerir categoría apropiada basándose en descripción y monto                    - Wong/Plaza Vea/Metro → Alimentación - Supermercado
+
                     - PedidosYa/Rappi → Alimentación - Delivery
-                    - Farmacia/botica → Salud - Medicamentos
+
+**ROI**: Alto - Reduce tiempo de registro en 70%                    - Farmacia/botica → Salud - Medicamentos
+
                     - Transferencias/Yape → según contexto
-                    """
+
+**Modelo**: GPT-3.5 Turbo (económico)                    """
+
                 },
-                {
+
+**Costo estimado**: ~$0.30/mes por usuario                {
+
                     "role": "user",
-                    "content": f"Categoriza: '{description}' por S/ {amount}"
-                }
-            ],
-            functions=[{
-                "name": "categorize_transaction",
-                "description": "Asigna la categoría más apropiada a una transacción",
+
+**Arquitectura**:                    "content": f"Categoriza: '{description}' por S/ {amount}"
+
+```python                }
+
+# app/services/ai_categorizer.py            ],
+
+from openai import OpenAI            functions=[{
+
+import hashlib                "name": "categorize_transaction",
+
+from typing import Dict, List                "description": "Asigna la categoría más apropiada a una transacción",
+
                 "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "category_id": {
-                            "type": "integer",
-                            "description": "ID de la categoría seleccionada"
-                        },
-                        "confidence": {
-                            "type": "number",
-                            "minimum": 0,
-                            "maximum": 1,
-                            "description": "Nivel de confianza (0-1)"
-                        },
-                        "reasoning": {
-                            "type": "string",
-                            "description": "Breve explicación de por qué se eligió esta categoría"
-                        }
-                    },
-                    "required": ["category_id", "confidence"]
-                }
-            }],
-            function_call={"name": "categorize_transaction"},
-            temperature=0.3,  # Más determinista
-            max_tokens=150
-        )
-        
-        result = json.loads(response.choices[0].message.function_call.arguments)
-        
-        # Agregar nombre de categoría
-        selected_cat = next((c for c in available_categories if c.id == result['category_id']), None)
-        result['category_name'] = selected_cat.name if selected_cat else None
-        
-        # Cache por 7 días
-        self.cache[cache_key] = result
-        
-        return result
-```
 
-**Endpoint**:
-```python
-# app/api/ai.py
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from app.db.database import get_db
+class TransactionCategorizer:                    "type": "object",
+
+    def __init__(self, api_key: str):                    "properties": {
+
+        self.client = OpenAI(api_key=api_key)                        "category_id": {
+
+                                "type": "integer",
+
+    def _get_cache_key(self, description: str, amount: float) -> str:                            "description": "ID de la categoría seleccionada"
+
+        """Genera key única para caching"""                        },
+
+        return hashlib.md5(f"{description.lower().strip()}:{amount}".encode()).hexdigest()                        "confidence": {
+
+                                "type": "number",
+
+    async def suggest_category(                            "minimum": 0,
+
+        self,                             "maximum": 1,
+
+        description: str,                             "description": "Nivel de confianza (0-1)"
+
+        amount: float,                        },
+
+        available_categories: List[Category]                        "reasoning": {
+
+    ) -> Dict:                            "type": "string",
+
+        """Sugiere categoría usando GPT-3.5"""                            "description": "Breve explicación de por qué se eligió esta categoría"
+
+                                }
+
+        # Check cache primero (Redis)                    },
+
+        cache_key = self._get_cache_key(description, amount)                    "required": ["category_id", "confidence"]
+
+        cached = await redis.get(cache_key)                }
+
+        if cached:            }],
+
+            return json.loads(cached)            function_call={"name": "categorize_transaction"},
+
+                    temperature=0.3,  # Más determinista
+
+        # Preparar lista de categorías            max_tokens=150
+
+        category_list = "\n".join([        )
+
+            f"- {cat.name} ({cat.type})"         
+
+            for cat in available_categories        result = json.loads(response.choices[0].message.function_call.arguments)
+
+        ])        
+
+                # Agregar nombre de categoría
+
+        response = self.client.chat.completions.create(        selected_cat = next((c for c in available_categories if c.id == result['category_id']), None)
+
+            model="gpt-3.5-turbo",        result['category_name'] = selected_cat.name if selected_cat else None
+
+            messages=[        
+
+                {        # Cache por 7 días
+
+                    "role": "system",        self.cache[cache_key] = result
+
+                    "content": f"""Eres experto en categorización de transacciones en Perú.        
+
+Categorías disponibles:        return result
+
+{category_list}```
+
+
+
+Patrones comunes:**Endpoint**:
+
+- Uber/Cabify → Transporte```python
+
+- Netflix/Spotify → Entretenimiento - Suscripciones# app/api/ai.py
+
+- Wong/Plaza Vea → Alimentación - Supermercadofrom fastapi import APIRouter, Depends, HTTPException
+
+- PedidosYa/Rappi → Alimentación - Deliveryfrom sqlalchemy.orm import Session
+
+- Inkafarma/Mifarma → Salud - Medicamentosfrom app.db.database import get_db
+
 from app.services.ai_categorizer import TransactionCategorizer
-from app.core.config import settings
 
-router = APIRouter(prefix="/ai", tags=["ai"])
+Responde SOLO con el nombre exacto de la categoría."""from app.core.config import settings
 
-@router.post("/categorize")
-async def categorize_transaction(
+                },
+
+                {router = APIRouter(prefix="/ai", tags=["ai"])
+
+                    "role": "user",
+
+                    "content": f"Categoriza: '{description}' por S/ {amount}"@router.post("/categorize")
+
+                }async def categorize_transaction(
+
+            ],    description: str,
+
+            temperature=0.3,    amount: float,
+
+            max_tokens=30    db: Session = Depends(get_db)
+
+        )):
+
+            """
+
+        suggested_name = response.choices[0].message.content.strip()    Sugiere categoría para una transacción
+
+            
+
+        # Buscar categoría exacta    Request:
+
+        selected_cat = next(        description: "Uber a San Isidro"
+
+            (c for c in available_categories if c.name.lower() == suggested_name.lower()),        amount: 25.50
+
+            None    
+
+        )    Response:
+
+                {
+
+        if not selected_cat:            "category_id": 3,
+
+            # Fallback: similitud            "category_name": "Transporte",
+
+            selected_cat = next(            "confidence": 0.98,
+
+                (c for c in available_categories if suggested_name.lower() in c.name.lower()),            "reasoning": "Mención explícita de Uber indica transporte privado"
+
+                available_categories[0]        }
+
+            )    """
+
+            try:
+
+        result = {        categories = db.query(Category).filter(Category.is_deleted == False).all()
+
+            'category_id': selected_cat.id,        
+
+            'category_name': selected_cat.name,        categorizer = TransactionCategorizer(api_key=settings.OPENAI_API_KEY)
+
+            'confidence': 'high' if selected_cat.name.lower() == suggested_name.lower() else 'medium'        suggestion = await categorizer.suggest_category(description, amount, categories)
+
+        }        
+
+                return suggestion
+
+        # Cache 7 días        
+
+        await redis.set(cache_key, json.dumps(result), ex=604800)    except Exception as e:
+
+                logger.error(f"Error categorizando transacción: {e}")
+
+        return result        raise HTTPException(status_code=500, detail="Error al categorizar transacción")
+
+``````
+
+
+
+**Endpoint**:**Frontend Integration**:
+
+```python```typescript
+
+@router.post("/api/ai/categorize")// frontend/src/components/QuickAddTransaction.tsx
+
+async def categorize_transaction(import { useMutation } from '@tanstack/react-query';
+
     description: str,
-    amount: float,
-    db: Session = Depends(get_db)
-):
-    """
-    Sugiere categoría para una transacción
-    
-    Request:
-        description: "Uber a San Isidro"
-        amount: 25.50
-    
-    Response:
-        {
-            "category_id": 3,
-            "category_name": "Transporte",
-            "confidence": 0.98,
-            "reasoning": "Mención explícita de Uber indica transporte privado"
-        }
-    """
-    try:
-        categories = db.query(Category).filter(Category.is_deleted == False).all()
-        
-        categorizer = TransactionCategorizer(api_key=settings.OPENAI_API_KEY)
-        suggestion = await categorizer.suggest_category(description, amount, categories)
-        
-        return suggestion
-        
-    except Exception as e:
-        logger.error(f"Error categorizando transacción: {e}")
-        raise HTTPException(status_code=500, detail="Error al categorizar transacción")
-```
 
-**Frontend Integration**:
-```typescript
-// frontend/src/components/QuickAddTransaction.tsx
-import { useMutation } from '@tanstack/react-query';
+    amount: float,const { mutate: categorizeMutate, data: categorySuggestion } = useMutation({
 
-const { mutate: categorizeMutate, data: categorySuggestion } = useMutation({
-  mutationFn: (data: { description: string; amount: number }) =>
-    fetch('/api/ai/categorize', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    }).then(r => r.json())
+    db: Session = Depends(get_db)  mutationFn: (data: { description: string; amount: number }) =>
+
+):    fetch('/api/ai/categorize', {
+
+    categories = db.query(Category).filter(Category.is_deleted == False).all()      method: 'POST',
+
+    categorizer = TransactionCategorizer(api_key=settings.OPENAI_API_KEY)      headers: { 'Content-Type': 'application/json' },
+
+    return await categorizer.suggest_category(description, amount, categories)      body: JSON.stringify(data)
+
+```    }).then(r => r.json())
+
 });
 
-// Cuando usuario escribe descripción
-const handleDescriptionChange = (description: string) => {
-  if (description.length > 5 && amount > 0) {
-    // Debounce de 500ms
-    categorizeMutate({ description, amount });
-  }
-};
+**Frontend**:
 
-// Mostrar sugerencia
-{categorySuggestion && (
-  <div className="p-2 bg-blue-50 rounded-lg flex items-center gap-2">
-    <Sparkles className="w-4 h-4 text-blue-500" />
-    <span className="text-sm">
-      Sugerencia IA: <strong>{categorySuggestion.category_name}</strong>
-      {categorySuggestion.confidence > 0.9 && ' ✓'}
+```typescript// Cuando usuario escribe descripción
+
+// Sugerencia con diseño visualconst handleDescriptionChange = (description: string) => {
+
+{categorySuggestion && (  if (description.length > 5 && amount > 0) {
+
+  <div className="flex items-center gap-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">    // Debounce de 500ms
+
+    <Sparkles className="w-4 h-4 text-purple-500" />    categorizeMutate({ description, amount });
+
+    <span className="text-sm">  }
+
+      Sugerencia: <strong>{categorySuggestion.category_name}</strong>};
+
     </span>
+
+    <button onClick={() => setCategory(categorySuggestion.category_id)}>// Mostrar sugerencia
+
+      Aplicar ✨{categorySuggestion && (
+
+    </button>  <div className="p-2 bg-blue-50 rounded-lg flex items-center gap-2">
+
+  </div>    <Sparkles className="w-4 h-4 text-blue-500" />
+
+)}    <span className="text-sm">
+
+```      Sugerencia IA: <strong>{categorySuggestion.category_name}</strong>
+
+      {categorySuggestion.confidence > 0.9 && ' ✓'}
+
+---    </span>
+
     <button onClick={() => setCategory(categorySuggestion.category_id)}>
-      Aplicar
+
+#### 1.2 ⭐ Análisis de PDF Bancario (CRÍTICO - BLOQUEADO)      Aplicar
+
     </button>
-  </div>
+
+**Estado**: ⚠️ **BLOQUEADO** - Requiere diseño de sistema de tarjetas primero  </div>
+
 )}
-```
 
----
+**Problema**: Banco no tiene API, solo PDF mensual```
 
-#### 1.2 Asistente Financiero Conversacional
 
-**Objetivo**: Responder preguntas sobre finanzas personales con contexto del usuario.
 
-**Arquitectura**:
+**Objetivo**: Extraer 20-50 transacciones automáticamente del PDF---
+
+
+
+**ROI**: Muy Alto - Elimina 30-60 min de entrada manual/mes#### 1.2 Asistente Financiero Conversacional
+
+
+
+**Modelo**: GPT-4o (con vision si es imagen)**Objetivo**: Responder preguntas sobre finanzas personales con contexto del usuario.
+
+
+
+**Costo estimado**: ~$0.50/mes por usuario (1-2 PDFs/mes)**Arquitectura**:
+
 ```python
-# app/services/ai_assistant.py
-from openai import OpenAI
-from datetime import datetime, timedelta
-from typing import Dict, List
 
-class FinancialAssistant:
+**Dependencias antes de implementar**:# app/services/ai_assistant.py
+
+- [ ] Definir modelo de `credit_cards`from openai import OpenAI
+
+- [ ] Definir modelo de `installments` (cuotas)from datetime import datetime, timedelta
+
+- [ ] Decidir flujo de importación (crear transacciones directamente vs preview)from typing import Dict, List
+
+- [ ] Resolver integración con Wishlist/Sprint
+
+- [ ] Implementar detector de duplicadosclass FinancialAssistant:
+
     def __init__(self, api_key: str):
-        self.client = OpenAI(api_key=api_key)
+
+**Arquitectura Propuesta** (pendiente de aprobación):        self.client = OpenAI(api_key=api_key)
+
     
-    async def ask(
-        self, 
-        question: str, 
-        user_id: int,
-        db: Session
-    ) -> Dict:
-        """
-        Responde pregunta financiera con contexto del usuario
-        """
-        # 1. Recopilar contexto relevante
-        context = await self._build_user_context(user_id, db)
-        
-        # 2. Construir prompt con contexto
-        system_prompt = self._build_system_prompt(context)
-        
-        # 3. Llamar a OpenAI
-        response = self.client.chat.completions.create(
-            model="gpt-4-turbo-preview",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": question}
-            ],
-            temperature=0.7,
-            max_tokens=400
-        )
-        
-        answer = response.choices[0].message.content
-        
-        return {
-            "question": question,
-            "answer": answer,
-            "tokens_used": response.usage.total_tokens,
-            "context_used": list(context.keys())
-        }
-    
-    async def _build_user_context(self, user_id: int, db: Session) -> Dict:
-        """Recopila datos relevantes del usuario"""
-        now = datetime.now()
-        month_start = now.replace(day=1)
-        
-        # Budget actual
-        current_budget = db.query(BudgetPlan).filter(
-            BudgetPlan.user_id == user_id,
-            BudgetPlan.month_name == now.strftime('%B')
-        ).first()
-        
+
+```python    async def ask(
+
+# app/services/pdf_analyzer.py        self, 
+
+class BankStatementAnalyzer:        question: str, 
+
+    async def analyze_bank_statement(self, pdf_file: bytes) -> Dict:        user_id: int,
+
+        """        db: Session
+
+        Extrae transacciones del PDF    ) -> Dict:
+
+                """
+
+        Returns:        Responde pregunta financiera con contexto del usuario
+
+            {        """
+
+                'period': '2025-10-23 a 2025-11-22',        # 1. Recopilar contexto relevante
+
+                'credit_card': 'Visa BBVA',        context = await self._build_user_context(user_id, db)
+
+                'total_spent': 1250.50,        
+
+                'transactions': [        # 2. Construir prompt con contexto
+
+                    {        system_prompt = self._build_system_prompt(context)
+
+                        'date': '2025-11-01',        
+
+                        'description': 'NETFLIX.COM',        # 3. Llamar a OpenAI
+
+                        'amount': 44.90,        response = self.client.chat.completions.create(
+
+                        'currency': 'USD',            model="gpt-4-turbo-preview",
+
+                        'is_installment': False,            messages=[
+
+                        'installment_info': None,                {"role": "system", "content": system_prompt},
+
+                        'suggested_category': 'Entretenimiento - Suscripciones'                {"role": "user", "content": question}
+
+                    },            ],
+
+                    {            temperature=0.7,
+
+                        'date': '2025-11-05',            max_tokens=400
+
+                        'description': 'SAGA FALABELLA',        )
+
+                        'amount': 299.00,        
+
+                        'currency': 'PEN',        answer = response.choices[0].message.content
+
+                        'is_installment': True,        
+
+                        'installment_info': {        return {
+
+                            'current': 2,            "question": question,
+
+                            'total': 6,            "answer": answer,
+
+                            'monthly_payment': 49.83            "tokens_used": response.usage.total_tokens,
+
+                        },            "context_used": list(context.keys())
+
+                        'suggested_category': 'Compras'        }
+
+                    }    
+
+                ],    async def _build_user_context(self, user_id: int, db: Session) -> Dict:
+
+                'summary': {        """Recopila datos relevantes del usuario"""
+
+                    'payment_due_date': '2025-12-05',        now = datetime.now()
+
+                    'minimum_payment': 120.00,        month_start = now.replace(day=1)
+
+                    'total_payment': 1250.50        
+
+                }        # Budget actual
+
+            }        current_budget = db.query(BudgetPlan).filter(
+
+        """            BudgetPlan.user_id == user_id,
+
+        # Implementación pendiente            BudgetPlan.month_name == now.strftime('%B')
+
+        pass        ).first()
+
+```        
+
         # Transacciones del mes
-        transactions = db.query(Transaction).filter(
-            Transaction.user_id == user_id,
-            Transaction.date >= month_start
-        ).all()
-        
-        # Calcular totales por categoría
-        category_totals = {}
+
+**Flujo de Usuario Propuesto**:        transactions = db.query(Transaction).filter(
+
+1. Usuario sube PDF mensual            Transaction.user_id == user_id,
+
+2. IA analiza y extrae transacciones            Transaction.date >= month_start
+
+3. Preview de transacciones con categorías sugeridas        ).all()
+
+4. Usuario revisa y confirma (puede deseleccionar duplicados)        
+
+5. Sistema crea transacciones + registra cuotas si aplica        # Calcular totales por categoría
+
+6. Vincula con compras del Wishlist si es posible        category_totals = {}
+
         for t in transactions:
-            cat_name = t.category.name
+
+---            cat_name = t.category.name
+
             if cat_name not in category_totals:
-                category_totals[cat_name] = {'income': 0, 'expense': 0}
+
+#### 1.3 Insight Diario Simple                category_totals[cat_name] = {'income': 0, 'expense': 0}
+
             
-            if t.type == 'income':
+
+**Estado**: ✅ Diseño completo - Listo para implementar            if t.type == 'income':
+
                 category_totals[cat_name]['income'] += float(t.amount)
-            else:
+
+**Objetivo**: 1 insight accionable diario para crear hábito            else:
+
                 category_totals[cat_name]['expense'] += float(t.amount)
-        
+
+**ROI**: Medio - Aumenta retención +30%        
+
         # Tarjetas de crédito (si existen)
-        credit_cards = db.query(CreditCard).filter(
+
+**Modelo**: GPT-3.5 Turbo        credit_cards = db.query(CreditCard).filter(
+
             CreditCard.user_id == user_id,
-            CreditCard.is_active == True
+
+**Costo estimado**: ~$0.20/mes por usuario            CreditCard.is_active == True
+
         ).all()
-        
-        # Tendencias (comparar con mes anterior)
-        last_month = (month_start - timedelta(days=1)).replace(day=1)
-        last_month_transactions = db.query(Transaction).filter(
+
+**Tipos de insights**:        
+
+- ⚠️ **Warning**: "Gastaste S/ 200 en delivery esta semana, 3x más que tu promedio"        # Tendencias (comparar con mes anterior)
+
+- ✅ **Success**: "¡Ahorraste S/ 150 esta semana vs semana anterior!"        last_month = (month_start - timedelta(days=1)).replace(day=1)
+
+- 💡 **Tip**: "Si reduces 1 delivery/semana ahorrarás S/ 180/mes"        last_month_transactions = db.query(Transaction).filter(
+
             Transaction.user_id == user_id,
-            Transaction.date >= last_month,
-            Transaction.date < month_start
-        ).all()
-        
-        context = {
-            'current_date': now.strftime('%Y-%m-%d'),
-            'days_in_month': (now - month_start).days + 1,
-            'budget': {
-                'total_income': sum(c.planned_amount for c in current_budget.categories if c.type == 'income'),
-                'total_budgeted': sum(c.planned_amount for c in current_budget.categories if c.type == 'expense'),
-                'actual_income': sum(t.amount for t in transactions if t.type == 'income'),
-                'actual_expense': sum(t.amount for t in transactions if t.type == 'expense'),
-            } if current_budget else None,
-            'spending_by_category': category_totals,
-            'transaction_count_this_month': len(transactions),
-            'credit_cards': [
+
+**Implementación**:            Transaction.date >= last_month,
+
+```python            Transaction.date < month_start
+
+class InsightGenerator:        ).all()
+
+    async def generate_daily_insight(self, user_id: int, db: Session) -> Dict:        
+
+        # Check cache (24h)        context = {
+
+        cache_key = f"daily_insight:{user_id}:{datetime.now().date()}"            'current_date': now.strftime('%Y-%m-%d'),
+
+        cached = await redis.get(cache_key)            'days_in_month': (now - month_start).days + 1,
+
+        if cached:            'budget': {
+
+            return json.loads(cached)                'total_income': sum(c.planned_amount for c in current_budget.categories if c.type == 'income'),
+
+                        'total_budgeted': sum(c.planned_amount for c in current_budget.categories if c.type == 'expense'),
+
+        # Analizar última semana vs anterior                'actual_income': sum(t.amount for t in transactions if t.type == 'income'),
+
+        week_data = await self._get_week_summary(user_id, db)                'actual_expense': sum(t.amount for t in transactions if t.type == 'expense'),
+
+                    } if current_budget else None,
+
+        prompt = f"""            'spending_by_category': category_totals,
+
+Analiza estos datos y genera UN insight accionable:            'transaction_count_this_month': len(transactions),
+
+{json.dumps(week_data)}            'credit_cards': [
+
                 {
-                    'name': cc.name,
-                    'balance': float(cc.current_balance),
-                    'limit': float(cc.credit_limit),
-                    'utilization': float(cc.current_balance / cc.credit_limit * 100)
-                }
-                for cc in credit_cards
-            ] if credit_cards else [],
-            'trends': {
-                'last_month_expense': sum(t.amount for t in last_month_transactions if t.type == 'expense'),
-                'this_month_expense': sum(t.amount for t in transactions if t.type == 'expense'),
-            }
-        }
-        
-        return context
-    
-    def _build_system_prompt(self, context: Dict) -> str:
-        """Construye prompt con contexto del usuario"""
-        prompt = """Eres un asesor financiero personal experto, conciso y práctico.
-Tu objetivo es ayudar al usuario a tomar mejores decisiones financieras.
 
-REGLAS:
-- Responde en español de forma clara y directa
+Responde en JSON:                    'name': cc.name,
+
+{{                    'balance': float(cc.current_balance),
+
+    "type": "warning|success|tip",                    'limit': float(cc.credit_limit),
+
+    "title": "Título corto",                    'utilization': float(cc.current_balance / cc.credit_limit * 100)
+
+    "message": "Mensaje con números específicos",                }
+
+    "action": "Texto botón",                for cc in credit_cards
+
+    "action_link": "/transactions?category=X"            ] if credit_cards else [],
+
+}}            'trends': {
+
+"""                'last_month_expense': sum(t.amount for t in last_month_transactions if t.type == 'expense'),
+
+                        'this_month_expense': sum(t.amount for t in transactions if t.type == 'expense'),
+
+        response = self.client.chat.completions.create(            }
+
+            model="gpt-3.5-turbo",        }
+
+            messages=[{"role": "user", "content": prompt}],        
+
+            response_format={"type": "json_object"},        return context
+
+            temperature=0.8,    
+
+            max_tokens=150    def _build_system_prompt(self, context: Dict) -> str:
+
+        )        """Construye prompt con contexto del usuario"""
+
+                prompt = """Eres un asesor financiero personal experto, conciso y práctico.
+
+        insight = json.loads(response.choices[0].message.content)Tu objetivo es ayudar al usuario a tomar mejores decisiones financieras.
+
+        await redis.set(cache_key, json.dumps(insight), ex=86400)
+
+        return insightREGLAS:
+
+```- Responde en español de forma clara y directa
+
 - Usa datos específicos cuando los tengas
-- Da consejos accionables, no teoría general
-- Sé empático pero honesto sobre la situación financiera
-- Si no tienes datos suficientes, pide más información
-- Usa formato markdown para mejor legibilidad
 
-INFORMACIÓN DEL USUARIO:
-"""
-        
-        if context.get('budget'):
-            budget = context['budget']
-            prompt += f"""
-PRESUPUESTO MENSUAL (Día {context['days_in_month']} del mes):
-- Ingresos presupuestados: S/ {budget['total_income']:.2f}
-- Gastos presupuestados: S/ {budget['total_budgeted']:.2f}
-- Ingresos reales: S/ {budget['actual_income']:.2f}
+**Frontend Component**:- Da consejos accionables, no teoría general
+
+```typescript- Sé empático pero honesto sobre la situación financiera
+
+<div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-6 text-white">- Si no tienes datos suficientes, pide más información
+
+  <div className="flex items-start gap-4">- Usa formato markdown para mejor legibilidad
+
+    <Lightbulb className="w-6 h-6" />
+
+    <div>INFORMACIÓN DEL USUARIO:
+
+      <h3 className="font-bold mb-2">{insight.title}</h3>"""
+
+      <p className="text-sm opacity-90">{insight.message}</p>        
+
+      <a href={insight.action_link} className="btn-white-ghost mt-4">        if context.get('budget'):
+
+        {insight.action} →            budget = context['budget']
+
+      </a>            prompt += f"""
+
+    </div>PRESUPUESTO MENSUAL (Día {context['days_in_month']} del mes):
+
+  </div>- Ingresos presupuestados: S/ {budget['total_income']:.2f}
+
+</div>- Gastos presupuestados: S/ {budget['total_budgeted']:.2f}
+
+```- Ingresos reales: S/ {budget['actual_income']:.2f}
+
 - Gastos reales: S/ {budget['actual_expense']:.2f}
-- Balance actual: S/ {(budget['actual_income'] - budget['actual_expense']):.2f}
+
+---- Balance actual: S/ {(budget['actual_income'] - budget['actual_expense']):.2f}
+
 - Cumplimiento: {(budget['actual_expense'] / budget['total_budgeted'] * 100):.1f}% del presupuesto usado
-"""
+
+#### 1.4 OCR de Recibos"""
+
         
-        if context.get('spending_by_category'):
+
+**Estado**: ✅ Diseño completo - Listo para implementar        if context.get('spending_by_category'):
+
             prompt += "\nGASTOS POR CATEGORÍA (este mes):\n"
-            for cat, amounts in sorted(context['spending_by_category'].items(), 
+
+**Objetivo**: Escanear foto de recibo y pre-llenar formulario            for cat, amounts in sorted(context['spending_by_category'].items(), 
+
                                       key=lambda x: x[1]['expense'], 
-                                      reverse=True)[:5]:
+
+**ROI**: Medio - Mejora UX, no crítico                                      reverse=True)[:5]:
+
                 prompt += f"- {cat}: S/ {amounts['expense']:.2f}\n"
-        
+
+**Modelo**: GPT-4o (vision)        
+
         if context.get('credit_cards'):
-            prompt += "\nTARJETAS DE CRÉDITO:\n"
+
+**Costo estimado**: ~$0.10/mes por usuario (10-15 recibos/mes)            prompt += "\nTARJETAS DE CRÉDITO:\n"
+
             for cc in context['credit_cards']:
-                prompt += f"- {cc['name']}: S/ {cc['balance']:.2f} / S/ {cc['limit']:.2f} ({cc['utilization']:.1f}% usado)\n"
+
+**Implementación**:                prompt += f"- {cc['name']}: S/ {cc['balance']:.2f} / S/ {cc['limit']:.2f} ({cc['utilization']:.1f}% usado)\n"
+
+```python        
+
+class ReceiptScanner:        if context.get('trends'):
+
+    async def scan_receipt(self, image_file: bytes) -> Dict:            trends = context['trends']
+
+        # Optimizar imagen a 1024x1024            change = ((trends['this_month_expense'] - trends['last_month_expense']) 
+
+        image = Image.open(io.BytesIO(image_file))                     / trends['last_month_expense'] * 100) if trends['last_month_expense'] > 0 else 0
+
+        if image.width > 1024 or image.height > 1024:            prompt += f"\nTENDENCIA: Gastos {'+' if change > 0 else ''}{change:.1f}% vs mes anterior\n"
+
+            image.thumbnail((1024, 1024))        
+
+                return prompt
+
+        img_base64 = base64.b64encode(image_bytes).decode()```
+
         
-        if context.get('trends'):
-            trends = context['trends']
-            change = ((trends['this_month_expense'] - trends['last_month_expense']) 
-                     / trends['last_month_expense'] * 100) if trends['last_month_expense'] > 0 else 0
-            prompt += f"\nTENDENCIA: Gastos {'+' if change > 0 else ''}{change:.1f}% vs mes anterior\n"
+
+        response = self.client.chat.completions.create(**Endpoint**:
+
+            model="gpt-4o",```python
+
+            messages=[{# app/api/ai.py
+
+                "role": "user",@router.post("/ask")
+
+                "content": [async def ask_assistant(
+
+                    {    question: str,
+
+                        "type": "text",    user_id: int = 1,  # TODO: Obtener de auth token
+
+                        "text": """Extrae: monto, establecimiento, fecha, items.    db: Session = Depends(get_db)
+
+Responde en JSON."""):
+
+                    },    """
+
+                    {    Asistente financiero conversacional
+
+                        "type": "image_url",    
+
+                        "image_url": {"url": f"data:image/jpeg;base64,{img_base64}"}    Request:
+
+                    }        question: "¿Por qué gasté tanto este mes?"
+
+                ]    
+
+            }],    Response:
+
+            response_format={"type": "json_object"},        {
+
+            max_tokens=300            "question": "¿Por qué gasté tanto este mes?",
+
+        )            "answer": "Tus gastos aumentaron 35% este mes principalmente por...",
+
+                    "tokens_used": 450,
+
+        return json.loads(response.choices[0].message.content)            "context_used": ["budget", "spending_by_category", "trends"]
+
+```        }
+
+    """
+
+---    try:
+
+        assistant = FinancialAssistant(api_key=settings.OPENAI_API_KEY)
+
+### Fase 2: Funcionalidades Adicionales (Opcional)        result = await assistant.ask(question, user_id, db)
+
         
-        return prompt
+
+#### 2.1 Asistente Mini (3 Preguntas Fijas)        # Log para analytics
+
+        logger.info(f"AI Question: {question} | Tokens: {result['tokens_used']}")
+
+**Límite**: 5 consultas/día        
+
+        return result
+
+**Preguntas predefinidas**:        
+
+- "¿Por qué gasté tanto esta semana?"    except Exception as e:
+
+- "¿Cuánto puedo gastar hoy?"        logger.error(f"Error en asistente AI: {e}")
+
+- "¿Debería pagar toda mi tarjeta?"        raise HTTPException(status_code=500, detail="Error al procesar pregunta")
+
 ```
 
-**Endpoint**:
-```python
-# app/api/ai.py
-@router.post("/ask")
-async def ask_assistant(
-    question: str,
-    user_id: int = 1,  # TODO: Obtener de auth token
-    db: Session = Depends(get_db)
-):
-    """
-    Asistente financiero conversacional
-    
-    Request:
-        question: "¿Por qué gasté tanto este mes?"
-    
-    Response:
-        {
-            "question": "¿Por qué gasté tanto este mes?",
-            "answer": "Tus gastos aumentaron 35% este mes principalmente por...",
-            "tokens_used": 450,
-            "context_used": ["budget", "spending_by_category", "trends"]
-        }
-    """
-    try:
-        assistant = FinancialAssistant(api_key=settings.OPENAI_API_KEY)
-        result = await assistant.ask(question, user_id, db)
-        
-        # Log para analytics
-        logger.info(f"AI Question: {question} | Tokens: {result['tokens_used']}")
-        
-        return result
-        
-    except Exception as e:
-        logger.error(f"Error en asistente AI: {e}")
-        raise HTTPException(status_code=500, detail="Error al procesar pregunta")
-```
+**Modelo**: GPT-3.5 Turbo
 
 **Frontend - Chat Component**:
-```typescript
+
+**Costo**: ~$0.50/mes por usuario```typescript
+
 // frontend/src/components/AIAssistant.tsx
-import React, { useState } from 'react';
+
+---import React, { useState } from 'react';
+
 import { MessageCircle, Send, Sparkles } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
+## Configuración y Mejores Prácticasimport { useMutation } from '@tanstack/react-query';
+
+
+
+### Stack Tecnológicointerface Message {
+
+```bash  role: 'user' | 'assistant';
+
+# Backend  content: string;
+
+pip install openai redis PyPDF2 pillow  timestamp: Date;
+
 }
 
-export default function AIAssistant() {
-  const [isOpen, setIsOpen] = useState(false);
+# Redis (para caching)
+
+docker run -d -p 6379:6379 redis:alpineexport default function AIAssistant() {
+
+```  const [isOpen, setIsOpen] = useState(false);
+
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
 
-  const { mutate: askAI, isLoading } = useMutation({
-    mutationFn: (question: string) =>
-      fetch('/api/ai/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question })
-      }).then(r => r.json()),
-    onSuccess: (data) => {
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: data.answer,
+### Config  const [input, setInput] = useState('');
+
+```python
+
+# app/core/config.py  const { mutate: askAI, isLoading } = useMutation({
+
+class Settings(BaseSettings):    mutationFn: (question: string) =>
+
+    OPENAI_API_KEY: str      fetch('/api/ai/ask', {
+
+    OPENAI_CATEGORIZE_MODEL: str = "gpt-3.5-turbo"        method: 'POST',
+
+    OPENAI_VISION_MODEL: str = "gpt-4o"        headers: { 'Content-Type': 'application/json' },
+
+            body: JSON.stringify({ question })
+
+    AI_REQUESTS_PER_USER_DAY: int = 100      }).then(r => r.json()),
+
+    AI_CACHE_TTL_HOURS: int = 24    onSuccess: (data) => {
+
+          setMessages(prev => [...prev, {
+
+    REDIS_URL: str = "redis://localhost:6379"        role: 'assistant',
+
+```        content: data.answer,
+
         timestamp: new Date()
-      }]);
-    }
-  });
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+### Rate Limiting      }]);
 
-    // Add user message
-    setMessages(prev => [...prev, {
-      role: 'user',
-      content: input,
-      timestamp: new Date()
-    }]);
+```python    }
 
-    // Ask AI
-    askAI(input);
-    setInput('');
-  };
+class AIRateLimiter:  });
 
-  const suggestions = [
-    "¿Por qué gasté tanto este mes?",
-    "¿Cuánto puedo gastar hoy?",
-    "¿Debería pagar toda mi tarjeta?",
-    "Dame consejos para ahorrar"
+    async def check_limit(self, user_id: int, limit: int = 100):
+
+        key = f"ai_limit:{user_id}:{datetime.now().date()}"  const handleSend = () => {
+
+        count = await self.redis.incr(key)    if (!input.trim()) return;
+
+        
+
+        if count == 1:    // Add user message
+
+            await self.redis.expire(key, 86400)    setMessages(prev => [...prev, {
+
+              role: 'user',
+
+        if count > limit:      content: input,
+
+            raise HTTPException(status_code=429, detail="Límite alcanzado")      timestamp: new Date()
+
+```    }]);
+
+
+
+### Caching con Redis    // Ask AI
+
+```python    askAI(input);
+
+class AICache:    setInput('');
+
+    async def get(self, key: str):  };
+
+        value = await self.redis.get(key)
+
+        return json.loads(value) if value else None  const suggestions = [
+
+        "¿Por qué gasté tanto este mes?",
+
+    async def set(self, key: str, value: dict, ex: int = 3600):    "¿Cuánto puedo gastar hoy?",
+
+        await self.redis.set(key, json.dumps(value), ex=ex)    "¿Debería pagar toda mi tarjeta?",
+
+```    "Dame consejos para ahorrar"
+
   ];
-
-  return (
-    <>
-      {/* Floating Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all z-50"
-      >
-        <MessageCircle className="w-6 h-6" />
-      </button>
-
-      {/* Chat Window */}
-      {isOpen && (
-        <div className="fixed bottom-24 right-6 w-96 h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col z-50">
-          {/* Header */}
-          <div className="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-2xl">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5" />
-              <h3 className="font-semibold">Asistente Financiero</h3>
-            </div>
-            <p className="text-xs text-blue-100 mt-1">Pregúntame sobre tus finanzas</p>
-          </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {messages.length === 0 ? (
-              <div className="space-y-2">
-                <p className="text-sm text-gray-500">Preguntas sugeridas:</p>
-                {suggestions.map((q, i) => (
-                  <button
-                    key={i}
-                    onClick={() => { setInput(q); handleSend(); }}
-                    className="w-full text-left p-3 text-sm bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[80%] p-3 rounded-2xl ${
-                      msg.role === 'user'
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                    <span className="text-xs opacity-70 mt-1 block">
-                      {msg.timestamp.toLocaleTimeString()}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 p-3 rounded-2xl">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Input */}
-          <div className="p-4 border-t">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Escribe tu pregunta..."
-                className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                onClick={handleSend}
-                disabled={!input.trim() || isLoading}
-                className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
-              >
-                <Send className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-```
 
 ---
 
-#### 1.3 Insights Diarios Automáticos
+  return (
 
-**Objetivo**: Generar 1 consejo/insight diario personalizado.
+## Métricas de Éxito    <>
 
-**Arquitectura**:
+      {/* Floating Button */}
+
+**Debes medir**:      <button
+
+        onClick={() => setIsOpen(!isOpen)}
+
+1. **Categorización**:        className="fixed bottom-6 right-6 p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all z-50"
+
+   - % transacciones con sugerencia aplicada (objetivo: >60%)      >
+
+   - Tiempo de registro (objetivo: -50%)        <MessageCircle className="w-6 h-6" />
+
+      </button>
+
+2. **PDF Bancario**:
+
+   - % transacciones importadas vs manual (objetivo: >80%)      {/* Chat Window */}
+
+   - Precisión de extracción (objetivo: >90%)      {isOpen && (
+
+   - Tiempo ahorrado (objetivo: 30-60 min/mes)        <div className="fixed bottom-24 right-6 w-96 h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col z-50">
+
+          {/* Header */}
+
+3. **Insights**:          <div className="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-2xl">
+
+   - % usuarios que abren app diariamente (objetivo: +30%)            <div className="flex items-center gap-2">
+
+   - % clicks en acción (objetivo: >20%)              <Sparkles className="w-5 h-5" />
+
+              <h3 className="font-semibold">Asistente Financiero</h3>
+
+4. **Costos**:            </div>
+
+   - Gasto por usuario (objetivo: <$2.00/mes)            <p className="text-xs text-blue-100 mt-1">Pregúntame sobre tus finanzas</p>
+
+   - ROI: tiempo ahorrado vs costo          </div>
+
+
+
+---          {/* Messages */}
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+
+## Consecuencias            {messages.length === 0 ? (
+
+              <div className="space-y-2">
+
+### Positivas                <p className="text-sm text-gray-500">Preguntas sugeridas:</p>
+
+✅ Reduce fricción en registro 70%                  {suggestions.map((q, i) => (
+
+✅ Elimina entrada manual de estado de cuenta (crítico)                    <button
+
+✅ Genera hábito de uso diario                      key={i}
+
+✅ Diferenciación vs competidores                      onClick={() => { setInput(q); handleSend(); }}
+
+✅ Costos controlados ($1.60/mes)                      className="w-full text-left p-3 text-sm bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+
+                  >
+
+### Negativas                    {q}
+
+⚠️ Dependencia de OpenAI API                    </button>
+
+⚠️ Latencia en PDF (5-10 segundos)                  ))}
+
+⚠️ Requiere Redis                </div>
+
+⚠️ IA puede cometer errores              ) : (
+
+              messages.map((msg, i) => (
+
+### Riesgos                <div
+
+🔴 API puede caerse temporalmente                    key={i}
+
+🔴 Costos escalan sin cache                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+
+🔴 Privacidad: datos van a OpenAI                  >
+
+🔴 PDF mal formateado falla                    <div
+
+                    className={`max-w-[80%] p-3 rounded-2xl ${
+
+### Mitigación                      msg.role === 'user'
+
+- Fallbacks a entrada manual                        ? 'bg-blue-500 text-white'
+
+- Caching agresivo                        : 'bg-gray-100 text-gray-800'
+
+- Rate limiting estricto                    }`}
+
+- Validación de datos extraídos                  >
+
+- Logs de errores                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+
+                    <span className="text-xs opacity-70 mt-1 block">
+
+---                      {msg.timestamp.toLocaleTimeString()}
+
+                    </span>
+
+## Alternativas Consideradas                  </div>
+
+                </div>
+
+### 1. Reglas Heurísticas (Sin IA)              ))
+
+**Pros**: Gratis, rápido              )}
+
+**Cons**: No puede analizar PDFs              {isLoading && (
+
+**Decisión**: ❌ No resuelve PDF bancario              <div className="flex justify-start">
+
+                <div className="bg-gray-100 p-3 rounded-2xl">
+
+### 2. Modelos Open Source                  <div className="flex gap-1">
+
+**Pros**: Sin costo API                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+
+**Cons**: Requiere GPU, menor calidad                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
+
+**Decisión**: ❌ Over-engineering                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
+
+                  </div>
+
+### 3. Servicios especializados (Plaid, Belvo)                </div>
+
+**Pros**: Diseñados para finanzas                </div>
+
+**Cons**: Caros, no disponibles en bancos peruanos              )}
+
+**Decisión**: ❌ Banco no tiene integración          </div>
+
+
+
+---          {/* Input */}
+
+          <div className="p-4 border-t">
+
+## Plan de Implementación            <div className="flex gap-2">
+
+              <input
+
+### ANTES DE EMPEZAR: Resolver Tarjetas de Crédito                type="text"
+
+                value={input}
+
+**Prioridad 0** (1-2 semanas):                onChange={(e) => setInput(e.target.value)}
+
+- [ ] Crear ADR-003: Sistema de Tarjetas de Crédito                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+
+- [ ] Diseñar modelo de datos (`credit_cards`, `installments`)                placeholder="Escribe tu pregunta..."
+
+- [ ] Implementar CRUD de tarjetas                className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+
+- [ ] Implementar tracking de deuda y cuotas              />
+
+- [ ] Integración con Dashboard y Presupuesto              <button
+
+- [ ] **CHECKPOINT**: Validar con usuario que sistema funciona                onClick={handleSend}
+
+                disabled={!input.trim() || isLoading}
+
+### Semana 1: Fundamentos IA                className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+
+- [ ] Configurar OpenAI API key              >
+
+- [ ] Instalar dependencias                <Send className="w-5 h-5" />
+
+- [ ] Configurar Redis para caching              </button>
+
+- [ ] Implementar categorización (backend + frontend)            </div>
+
+- [ ] Tests básicos          </div>
+
+        </div>
+
+### Semana 2: PDF Bancario (PRIORIDAD)      )}
+
+- [ ] Implementar `BankStatementAnalyzer`    </>
+
+- [ ] Endpoint `/analyze-bank-pdf`  );
+
+- [ ] Endpoint `/confirm-pdf-import`}
+
+- [ ] UI de importación con preview```
+
+- [ ] Detección de duplicados
+
+- [ ] Vinculación con tarjetas---
+
+
+
+### Semana 3: Insights y OCR#### 1.3 Insights Diarios Automáticos
+
+- [ ] Implementar insights diarios
+
+- [ ] Widget en Dashboard**Objetivo**: Generar 1 consejo/insight diario personalizado.
+
+- [ ] OCR de recibos
+
+- [ ] Tests de prompts**Arquitectura**:
+
 ```python
-# app/services/ai_insights.py
-from openai import OpenAI
-from datetime import datetime
-from typing import Dict
+
+### Semana 4: Polish# app/services/ai_insights.py
+
+- [ ] Rate limiting completofrom openai import OpenAI
+
+- [ ] Monitoreo de costosfrom datetime import datetime
+
+- [ ] Analytics de métricasfrom typing import Dict
+
+- [ ] Documentación
 
 class InsightGenerator:
-    def __init__(self, api_key: str):
+
+---    def __init__(self, api_key: str):
+
         self.client = OpenAI(api_key=api_key)
-    
+
+## Monitoreo de Costos    
+
     async def generate_daily_insight(
-        self, 
-        user_id: int,
-        db: Session
-    ) -> Dict:
-        """
-        Genera insight diario personalizado
-        
-        Returns:
-            {
-                'type': 'warning' | 'success' | 'tip' | 'prediction',
-                'icon': 'alert-circle' | 'check-circle' | 'lightbulb' | 'trending-up',
-                'title': 'Alerta: Gastos en Delivery',
-                'message': 'Llevas S/ 180 en delivery esta semana...',
+
+```python        self, 
+
+# app/models/ai_usage.py        user_id: int,
+
+class AIUsageLog(Base):        db: Session
+
+    __tablename__ = "ai_usage_logs"    ) -> Dict:
+
+            """
+
+    id = Column(Integer, primary_key=True)        Genera insight diario personalizado
+
+    user_id = Column(Integer, ForeignKey("users.id"))        
+
+    feature = Column(String)  # 'categorize', 'pdf', 'ocr', 'insight'        Returns:
+
+    model_used = Column(String)  # 'gpt-3.5-turbo', 'gpt-4o'            {
+
+    tokens_used = Column(Integer)                'type': 'warning' | 'success' | 'tip' | 'prediction',
+
+    cost_usd = Column(Numeric(10, 6))                'icon': 'alert-circle' | 'check-circle' | 'lightbulb' | 'trending-up',
+
+    created_at = Column(DateTime, default=datetime.utcnow)                'title': 'Alerta: Gastos en Delivery',
+
+```                'message': 'Llevas S/ 180 en delivery esta semana...',
+
                 'action': 'Ver transacciones',
-                'action_link': '/transactions?category=alimentacion'
-            }
-        """
-        # Recopilar datos de la última semana
-        week_data = await self._get_week_summary(user_id, db)
+
+**Dashboard de costos**:                'action_link': '/transactions?category=alimentacion'
+
+- Costo total por usuario/día/mes            }
+
+- Breakdown por feature        """
+
+- Alertas si excede $2.00/mes por usuario        # Recopilar datos de la última semana
+
+- % de cache hits (objetivo: >80%)        week_data = await self._get_week_summary(user_id, db)
+
         
-        prompt = f"""
+
+---        prompt = f"""
+
         Analiza estos datos de la última semana del usuario y genera UN insight accionable:
-        
-        {json.dumps(week_data, indent=2)}
-        
-        Tipos de insights que puedes generar:
-        1. WARNING: Gastos inusuales o que exceden presupuesto
-        2. SUCCESS: Logros o mejoras vs semana anterior
+
+## Referencias        
+
+- [OpenAI API Documentation](https://platform.openai.com/docs)        {json.dumps(week_data, indent=2)}
+
+- [GPT-4o Overview](https://platform.openai.com/docs/models/gpt-4o)        
+
+- [Prompt Engineering Best Practices](https://platform.openai.com/docs/guides/prompt-engineering)        Tipos de insights que puedes generar:
+
+- [ADR-002: Wishlist Sprint System](./ADR-002-wishlist-sprint-system.md)        1. WARNING: Gastos inusuales o que exceden presupuesto
+
+- [Pendiente] ADR-003: Sistema de Tarjetas de Crédito        2. SUCCESS: Logros o mejoras vs semana anterior
+
         3. TIP: Consejo práctico para ahorrar
-        4. PREDICTION: Proyección de fin de mes
+
+---        4. PREDICTION: Proyección de fin de mes
+
         
-        Responde en JSON con esta estructura:
+
+## Historial de Cambios        Responde en JSON con esta estructura:
+
         {{
-            "type": "warning|success|tip|prediction",
-            "title": "Título corto y llamativo",
-            "message": "Mensaje explicativo con números específicos (máximo 2 líneas)",
-            "action": "Texto del botón de acción",
-            "action_link": "URL interna de la app"
-        }}
-        """
+
+| Fecha      | Versión | Cambios                                      |            "type": "warning|success|tip|prediction",
+
+|------------|---------|----------------------------------------------|            "title": "Título corto y llamativo",
+
+| 2024-11-14 | 1.0     | Propuesta inicial (over-engineered)         |            "message": "Mensaje explicativo con números específicos (máximo 2 líneas)",
+
+| 2025-11-18 | 2.0     | Revisión pragmática - 4 features core       |            "action": "Texto del botón de acción",
+
+|            |         | + Prioridad a PDF bancario (sin API)        |            "action_link": "URL interna de la app"
+
+|            |         | + Reducción de costos 55%                   |        }}
+
+|            |         | + BLOQUEADO hasta resolver tarjetas         |        """
+
         
-        response = self.client.chat.completions.create(
+
+---        response = self.client.chat.completions.create(
+
             model="gpt-4-turbo-preview",
-            messages=[{"role": "user", "content": prompt}],
+
+## Aprobaciones            messages=[{"role": "user", "content": prompt}],
+
             response_format={"type": "json_object"},
-            temperature=0.8,
-            max_tokens=200
+
+- [ ] Product Owner: _______________            temperature=0.8,
+
+- [ ] Tech Lead: _______________            max_tokens=200
+
         )
-        
+
+---        
+
         insight = json.loads(response.choices[0].message.content)
-        
+
+## Próximos Pasos        
+
         # Mapear icono según tipo
-        icon_map = {
-            'warning': 'alert-circle',
-            'success': 'check-circle',
-            'tip': 'lightbulb',
+
+1. **INMEDIATO**: Discutir sistema de tarjetas de crédito        icon_map = {
+
+   - ¿Modelo de datos correcto?            'warning': 'alert-circle',
+
+   - ¿Integración con Wishlist/Sprint?            'success': 'check-circle',
+
+   - ¿Flujo de importación de PDF?            'tip': 'lightbulb',
+
             'prediction': 'trending-up'
-        }
-        insight['icon'] = icon_map.get(insight['type'], 'info')
-        
-        return insight
+
+2. **DESPUÉS**: Implementar IA sobre base sólida        }
+
+   - Categorización (Semana 1)        insight['icon'] = icon_map.get(insight['type'], 'info')
+
+   - PDF bancario (Semana 2)        
+
+   - Insights + OCR (Semana 3)        return insight
+
     
-    async def _get_week_summary(self, user_id: int, db: Session) -> Dict:
+
+**¿Listo para discutir tarjetas de crédito?** 💳    async def _get_week_summary(self, user_id: int, db: Session) -> Dict:
+
         """Resumen de última semana"""
         week_ago = datetime.now() - timedelta(days=7)
         

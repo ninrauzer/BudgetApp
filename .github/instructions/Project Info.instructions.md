@@ -75,22 +75,94 @@ npm run build        # Build producción
 #### Backend (Puerto 8000)
 ```bash
 cd E:\Desarrollo\BudgetApp\backend
-.\.venv\Scripts\Activate.ps1
-python -m uvicorn app.main:app --reload
+
+# Desarrollo (SQLite local)
+.\switch-env.ps1 dev
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+
+# Producción (Supabase)
+.\switch-env.ps1 prod
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 ## 🗄️ Base de Datos
-- **Ubicación**: `E:\Desarrollo\BudgetApp\backend\budget.db`
-- **Tipo**: SQLite
-- **Modelos principales**: Account, Category, Transaction, BudgetPlan
+
+### Producción (Supabase PostgreSQL)
+- **Host**: db.ohleydwbqagxwyfdtiny.supabase.co:6543
+- **Tipo**: PostgreSQL 17.6
+- **Datos**: 43 transacciones, 35 categorías, 3 cuentas
+- **Backups**: Automáticos diarios (7 días)
+- **Migración**: 19 Nov 2024 desde SQLite
+
+### Desarrollo (SQLite local)
+- **Ubicación**: `E:\Desarrollo\BudgetApp\backend\dev_budget.db`
+- **Tipo**: SQLite 3.x
+- **Uso**: Testing y desarrollo local
+
+### Alternar Entornos
+```powershell
+# Cambiar a desarrollo
+cd backend
+.\switch-env.ps1 dev
+
+# Cambiar a producción
+.\switch-env.ps1 prod
+```
+
+📖 Ver [SUPABASE.md](../../SUPABASE.md) para documentación completa
+
+**Modelos principales**: Account, Category, Transaction, BudgetPlan, Loan, CreditCard, QuickTemplate, BillingCycle
 
 ## 🎨 Stack Tecnológico
 - **Frontend**: React 18, TypeScript, Vite 7, Tailwind CSS 3
 - **Backend**: FastAPI, SQLAlchemy, Uvicorn
 - **Base de datos**: SQLite
 - **Estado**: TanStack Query (React Query)
-- **Gráficos**: Recharts
+- **Gráficos**: Recharts + Nivo (POC en progreso)
 - **Iconos**: Lucide React
+
+## 📊 Animaciones en Nivo Charts
+**Principio clave**: Las animaciones de Nivo se activan con **cambios de datos**, no en el render inicial.
+
+**Patrón "Roll the Dice" (animación en mount)**:
+```typescript
+const [animatedData, setAnimatedData] = useState([]);
+
+useEffect(() => {
+  // 1. Iniciar con valores en 0
+  const initialData = rawData.map(item => ({ ...item, value: 0 }));
+  setAnimatedData(initialData);
+
+  // 2. Después de 100ms, cambiar a valores reales
+  const timer = setTimeout(() => {
+    setAnimatedData(rawData.map(item => ({ ...item, value: item.value })));
+  }, 100);
+
+  return () => clearTimeout(timer);
+}, [rawData]);
+
+// 3. Usar el estado animado
+<ResponsivePie
+  data={animatedData}
+  animate={true}
+  motionConfig="wobbly"      // Presets: gentle, wobbly, stiff, slow, molasses
+  transitionMode="pushIn"    // Modos: pushIn, startAngle, innerRadius, etc.
+/>
+```
+
+**¿Por qué funciona?**
+- Nivo detecta el cambio `0 → valor_real` y ejecuta la transición animada
+- `motionConfig="wobbly"` da efecto con bounce visible
+- `transitionMode="pushIn"` hace que los slices se empujen entre sí
+
+**Presets de motionConfig**:
+- `"gentle"` - Suave y rápido (default)
+- `"wobbly"` - Con bounce (recomendado para efectos visibles)
+- `"stiff"` - Más rígido y rápido
+- `"slow"` - Lento y visible
+- `"molasses"` - Muy lento
+
+**Referencia**: [GitHub Issue #39](https://github.com/plouc/nivo/issues/39), [Stack Overflow](https://stackoverflow.com/questions/70620999)
 
 ## 🔧 Configuración
 - **Moneda por defecto**: PEN (Soles peruanos)

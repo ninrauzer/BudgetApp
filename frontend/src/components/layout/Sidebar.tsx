@@ -18,6 +18,7 @@ const navigation = [
   { name: 'Transacciones', href: '/transactions', icon: Receipt },
   { name: 'Presupuestos', href: '/budget', icon: PiggyBank },
   { name: 'Análisis', href: '/analysis', icon: BarChart3 },
+  { name: 'Tarjetas de Crédito', href: '/credit-cards', icon: CreditCard },
   { name: 'Deudas', href: '/debts', icon: CreditCard },
   { name: 'Cuentas', href: '/accounts', icon: Wallet },
   { name: 'Configuración', href: '/settings', icon: Settings },

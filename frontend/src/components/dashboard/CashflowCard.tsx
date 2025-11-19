@@ -34,8 +34,8 @@ export function CashflowCard() {
       </p>
 
       {/* Sparkline */}
-      <div className="h-12 -mx-2 mb-2 mt-2">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="mb-2 mt-2" style={{ width: '100%', height: '48px' }}>
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <LineChart data={data.daily_data}>
             <Line 
               type="monotone" 
