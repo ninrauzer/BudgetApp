@@ -6,8 +6,7 @@ services:
       dockerfile: Dockerfile.backend
     container_name: budgetapp-backend
     restart: unless-stopped
-    ports:
-      - "8000:8000"
+    network_mode: host
     volumes:
       # Persist SQLite database
       - ./data:/app/data
@@ -17,8 +16,6 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=info
-    networks:
-      - budgetapp-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s
@@ -33,13 +30,9 @@ services:
       dockerfile: Dockerfile.frontend
     container_name: budgetapp-frontend
     restart: unless-stopped
-    ports:
-      - "80:80"
+    network_mode: host
     depends_on:
-      backend:
-        condition: service_started
-    networks:
-      - budgetapp-network
+      - backend
     environment:
       - VITE_API_URL=http://localhost:8000
     healthcheck:
@@ -49,10 +42,3 @@ services:
       retries: 3
       start_period: 5s
 
-networks:
-  budgetapp-network:
-    driver: bridge
-
-volumes:
-  budgetapp-data:
-    driver: local
