@@ -85,8 +85,20 @@ cd backend
 ## 🐳 Docker Local
 
 ```bash
-# Iniciar
+# Iniciar servicios
 docker compose up -d
+
+# Ver logs en tiempo real
+docker compose logs -f
+
+# Detener servicios
+docker compose down
+
+# Reiniciar servicios
+docker compose restart
+
+# Limpiar todo (⚠️ elimina datos)
+docker compose down -v
 
 # URLs
 # Frontend: http://192.168.126.127:8080

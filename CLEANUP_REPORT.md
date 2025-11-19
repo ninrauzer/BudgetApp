@@ -1,10 +1,10 @@
 # 🎯 BudgetApp - Final Cleanup Report
 
-## ✅ Limpieza Completada
+## 📊 Antes vs Después
 
 **Fecha**: 19 Nov 2025
-**Cambio**: De 40+ archivos innecesarios → 14 archivos esenciales
-**Resultado**: -65% de archivos no esenciales
+**Cambio**: De 40+ archivos innecesarios → 13 archivos esenciales
+**Resultado**: -67% de archivos no esenciales
 
 ---
 
@@ -17,19 +17,19 @@
 ├── 10 scripts .ps1 (muchos obsoletos)
 ├── 9 archivos shell .sh (viejos)
 ├── 4 archivos docker/config (duplicados)
+├── 1 Makefile (no usado)
 └── + varios archivos legacy
 ```
 
 ### Después
 ```
-14 archivos ESENCIALES
+13 archivos ESENCIALES
 ├── 3 docs (README.md, RENDER.md, QUICKSTART.md)
 ├── 2 dockerfile (backend, frontend)
 ├── 2 config (compose.yml, render.yaml)
 ├── 3 env (.env, .env.example, .gitignore)
 ├── 1 config (nginx.conf)
-├── 1 makefile
-└── 1 requirements.txt
+└── 2 misc (CLEANUP_REPORT.md, requirements.txt)
 ```
 
 ---
@@ -147,9 +147,10 @@ BudgetApp/
 
 | Métrica | Antes | Después | Mejora |
 |---------|-------|---------|--------|
-| Archivos totales | 40+ | 14 | -65% ✅ |
+| Archivos totales | 40+ | 13 | -67% ✅ |
 | Documentos .md | 12+ | 3 | -75% ✅ |
 | Scripts shell | 9+ | 0 | -100% ✅ |
+| Makefile | 1 | 0 | -100% ✅ |
 | Dead code | Sí | No | ✅ |
 | Confusión | Alta | Baja | ✅ |
 | Onboarding time | ~1h | ~15min | -75% ✅ |
