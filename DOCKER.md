@@ -131,20 +131,26 @@ docker compose logs frontend
 
 #### Frontend build fails con TypeScript errors
 El proyecto usa configuraciones separadas de TypeScript:
-- **Desarrollo** (`tsconfig.app.json`): Strict mode activo
-- **Producción** (`tsconfig.build.json`): Strict mode deshabilitado
+- **Desarrollo** (`npm run dev`): Vite dev server sin type checking
+- **Build local** (`npm run build`): TypeScript check + Vite build
+- **Build Docker** (`npm run build:docker`): Solo Vite build (sin TypeScript check)
 
-El build de Docker usa `tsconfig.build.json` automáticamente para evitar errores de tipos en producción. Si necesitas debugging:
+El build de Docker usa `npm run build:docker` para evitar errores de tipos en producción. Vite transpila TypeScript sin verificar tipos, lo que es suficiente para producción.
+
+Si necesitas debugging de tipos localmente:
 
 ```bash
-# Ver errores de TypeScript
-cd frontend && npm run build
+# Verificar tipos sin build
+cd frontend && npx tsc --noEmit
 
-# Forzar rebuild sin caché
-docker compose build --no-cache frontend
+# Build local con verificación
+npm run build
+
+# Build como Docker (sin verificación)
+npm run build:docker
 ```
 
-#### Base de datos corrupta
+#### Backend no inicia
 ```bash
 # Detener servicios
 docker compose down

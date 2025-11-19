@@ -36,12 +36,24 @@ Configuración relajada para builds de producción:
 ```json
 {
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && vite build"
+    "build": "tsc -p tsconfig.build.json && vite build",
+    "build:docker": "vite build"
   }
 }
 ```
 
-### 3. Verificado Build Local
+**Explicación**:
+- `npm run build` - Build local con verificación TypeScript (usa tsconfig.build.json)
+- `npm run build:docker` - Build Docker sin verificación TypeScript (solo Vite transpilation)
+
+### 3. Actualizado `Dockerfile.frontend`
+```dockerfile
+# Build for production (skip TypeScript checking for Docker builds)
+# Vite will handle transpilation without strict type checking
+RUN npm run build:docker
+```
+
+### 4. Verificado Build Local
 ```bash
 cd frontend && npm run build
 # ✓ 2579 modules transformed

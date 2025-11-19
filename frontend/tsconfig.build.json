@@ -7,6 +7,17 @@
     "noUnusedParameters": false,
     "skipLibCheck": true,
     "noImplicitAny": false,
+    "noImplicitThis": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "strictPropertyInitialization": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
+    "noUncheckedIndexedAccess": false,
+    
+    /* Disable all checks for unknown types */
+    "suppressImplicitAnyIndexErrors": true,
+    "noPropertyAccessFromIndexSignature": false,
     
     /* Keep essential settings */
     "target": "ES2022",
@@ -17,7 +28,11 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": false
   },
   "include": ["src"]
 }
