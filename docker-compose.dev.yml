@@ -11,3 +11,4 @@ services:
       # Mount only what we need for development
       - ./backend/app:/app/app
       - ./data:/app/data
+    env_file: .env

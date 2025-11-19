@@ -13,8 +13,8 @@ services:
       - ./data:/app/data
       # Mount backend code for development (hot reload)
       - ./backend:/app:delegated
+    env_file: .env
     environment:
-      - DATABASE_URL=sqlite:///./data/budget.db
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=info
     networks:
