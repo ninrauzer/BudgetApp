@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowUpDown, Wallet, TrendingUp, TrendingDown, MoreVertical, Plus, Pencil, Trash2 } from 'lucide-react';
-import { useAccounts, useTransactions, useTransfers, useDeleteTransfer, useCreateAccount, useUpdateAccount, useDeleteAccount } from '../lib/hooks/useApi';
-import { useDemoMode } from '../lib/hooks/useDemoMode';
+import { useAccounts, useTransactions, useTransfers, useDeleteTransfer, useCreateAccount, useUpdateAccount, useDeleteAccount } from '@/lib/hooks/useApi';
+import { useDemoMode } from '@/lib/hooks/useDemoMode';
 import { useToast } from '@/components/toast/ToastContext';
 import DemoBanner from '../components/DemoBanner';
 import TransferModal from '@/components/TransferModal';
@@ -12,7 +12,7 @@ import { SectionHeader } from '@/components/ui/section-header';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { PageHeader } from '@/components/ui/page-header';
-import type { Account, TransactionWithDetails, PaginatedResponse } from '../lib/api/types';
+import type { Account, TransactionWithDetails, PaginatedResponse } from '@/lib/api/types';
 import { formatCurrencyISO } from '@/lib/format';
 
 export default function Accounts() {

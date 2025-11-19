@@ -3,17 +3,17 @@ import { ResponsiveContainer, Treemap, AreaChart, Area, CartesianGrid, XAxis, YA
 import { ResponsivePie } from '@nivo/pie';
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsiveLine } from '@nivo/line';
-import { useCurrentCycle, useCategoryAnalysis, useTrends, useAnalysisSummary, useBudgetComparison, useTransactions } from '../lib/hooks/useApi';
+import { useCurrentCycle, useCategoryAnalysis, useTrends, useAnalysisSummary, useBudgetComparison, useTransactions } from '@/lib/hooks/useApi';
 import CategoryIcon from '../components/CategoryIcon';
 import BudgetComparisonSection from '../components/BudgetComparisonSection';
 import ChartCard from '../components/ChartCard';
 import { Loader2 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
-import { exchangeRateApi } from '../lib/api';
+import { exchangeRateApi } from '@/lib/api';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
-import { useDemoMode } from '../lib/hooks/useDemoMode';
+import { useDemoMode } from '@/lib/hooks/useDemoMode';
 import { formatCurrencyISO, formatBudget } from '@/lib/format';
 
 const COLORS = ['#10B981', '#F43F5E', '#EC4899', '#8B5CF6', '#3B82F6', '#F59E0B', '#06B6D4', '#84CC16'];

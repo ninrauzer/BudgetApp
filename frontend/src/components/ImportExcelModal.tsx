@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Upload, X, FileSpreadsheet, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { apiClient } from '../lib/api';
+import { apiClient } from '@/lib/api';
 
 interface ImportResult {
   success: number;

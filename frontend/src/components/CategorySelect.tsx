@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
-import type { Category } from '../lib/api';
+import type { Category } from '@/lib/api';
 import CategoryIcon from './CategoryIcon';
 
 interface CategorySelectProps {

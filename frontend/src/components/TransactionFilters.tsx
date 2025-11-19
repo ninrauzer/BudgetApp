@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Search, Filter, X, Calendar } from 'lucide-react';
-import type { TransactionFilters } from '../lib/api';
-import type { Category, Account } from '../lib/api';
-import { useCurrentCycle, useBillingCycle } from '../lib/hooks/useApi';
+import type { TransactionFilters } from '@/lib/api';
+import type { Category, Account } from '@/lib/api';
+import { useCurrentCycle, useBillingCycle } from '@/lib/hooks/useApi';
 
 interface TransactionFiltersProps {
   filters: TransactionFilters;

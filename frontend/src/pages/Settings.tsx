@@ -5,7 +5,7 @@ import CategoryCRUD from '../components/CategoryCRUD';
 import QuickTemplateCRUD from '../components/QuickTemplateCRUD';
 import BillingCycleSettings from '../components/BillingCycleSettings';
 import CategoryIcon from '../components/CategoryIcon';
-import { useAccounts } from '../lib/hooks/useApi';
+import { useAccounts } from '@/lib/hooks/useApi';
 import { useDefaultAccount } from '../contexts/DefaultAccountContext';
 import { useDefaultCurrency } from '../contexts/DefaultCurrencyContext';
 

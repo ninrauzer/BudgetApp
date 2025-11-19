@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Plus, Calendar, DollarSign, FileText, Tag, CreditCard, Landmark } from 'lucide-react';
-import type { Transaction, Category, Account } from '../lib/api';
+import type { Transaction, Category, Account } from '@/lib/api';
 import ExchangeRateDisplay from './ExchangeRateDisplay';
 import CategorySelect from './CategorySelect';
 import { useDefaultAccount } from '../contexts/DefaultAccountContext';

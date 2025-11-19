@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, ArrowRight, Calendar } from 'lucide-react';
-import type { Account } from '../lib/api/types';
-import { useCreateTransfer } from '../lib/hooks/useApi';
+import type { Account } from '@/lib/api/types';
+import { useCreateTransfer } from '@/lib/hooks/useApi';
 import { useToast } from './toast/ToastContext';
 
 interface TransferModalProps {

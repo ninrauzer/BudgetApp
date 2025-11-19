@@ -13,13 +13,13 @@ import {
   useUpdateTransaction,
   useDeleteTransaction,
   useCurrentCycle
-} from '../lib/hooks/useApi';
-import type { TransactionFilters, Transaction } from '../lib/api';
-import { exchangeRateApi } from '../lib/api';
+} from '@/lib/hooks/useApi';
+import type { TransactionFilters, Transaction } from '@/lib/api';
+import { exchangeRateApi } from '@/lib/api';
 import { formatCurrencyISO } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useDefaultAccount } from '../contexts/DefaultAccountContext';
-import { useDemoMode } from '../lib/hooks/useDemoMode';
+import { useDemoMode } from '@/lib/hooks/useDemoMode';
 
 export default function Transactions() {
   const { defaultAccountId } = useDefaultAccount();

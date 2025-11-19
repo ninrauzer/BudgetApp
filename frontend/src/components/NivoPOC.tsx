@@ -7,7 +7,7 @@ import { ResponsivePie } from '@nivo/pie';
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsiveLine } from '@nivo/line';
 import { ResponsiveBump } from '@nivo/bump';
-import { formatCurrencyISO } from '../lib/format';
+import { formatCurrencyISO } from '@/lib/format';
 
 interface NivoPOCProps {
   pieData: Array<{ name: string; value: number }>;

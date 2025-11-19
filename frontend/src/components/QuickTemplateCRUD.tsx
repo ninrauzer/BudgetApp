@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, Edit2, Trash2, X, Check, Zap } from 'lucide-react';
-import type { QuickTemplate } from '../lib/api';
+import type { QuickTemplate } from '@/lib/api';
 import CategoryIcon from './CategoryIcon';
 import CategorySelect from './CategorySelect';
 import { 
@@ -9,7 +9,7 @@ import {
   useUpdateQuickTemplate, 
   useDeleteQuickTemplate,
   useCategories 
-} from '../lib/hooks/useApi';
+} from '@/lib/hooks/useApi';
 
 interface TemplateFormData {
   name: string;

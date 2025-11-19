@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Calendar, Check, X } from 'lucide-react';
-import { useBillingCycle, useCurrentCycle, useUpdateBillingCycle } from '../lib/hooks/useApi';
+import { useBillingCycle, useCurrentCycle, useUpdateBillingCycle } from '@/lib/hooks/useApi';
 
 export default function BillingCycleSettings() {
   const { data: billingCycle, isLoading: isCycleLoading } = useBillingCycle();

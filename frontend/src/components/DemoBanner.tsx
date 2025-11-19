@@ -1,5 +1,5 @@
 import { Eye, X } from 'lucide-react';
-import { useDemoMode } from '../lib/hooks/useDemoMode';
+import { useDemoMode } from '@/lib/hooks/useDemoMode';
 import { useState } from 'react';
 
 export default function DemoBanner() {

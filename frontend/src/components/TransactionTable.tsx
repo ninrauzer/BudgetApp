@@ -1,5 +1,5 @@
 import { Pencil, Trash2, TrendingUp, TrendingDown, Copy, StickyNote } from 'lucide-react';
-import type { TransactionWithDetails } from '../lib/api';
+import type { TransactionWithDetails } from '@/lib/api';
 import CategoryIcon from './CategoryIcon';
 import type { ReactNode } from 'react';
 

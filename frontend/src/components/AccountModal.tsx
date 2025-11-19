@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { X, Wallet } from 'lucide-react';
-import type { Account } from '../lib/api/types';
+import type { Account } from '@/lib/api/types';
 
 interface AccountModalProps {
   isOpen: boolean;

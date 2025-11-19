@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Plus, Check, X } from 'lucide-react';
-import type { Transaction, Category, Account } from '../lib/api';
+import type { Transaction, Category, Account } from '@/lib/api';
 import CategorySelect from './CategorySelect';
 import { useDefaultAccount } from '../contexts/DefaultAccountContext';
 import { useDefaultCurrency } from '../contexts/DefaultCurrencyContext';

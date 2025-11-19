@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/components/toast/ToastContext';
 import { Plus, Edit2, Trash2, X, Check, Calendar, TrendingUp } from 'lucide-react';
-import type { Category } from '../lib/api';
+import type { Category } from '@/lib/api';
 import CategoryIcon from './CategoryIcon';
-import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../lib/hooks/useApi';
+import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '@/lib/hooks/useApi';
 
 // Common Lucide icon names for categories
 const ICON_OPTIONS = [
