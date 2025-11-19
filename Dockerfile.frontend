@@ -4,20 +4,11 @@ FROM node:20-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY frontend/package*.json ./
+# Copy entire frontend directory
+COPY frontend/ .
 
 # Install dependencies
 RUN npm ci
-
-# Copy configuration files first
-COPY frontend/tsconfig*.json ./
-COPY frontend/vite.config.ts ./
-COPY frontend/index.html ./
-
-# Copy source code
-COPY frontend/src ./src
-COPY frontend/public ./public
 
 # Build for production (skip TypeScript checking for Docker builds)
 # Vite will handle transpilation without strict type checking
