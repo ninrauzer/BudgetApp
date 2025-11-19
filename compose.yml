@@ -17,6 +17,8 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=info
+      # WSL gateway IP - allows container to reach Windows/Internet
+      - WSL_HOST=host.docker.internal
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s
