@@ -10,8 +10,14 @@ COPY frontend/package*.json ./
 # Install dependencies
 RUN npm ci
 
+# Copy configuration files first
+COPY frontend/tsconfig*.json ./
+COPY frontend/vite.config.ts ./
+COPY frontend/index.html ./
+
 # Copy source code
-COPY frontend/ .
+COPY frontend/src ./src
+COPY frontend/public ./public
 
 # Build for production (skip TypeScript checking for Docker builds)
 # Vite will handle transpilation without strict type checking
