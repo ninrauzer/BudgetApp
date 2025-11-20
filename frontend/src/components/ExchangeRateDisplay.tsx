@@ -1,73 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useExchangeRate } from '@/lib/hooks/useApi';
 import { DollarSign } from 'lucide-react';
-import { exchangeRateApi } from '@/lib/api';
 
-interface ExchangeRateDisplayProps {
-  currency?: 'PEN' | 'USD';
-  date: string;
-  amount: number;
-}
+/**
+ * ExchangeRateDisplay - Muestra el tipo de cambio USD/PEN en el header global
+ * Visible en todas las páginas de la aplicación
+ */
+export default function ExchangeRateDisplay() {
+  const { data: exchangeRate, isLoading } = useExchangeRate();
 
-export default function ExchangeRateDisplay({ currency, date, amount }: ExchangeRateDisplayProps) {
-  const [rate, setRate] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    const fetchRate = async () => {
-      if (currency !== 'USD' || !date) {
-        setRate(null);
-        return;
-      }
-
-      setLoading(true);
-      setError(false);
-
-      try {
-        const response = await exchangeRateApi.getRate(date);
-        setRate(response.rate);
-      } catch (err) {
-        console.error('Error fetching exchange rate:', err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRate();
-  }, [currency, date]);
-
-  if (currency !== 'USD' || !rate) {
-    return null;
+  if (isLoading || !exchangeRate) {
+    return (
+      <div className="h-5 w-20 bg-gray-200 rounded animate-pulse" />
+    );
   }
 
-  const converted = (amount * rate).toFixed(2);
-
   return (
-    <div className="mt-2 p-3 bg-primary/5 border border-primary/20 rounded-xl">
-      <div className="flex items-start gap-2 text-sm">
-        <DollarSign className="w-4 h-4 text-primary mt-0.5" strokeWidth={2.5} />
-        <div className="flex-1">
-          {loading && (
-            <p className="text-text-muted">⏳ Consultando tipo de cambio BCRP...</p>
-          )}
-          {error && (
-            <p className="text-danger">⚠️ No se pudo obtener el tipo de cambio</p>
-          )}
-          {!loading && !error && rate && (
-            <div>
-              <p className="font-bold text-primary">
-                💱 Tipo de cambio: {rate.toFixed(4)} PEN por USD
-              </p>
-              {amount > 0 && (
-                <p className="text-text-secondary mt-1">
-                  {amount.toFixed(2)} USD <strong className="text-text-primary">≈ {converted} PEN</strong>
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+    <div className="flex items-center gap-2 text-text-secondary">
+      <DollarSign className="h-4 w-4" strokeWidth={2.5} />
+      <span className="text-sm font-semibold">
+        USD/PEN {exchangeRate.rate.toFixed(2)}
+      </span>
     </div>
   );
 }
