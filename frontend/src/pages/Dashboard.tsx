@@ -34,8 +34,6 @@ export default function Dashboard() {
 
       {/* ZONA DE DECISIÓN - 5 Métricas Críticas */}
       <div className="space-y-6">
-        <h2 className="text-h2 font-extrabold text-text-primary">Zona de Decisión Instantánea</h2>
-        
         {/* 1. Disponible del Ciclo - Tarjeta Hero */}
         <AvailableBalanceCard />
 
