@@ -127,6 +127,8 @@ export default function LoanForm({ loan, onClose, onSuccess }: LoanFormProps) {
         notes: formData.notes || undefined
       }
 
+      console.log('Sending loan payload:', payload)
+
       const url = loan ? `/api/loans/${loan.id}` : '/api/loans'
       const method = loan ? 'PUT' : 'POST'
 
@@ -138,7 +140,15 @@ export default function LoanForm({ loan, onClose, onSuccess }: LoanFormProps) {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.detail || 'Error al guardar el préstamo')
+        // Log the error details for debugging
+        console.error('Loan creation error:', {
+          status: response.status,
+          detail: errorData.detail,
+          errors: errorData.errors,
+          fullResponse: errorData
+        })
+        const errorMsg = errorData.detail || errorData.errors?.[0]?.msg || 'Error al guardar el préstamo'
+        throw new Error(errorMsg)
       }
 
       onSuccess()

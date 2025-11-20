@@ -44,13 +44,10 @@ class LoanCreate(LoanBase):
     current_debt: Optional[float] = Field(None, description="Current outstanding debt (defaults to original_amount)")
     base_installments_paid: int = Field(default=0, ge=0, description="Manual count of installments already paid")
     
-    @field_validator('current_debt')
-    @classmethod
-    def set_current_debt(cls, v, info):
+    def model_post_init(self, __context):
         """Set current_debt to original_amount if not provided"""
-        if v is None and 'original_amount' in info.data:
-            return info.data['original_amount']
-        return v
+        if self.current_debt is None:
+            self.current_debt = self.original_amount
 
 
 class LoanUpdate(BaseModel):
