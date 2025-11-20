@@ -61,7 +61,7 @@ export default function BudgetComparisonSection({ cycleName, displayCurrency = '
       {/* Summary KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Income Compliance */}
-        <Card className="bg-gradient-to-br from-emerald-400 to-emerald-500 border-none text-white shadow-card">
+        <Card className="bg-gradient-to-br from-emerald-400/90 to-emerald-500/90 border-none text-white shadow-card backdrop-blur-md">
           <CardContent className="p-6">
           <div className="flex items-center justify-between mb-3">
             <TrendingUp className="w-6 h-6" />
@@ -86,7 +86,7 @@ export default function BudgetComparisonSection({ cycleName, displayCurrency = '
         </Card>
 
         {/* Expense Compliance */}
-        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 border-none text-white shadow-card">
+        <Card className="bg-gradient-to-br from-orange-500/90 to-orange-600/90 border-none text-white shadow-card backdrop-blur-md">
           <CardContent className="p-6">
           <div className="flex items-center justify-between mb-3">
             <TrendingDown className="w-6 h-6" />
@@ -112,12 +112,12 @@ export default function BudgetComparisonSection({ cycleName, displayCurrency = '
 
         {/* Overall Compliance */}
         <Card className={cn(
-          "border-none text-white shadow-card bg-gradient-to-br",
+          "border-none text-white shadow-card bg-gradient-to-br backdrop-blur-md",
           summary.overall_compliance >= 80 
-            ? "from-green-500 to-green-600"
+            ? "from-green-500/90 to-green-600/90"
             : summary.overall_compliance >= 60
-            ? "from-amber-400 to-amber-500"
-            : "from-red-500 to-red-600"
+            ? "from-amber-400/90 to-amber-500/90"
+            : "from-red-500/90 to-red-600/90"
         )}>
           <CardContent className="p-6">
           <div className="flex items-center justify-between mb-3">
@@ -137,10 +137,10 @@ export default function BudgetComparisonSection({ cycleName, displayCurrency = '
 
         {/* Saving Status */}
         <Card className={cn(
-          "border-none text-white shadow-card bg-gradient-to-br",
+          "border-none text-white shadow-card bg-gradient-to-br backdrop-blur-md",
           summary.total_actual_saving >= summary.total_budgeted_saving
-            ? "from-blue-500 to-blue-600"
-            : "from-amber-400 to-amber-500"
+            ? "from-blue-500/90 to-blue-600/90"
+            : "from-amber-400/90 to-amber-500/90"
         )}>
           <CardContent className="p-6">
           <div className="flex items-center justify-between mb-3">

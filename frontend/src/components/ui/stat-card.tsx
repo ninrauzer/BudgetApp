@@ -17,12 +17,12 @@ export interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const variantClasses = {
-  success: "from-emerald-400 to-emerald-500",
-  danger: "from-red-400 to-red-500",
-  info: "from-blue-400 to-blue-500",
-  warning: "from-orange-400 to-orange-500",
-  purple: "from-purple-400 to-purple-500",
-  primary: "from-primary to-blue-600",
+  success: "from-emerald-400/90 to-emerald-500/90",
+  danger: "from-red-400/90 to-red-500/90",
+  info: "from-blue-400/90 to-blue-500/90",
+  warning: "from-orange-400/90 to-orange-500/90",
+  purple: "from-purple-400/90 to-purple-500/90",
+  primary: "from-primary/90 to-blue-600/90",
 };
 
 const variantTextClasses = {
@@ -40,7 +40,7 @@ export const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
       <Card
         ref={ref}
         className={cn(
-          "bg-gradient-to-br text-white border-0",
+          "bg-gradient-to-br text-white border-0 backdrop-blur-md shadow-lg",
           variantClasses[variant],
           className
         )}
