@@ -55,6 +55,19 @@ export default function LoanForm({ loan, onClose, onSuccess }: LoanFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Validar que los campos requeridos estén completos
+  const isFormValid = () => {
+    return (
+      formData.name.trim() !== '' &&
+      formData.entity.trim() !== '' &&
+      formData.original_amount !== '' &&
+      formData.annual_rate !== '' &&
+      formData.total_installments !== '' &&
+      formData.start_date !== '' &&
+      formData.payment_day !== ''
+    )
+  }
+
   // Cargar datos si es edición
   useEffect(() => {
     if (loan) {
@@ -377,7 +390,7 @@ export default function LoanForm({ loan, onClose, onSuccess }: LoanFormProps) {
             </button>
             <button
               type="submit"
-              disabled={loading || (!calculatedPayment && !loan)}
+              disabled={loading || !isFormValid()}
               className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Guardando...' : loan ? 'Actualizar' : 'Crear Préstamo'}
