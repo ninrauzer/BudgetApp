@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Plus, TrendingUp, TrendingDown, Loader2, Trash2, ChevronUp, ChevronDown, Calendar } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Loader2, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import TransactionTable from '../components/TransactionTable';
 import TransactionFiltersComponent from '../components/TransactionFilters';
 import TransactionModal from '../components/TransactionModal';
 import QuickAddRow from '../components/QuickAddRow';
 import FloatingActionButton from '../components/FloatingActionButton';
+import { CycleInfo } from '@/components/ui/cycle-info';
 import { 
   useTransactions, 
   useCategories, 
@@ -233,13 +234,8 @@ export default function Transactions() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-text-primary">Transacciones</h1>
-            {currentCycle ? (
-              <p className="text-text-secondary flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Ciclo: {currentCycle.cycle_name} ({new Date(currentCycle.start_date).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })} - {new Date(currentCycle.end_date).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })})
-              </p>
-            ) : (
-              <p className="text-text-secondary">Gestiona todos tus movimientos financieros</p>
+            {currentCycle && (
+              <CycleInfo cycleData={currentCycle} exchangeRate={exchangeRate} isLoading={rateLoading} />
             )}
           </div>
           <div className="flex gap-3 items-center">
