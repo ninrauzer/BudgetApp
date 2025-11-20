@@ -55,12 +55,23 @@ async def health_check():
     Health check endpoint to verify API is running.
     Available at both /health and /api/health for Docker compatibility.
     """
+    # Detect environment from DATABASE_URL
+    db_url = os.getenv("DATABASE_URL", "")
+    environment = "unknown"
+    if "budgetapp_dev" in db_url:
+        environment = "development"
+    elif "budgetapp_prod" in db_url:
+        environment = "production"
+    elif "sqlite" in db_url:
+        environment = "sqlite"
+    
     return JSONResponse(
         content={
             "status": "ok",
             "version": APP_VERSION,
             "database": "connected",
             "app": APP_NAME,
+            "environment": environment,
         }
     )
 
