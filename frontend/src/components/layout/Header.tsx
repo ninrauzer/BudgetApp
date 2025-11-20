@@ -31,7 +31,7 @@ export function Header() {
         </div>
 
         {/* Right section */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
           {/* Exchange Rate Display */}
           <ExchangeRateDisplay />
           
