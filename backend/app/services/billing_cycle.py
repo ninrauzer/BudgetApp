@@ -108,7 +108,7 @@ def get_cycle_dates(cycle_name: str, db=None) -> dict | None:
     
     Args:
         cycle_name: Month name in Spanish ("Enero", "Febrero", etc.)
-        db: Database session (to get billing_cycle_day from settings)
+        db: Database session (to get billing_cycle_day from settings and lookup budget plans)
     
     Returns:
         dict with start_date and end_date, or None if invalid cycle_name
@@ -127,10 +127,31 @@ def get_cycle_dates(cycle_name: str, db=None) -> dict | None:
         except Exception:
             start_day = 23
     
+    # FIRST STRATEGY: Look in the database for existing budget plans for this cycle
+    # This ensures we return the correct dates even if we're in the middle of the cycle
+    if db:
+        try:
+            from app.models.budget_plan import BudgetPlan
+            from sqlalchemy import func
+            
+            existing = db.query(
+                func.min(BudgetPlan.start_date),
+                func.max(BudgetPlan.end_date)
+            ).filter(BudgetPlan.cycle_name == cycle_name).first()
+            
+            if existing and existing[0] and existing[1]:
+                return {
+                    "start_date": existing[0],
+                    "end_date": existing[1]
+                }
+        except Exception:
+            pass
+    
+    # SECOND STRATEGY: Calculate dates based on cycle logic
+    # This is used when no budget plans exist yet
     current_date = datetime.now()
     month_num = MONTH_NAMES.index(cycle_name) + 1
     
-    # Strategy: Try to find the most recent occurrence of this cycle
     # Start with current year
     year = current_date.year
     
@@ -141,7 +162,7 @@ def get_cycle_dates(cycle_name: str, db=None) -> dict | None:
         cycle_end = _safe_date(year, 1, start_day) - timedelta(days=1)
         cycle_start = _safe_date(year - 1, 12, start_day)
     elif month_num == 12:
-        # December cycle: next month is January (of next year)
+        # December cycle: ends on Dec 22, starts on Nov 23
         cycle_end = _safe_date(year, 12, start_day) - timedelta(days=1)
         cycle_start = _safe_date(year, 11, start_day)
     else:
@@ -149,8 +170,13 @@ def get_cycle_dates(cycle_name: str, db=None) -> dict | None:
         cycle_end = _safe_date(year, month_num, start_day) - timedelta(days=1)
         cycle_start = _safe_date(year, month_num - 1, start_day)
     
-    # If this cycle is in the future, use the previous year's cycle instead
-    if cycle_end.date() > current_date.date():
+    # If cycle ends in the future AND it's not today's month, use previous year
+    # BUT: If we're in the named month before the cycle end date, this is still current year
+    is_named_month = current_date.month == month_num
+    cycle_end_has_passed = current_date.date() > cycle_end.date()
+    
+    if cycle_end.date() > current_date.date() and not is_named_month:
+        # Cycle is in the future and we're not in that month - use previous year
         year = year - 1
         if month_num == 1:
             cycle_end = _safe_date(year, 1, start_day) - timedelta(days=1)
@@ -161,7 +187,6 @@ def get_cycle_dates(cycle_name: str, db=None) -> dict | None:
         else:
             cycle_end = _safe_date(year, month_num, start_day) - timedelta(days=1)
             cycle_start = _safe_date(year, month_num - 1, start_day)
-        print(f"DEBUG after adjustment: cycle_start={cycle_start.date()}, cycle_end={cycle_end.date()}")
     
     return {
         "start_date": cycle_start.date(),
