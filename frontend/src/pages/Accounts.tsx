@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { ArrowUpDown, Wallet, TrendingUp, TrendingDown, MoreVertical, Plus, Pencil, Trash2 } from 'lucide-react';
-import { useAccounts, useTransactions, useTransfers, useDeleteTransfer, useCreateAccount, useUpdateAccount, useDeleteAccount } from '@/lib/hooks/useApi';
+import { useAccounts, useTransactions, useTransfers, useDeleteTransfer, useCreateAccount, useUpdateAccount, useDeleteAccount, useCurrentCycle, useExchangeRate } from '@/lib/hooks/useApi';
 import { useDemoMode } from '@/lib/hooks/useDemoMode';
+import { CycleInfo } from '@/components/ui/cycle-info';
 import { useToast } from '@/components/toast/ToastContext';
 import DemoBanner from '../components/DemoBanner';
 import TransferModal from '@/components/TransferModal';
@@ -11,7 +12,6 @@ import { StatCard } from '@/components/ui/stat-card';
 import { SectionHeader } from '@/components/ui/section-header';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { EmptyState } from '@/components/ui/empty-state';
-import { PageHeader } from '@/components/ui/page-header';
 import type { Account, TransactionWithDetails, PaginatedResponse } from '@/lib/api/types';
 import { formatCurrencyISO } from '@/lib/format';
 
@@ -29,6 +29,8 @@ export default function Accounts() {
   const createAccountMutation = useCreateAccount();
   const updateAccountMutation = useUpdateAccount();
   const deleteAccountMutation = useDeleteAccount();
+  const { data: currentCycle, isLoading: cycleLoading } = useCurrentCycle();
+  const { data: exchangeRate, isLoading: rateLoading } = useExchangeRate();
   const { pushToast } = useToast();
 
   // Close actions menu when clicking outside
@@ -132,11 +134,12 @@ export default function Accounts() {
       {isDemoMode && <DemoBanner />}
       
       {/* Header */}
-      <PageHeader
-        title="Cuentas"
-        subtitle="Administra tus cuentas y realiza transferencias"
-        actions={
-          <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-text-primary">Cuentas</h1>
+          <CycleInfo cycleData={currentCycle} exchangeRate={exchangeRate?.rate} isLoading={cycleLoading || rateLoading} />
+        </div>
+        <div className="flex items-center gap-3">
             <button
               onClick={handleCreateAccount}
               className="flex items-center gap-2 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white px-6 py-3 rounded-xl shadow-button hover:shadow-lg transition-all hover:scale-105"
@@ -155,8 +158,7 @@ export default function Accounts() {
               <span className="font-semibold">Nueva Transferencia</span>
             </button>
           </div>
-        }
-      />
+      </div>
 
       {/* Resumen de saldos */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
