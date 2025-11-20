@@ -183,7 +183,7 @@ cd backend
   - `budgetapp_prod`: Base de producción (Docker)
   - `budgetapp_dev`: Base de desarrollo (local VSCode)
 - **Estado**: TanStack Query (React Query)
-- **Gráficos**: Nivo (POC en progreso)
+- **Gráficos**: Nivo (Charts, Pie, Bar, Line, Treemap, Bump)
 - **Iconos**: Lucide React
 
 ## 📊 Animaciones en Nivo Charts
@@ -673,11 +673,15 @@ text-white/60            /* Secundario - 60% opacidad */
 
 ---
 
-## 📊 Charts y Visualizaciones (Recharts)
+## 📊 Charts y Visualizaciones (Nivo)
 
 ### Configuración Base
 ```tsx
-import { ResponsiveContainer, LineChart, Line, PieChart, Pie } from 'recharts';
+import { ResponsivePie } from '@nivo/pie';
+import { ResponsiveBar } from '@nivo/bar';
+import { ResponsiveLine } from '@nivo/line';
+import { ResponsiveTreeMap } from '@nivo/treemap';
+import { ResponsiveBump } from '@nivo/bump';
 
 // Array de colores para charts
 const COLORS = [
@@ -686,53 +690,132 @@ const COLORS = [
 ];
 ```
 
-### Line Chart (Sparkline)
-```tsx
-<ResponsiveContainer width="100%" height="100%">
-  <LineChart data={dailyData}>
-    <Line 
-      type="monotone" 
-      dataKey="balance" 
-      stroke="rgba(255,255,255,0.8)" 
-      strokeWidth={2} 
-      dot={false}
-    />
-  </LineChart>
-</ResponsiveContainer>
-```
-
 ### Pie Chart (Distribución)
 ```tsx
-<ResponsiveContainer width="100%" height={300}>
-  <PieChart>
-    <Pie
-      data={data}
-      dataKey="value"
-      nameKey="name"
-      cx="50%"
-      cy="50%"
-      outerRadius={100}
-      label
-    >
-      {data.map((entry, index) => (
-        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-      ))}
-    </Pie>
-    <Tooltip formatter={(value) => formatCurrency(value)} />
-  </PieChart>
-</ResponsiveContainer>
+<ResponsivePie
+  data={data}
+  margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
+  innerRadius={0.5}
+  padAngle={0.7}
+  cornerRadius={3}
+  colors={COLORS}
+  borderWidth={1}
+  borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
+  radialLabelsSkipAngle={10}
+  radialLabelsTextColor="#333333"
+  radialLabelsLinkColor={{ from: 'color' }}
+  sliceLabelsSkipAngle={10}
+  sliceLabelsTextColor="#fff"
+  animate={true}
+  motionConfig="wobbly"
+  transitionMode="pushIn"
+/>
 ```
 
-### Gauge Chart (Presupuesto)
+### Bar Chart (Comparativa)
 ```tsx
-<RadialBarChart 
-  width={200} height={200} 
-  innerRadius="70%" outerRadius="100%"
-  data={[{ value: percentage, fill: getColor(percentage) }]}
-  startAngle={180} endAngle={0}
->
-  <RadialBar dataKey="value" />
-</RadialBarChart>
+<ResponsiveBar
+  data={data}
+  keys={['value1', 'value2']}
+  indexBy="name"
+  margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
+  padding={0.3}
+  colors={COLORS}
+  borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+  axisTop={null}
+  axisRight={null}
+  axisBottom={{
+    tickSize: 5,
+    tickPadding: 5,
+    tickRotation: 0,
+    legend: 'Categoría',
+    legendPosition: 'middle',
+    legendOffset: 40
+  }}
+  axisLeft={{
+    tickSize: 5,
+    tickPadding: 5,
+    tickRotation: 0,
+    legend: 'Monto',
+    legendPosition: 'middle',
+    legendOffset: -40
+  }}
+  animate={true}
+  motionConfig="wobbly"
+/>
+```
+
+### Line Chart (Series Temporal)
+```tsx
+<ResponsiveLine
+  data={data}
+  margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
+  xScale={{ type: 'point' }}
+  yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: true, reverse: false }}
+  curve="catmullRom"
+  colors={COLORS}
+  strokeWidth={2}
+  pointSize={8}
+  pointColor={{ theme: 'background' }}
+  pointBorderWidth={2}
+  pointBorderColor={{ from: 'serieColor' }}
+  animate={true}
+  motionConfig="wobbly"
+/>
+```
+
+### TreeMap (Jerarquía)
+```tsx
+<ResponsiveTreeMap
+  data={data}
+  identity="name"
+  label="name"
+  labelSkipSize={12}
+  labelTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
+  parentLabelPosition="top"
+  parentLabelTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
+  colors={COLORS}
+  borderColor={{ from: 'color', modifiers: [['darker', 0.1]] }}
+  animate={true}
+  motionConfig="wobbly"
+/>
+```
+
+### Animaciones Nivo
+**Principio**: Las animaciones se activan con cambios de datos
+
+**Patrón "Roll the Dice"**:
+```tsx
+const [animatedData, setAnimatedData] = useState([]);
+
+useEffect(() => {
+  // 1. Iniciar con valores en 0
+  const initialData = rawData.map(item => ({ ...item, value: 0 }));
+  setAnimatedData(initialData);
+
+  // 2. Cambiar a valores reales después de 100ms
+  const timer = setTimeout(() => {
+    setAnimatedData(rawData.map(item => ({ ...item, value: item.value })));
+  }, 100);
+
+  return () => clearTimeout(timer);
+}, [rawData]);
+
+// 3. Usar con animate={true} y motionConfig
+<ResponsivePie
+  data={animatedData}
+  animate={true}
+  motionConfig="wobbly"      // Presets: gentle, wobbly, stiff, slow, molasses
+  transitionMode="pushIn"    // Modos: pushIn, startAngle, innerRadius
+/>
+```
+
+**Presets de motionConfig**:
+- `"gentle"` - Suave y rápido (default)
+- `"wobbly"` - Con bounce (recomendado)
+- `"stiff"` - Más rígido y rápido
+- `"slow"` - Lento y visible
+- `"molasses"` - Muy lento
 ```
 
 ---
