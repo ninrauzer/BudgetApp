@@ -24,9 +24,9 @@ const mainNavigation = [
 ]
 
 const bankingGroup = [
-  { name: 'Tarjetas de Crédito', href: '/credit-cards', icon: CreditCard },
-  { name: 'Deudas', href: '/debts', icon: CreditCard },
   { name: 'Cuentas', href: '/accounts', icon: Wallet },
+  { name: 'Préstamos', href: '/debts', icon: CreditCard },
+  { name: 'Crédito', href: '/credit-cards', icon: CreditCard },
 ]
 
 const bottomNavigation = [
