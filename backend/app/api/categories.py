@@ -16,7 +16,7 @@ from app.schemas.category import (
     CategoryWithSubcategories,
 )
 
-router = APIRouter(prefix="/api/categories", tags=["categories"])
+router = APIRouter(prefix="/categories", tags=["categories"])
 
 
 @router.get("", response_model=List[CategoryResponse])

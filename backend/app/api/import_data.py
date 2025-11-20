@@ -20,7 +20,7 @@ from app.services.excel_import import (
     ExcelImportResult
 )
 
-router = APIRouter(prefix="/api/import", tags=["import"])
+router = APIRouter(prefix="/import", tags=["import"])
 logger = logging.getLogger(__name__)
 
 

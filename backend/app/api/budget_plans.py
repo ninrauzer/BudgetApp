@@ -22,7 +22,7 @@ from app.services.billing_cycle import get_cycle_dates, get_cycle_for_date, MONT
 from dateutil.relativedelta import relativedelta
 
 router = APIRouter(
-    prefix="/api/budget-plans",
+    prefix="/budget-plans",
     tags=["budget-plans"]
 )
 

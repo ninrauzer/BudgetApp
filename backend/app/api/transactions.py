@@ -24,7 +24,7 @@ from app.schemas.transaction import (
 )
 from app.services.exchange_rate import get_exchange_rate, convert_to_pen
 
-router = APIRouter(prefix="/api/transactions", tags=["transactions"])
+router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 
 @router.get("", response_model=List[TransactionResponse])

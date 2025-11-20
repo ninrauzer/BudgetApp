@@ -11,7 +11,7 @@ from app.db.database import get_db
 from app.models.account import Account
 from app.schemas.account import AccountCreate, AccountUpdate, AccountResponse
 
-router = APIRouter(prefix="/api/accounts", tags=["accounts"])
+router = APIRouter(prefix="/accounts", tags=["accounts"])
 
 
 def _compute_account_response(account: Account) -> dict:

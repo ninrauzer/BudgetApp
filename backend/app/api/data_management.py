@@ -14,7 +14,7 @@ from app.models.category import Category
 from app.models.account import Account
 
 router = APIRouter(
-    prefix="/api/data",
+    prefix="/data",
     tags=["data-management"]
 )
 

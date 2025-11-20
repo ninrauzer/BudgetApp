@@ -15,8 +15,8 @@ from app.models.billing_cycle import BillingCycle
 from app.services.billing_cycle import get_cycle_for_date, get_cycle_by_offset
 
 router = APIRouter(
-    prefix="/api/analysis",
-    tags=["analysis"]
+    prefix="/analysis",
+    tags=["analysis"],
 )
 
 

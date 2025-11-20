@@ -25,7 +25,7 @@ from calendar import monthrange
 from datetime import timedelta
 
 router = APIRouter(
-    prefix="/api/dashboard",
+    prefix="/dashboard",
     tags=["dashboard"]
 )
 

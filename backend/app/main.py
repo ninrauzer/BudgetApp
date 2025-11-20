@@ -102,20 +102,20 @@ from app.api import (
     credit_cards
 )
 
-app.include_router(categories.router)
-app.include_router(accounts.router)
-app.include_router(transactions.router)
-app.include_router(transfers.router)
-app.include_router(budget_plans.router)
-app.include_router(dashboard.router)
-app.include_router(exchange_rate.router)
-app.include_router(import_data.router)
-app.include_router(data_management.router)
-app.include_router(quick_templates.router)
-app.include_router(billing_cycle.router)
-app.include_router(analysis.router)
-app.include_router(loans.router)  # Debt management
-app.include_router(credit_cards.router)  # Credit card management (ADR-004)
+app.include_router(categories.router, prefix="/api")
+app.include_router(accounts.router, prefix="/api")
+app.include_router(transactions.router, prefix="/api")
+app.include_router(transfers.router, prefix="/api")
+app.include_router(budget_plans.router, prefix="/api")
+app.include_router(dashboard.router, prefix="/api")
+app.include_router(exchange_rate.router, prefix="/api")
+app.include_router(import_data.router, prefix="/api")
+app.include_router(data_management.router, prefix="/api")
+app.include_router(quick_templates.router, prefix="/api")
+app.include_router(billing_cycle.router, prefix="/api")
+app.include_router(analysis.router, prefix="/api")
+app.include_router(loans.router, prefix="/api")  # Debt management
+app.include_router(credit_cards.router, prefix="/api")  # Credit card management (ADR-004)
 app.include_router(frontend.router)  # Keep for legacy HTMX if needed
 
 
@@ -143,6 +143,32 @@ for static_dir in STATIC_CANDIDATES:
 else:
     if DEBUG:
         print(f"[static] No static directory found. Candidates: {STATIC_CANDIDATES}")
+
+
+# Startup event: Fix database sequences
+@app.on_event("startup")
+async def startup_event():
+    """
+    Fix database sequences on application startup.
+    This prevents duplicate key errors when inserting records.
+    """
+    try:
+        from app.db.database import SessionLocal
+        from app.db.fix_sequences import fix_all_sequences
+        
+        db = SessionLocal()
+        try:
+            results = fix_all_sequences(db)
+            if DEBUG:
+                print("[startup] Database sequences fixed")
+                for result in results:
+                    if result['status'] == 'fixed':
+                        print(f"  - {result['table']}: max_id={result['max_id']}, next_id={result['next_id']}")
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"[startup] Warning: Could not fix sequences: {e}")
+
 
 if __name__ == "__main__":
     import uvicorn

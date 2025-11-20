@@ -27,7 +27,7 @@ from app.schemas.loan import (
 from app.services import loan_calculator
 from app.schemas.common import SuccessResponse
 
-router = APIRouter(prefix="/api/loans", tags=["loans"])
+router = APIRouter(prefix="/loans", tags=["loans"])
 
 
 # ===== Helper Functions =====

@@ -11,7 +11,7 @@ from app.models.quick_template import QuickTemplate
 from app.schemas.quick_template import QuickTemplateCreate, QuickTemplateUpdate, QuickTemplateResponse
 
 # Align with other routers that use /api/... prefix
-router = APIRouter(prefix="/api/quick-templates", tags=["quick-templates"])
+router = APIRouter(prefix="/quick-templates", tags=["quick-templates"])
 
 
 @router.get("/", response_model=List[QuickTemplateResponse])
