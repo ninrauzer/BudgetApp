@@ -1,15 +1,16 @@
 # Button Premium Standard - BudgetApp
 
-> **Botones con efecto premium, gradientes y animaciones fluidas**
+> **Botones con efecto premium, gradientes y diseño pill-shaped**
 
 Fecha: 20 Noviembre 2025  
-Versión: 1.0
+Versión: 1.1
 
 ---
 
 ## 📋 Definición
 
 Los botones en BudgetApp ahora tienen efecto premium con:
+- Bordes completamente redondeados (`rounded-full`) - estilo pill-shaped
 - Gradientes vibrantes
 - Sombras con color (color-specific shadow)
 - Animaciones suaves (scale en hover/active)
@@ -93,16 +94,16 @@ Los botones en BudgetApp ahora tienen efecto premium con:
 ```
 - Altura: `h-9`
 - Padding: `px-4`
-- Border-radius: `rounded-xl`
+- Border-radius: `rounded-full`
 - Font-size: `text-xs`
 
 ### Default (default)
 ```tsx
 <Button size="default">Default Button</Button>
 ```
-- Altura: `h-11`
-- Padding: `px-5 py-3`
-- Border-radius: `rounded-2xl`
+- Altura: `h-10`
+- Padding: `px-6 py-2`
+- Border-radius: `rounded-full`
 - Font-size: `text-sm`
 
 ### Large (lg)
@@ -111,16 +112,16 @@ Los botones en BudgetApp ahora tienen efecto premium con:
 ```
 - Altura: `h-12`
 - Padding: `px-8`
-- Border-radius: `rounded-2xl`
+- Border-radius: `rounded-full`
 - Font-size: `text-base`
 
 ### Icon (icon)
 ```tsx
 <Button size="icon"><Plus className="w-5 h-5" /></Button>
 ```
-- Altura: `h-11`
-- Ancho: `w-11`
-- Perfectamente cuadrado
+- Altura: `h-10`
+- Ancho: `w-10`
+- Perfectamente cuadrado con bordes redondeados
 
 ---
 
