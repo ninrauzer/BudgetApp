@@ -103,20 +103,20 @@ def get_cycle_dates(cycle_name: str, db=None) -> dict | None:
     """
     Get start and end dates for a given cycle name.
     
+    A cycle is named after the MONTH IT ENDS IN.
+    Example: "Enero" cycle ends in January (runs Dec 23 - Jan 22)
+    
     Args:
         cycle_name: Month name in Spanish ("Enero", "Febrero", etc.)
         db: Database session (to get billing_cycle_day from settings)
     
     Returns:
         dict with start_date and end_date, or None if invalid cycle_name
-        
-    Example:
-        cycle_name="Enero" returns dates for the Enero cycle based on billing day
     """
     if cycle_name not in MONTH_NAMES:
         return None
     
-    # Get billing cycle start day from settings (default to 23 if not found)
+    # Get billing cycle start day (default to 23)
     start_day = 23
     if db:
         try:
@@ -127,40 +127,33 @@ def get_cycle_dates(cycle_name: str, db=None) -> dict | None:
         except Exception:
             start_day = 23
     
-    # Find the month number for the cycle_name
+    current_date = datetime.now()
     month_num = MONTH_NAMES.index(cycle_name) + 1
     
-    # Get current date and use get_cycle_for_date to find the reference cycle
-    # Then calculate the target cycle relative to that
-    current_date = datetime.now()
-    current_cycle = get_cycle_for_date(start_day, current_date)
-    current_cycle_month = MONTH_NAMES.index(current_cycle["cycle_name"]) + 1
+    # Strategy: Try to find the most recent occurrence of this cycle
+    # Start with current year
+    year = current_date.year
     
-    # Calculate month offset from current cycle to target cycle
-    # If target month is before current month, it's in the future relative to current cycle
-    if month_num > current_cycle_month:
-        # Target is in the future - use current year
-        year = current_date.year
+    # Calculate what the cycle dates would be for this year
+    # Cycle ends on (start_day - 1) of (month_num)
+    if month_num == 1:
+        # January cycle: previous month is December
+        cycle_end = _safe_date(year, 1, start_day) - timedelta(days=1)
+        cycle_start = _safe_date(year - 1, 12, start_day)
     else:
-        # Target is in the past or current - could be next year
-        # Check if target month (as a cycle end) has already passed
-        # The cycle ends on the last day of target_month
-        end_candidate = _safe_date(current_date.year, month_num, start_day)
-        end_date_obj = end_candidate - timedelta(days=1)
-        
-        if end_date_obj.date() < current_date.date():
-            # This cycle has already ended in current year, use next year
-            year = current_date.year + 1
+        # Other months
+        cycle_end = _safe_date(year, month_num, start_day) - timedelta(days=1)
+        cycle_start = _safe_date(year, month_num - 1, start_day)
+    
+    # If this cycle is in the future, use the previous year's cycle instead
+    if cycle_end.date() > current_date.date():
+        year = year - 1
+        if month_num == 1:
+            cycle_end = _safe_date(year, 1, start_day) - timedelta(days=1)
+            cycle_start = _safe_date(year - 1, 12, start_day)
         else:
-            # This cycle is still ahead or we need to match with current cycle logic
-            year = current_date.year
-    
-    # The cycle ends in the month matching cycle_name
-    cycle_end_temp = _safe_date(year, month_num, start_day)
-    cycle_end = cycle_end_temp - timedelta(days=1)
-    
-    # Start is one month before end
-    cycle_start = cycle_end_temp - relativedelta(months=1)
+            cycle_end = _safe_date(year, month_num, start_day) - timedelta(days=1)
+            cycle_start = _safe_date(year, month_num - 1, start_day)
     
     return {
         "start_date": cycle_start.date(),
