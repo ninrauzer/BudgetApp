@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Grid3x3, List, Loader2 } from 'lucide-react';
 import { useCurrentCycle, useExchangeRate } from '@/lib/hooks/useApi';
+import { CycleInfo } from '@/components/ui/cycle-info';
 import BudgetAnnualView from '@/components/BudgetAnnualView';
 import BudgetMonthlyView from '@/components/BudgetMonthlyView';
 import BudgetActions from '@/components/BudgetActions';
@@ -48,14 +49,12 @@ export default function Budget() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-8">
         <div>
           <h1 className="text-h1 font-bold text-text-primary">
             Presupuesto {viewType === 'annual' ? selectedYear : `${selectedCycle} ${selectedYear}`}
           </h1>
-          <p className="text-body-sm text-text-secondary mt-1">
-            Planifica tus ingresos y gastos
-          </p>
+          <CycleInfo cycleData={currentCycle} exchangeRate={exchangeRate?.rate} isLoading={cycleLoading || rateLoading} />
         </div>
 
         <div className="flex items-center gap-3">

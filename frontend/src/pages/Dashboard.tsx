@@ -1,7 +1,8 @@
-import { useRecentTransactions } from '@/lib/hooks/useApi';
+import { useRecentTransactions, useCurrentCycle, useExchangeRate } from '@/lib/hooks/useApi';
 import { formatCurrencyISO } from '@/lib/format';
 import CategoryIcon from '@/components/CategoryIcon';
 import { useDemoMode } from '@/lib/hooks/useDemoMode';
+import { CycleInfo } from '@/components/ui/cycle-info';
 import {
   AvailableBalanceCard,
   SpendingStatusCard,
@@ -16,15 +17,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 export default function Dashboard() {
   const { obfuscateDescription } = useDemoMode();
   const { data: transactions = [], isLoading: transactionsLoading } = useRecentTransactions(5);
+  const { data: currentCycle, isLoading: cycleLoading } = useCurrentCycle();
+  const { data: exchangeRateData, isLoading: rateLoading } = useExchangeRate();
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-h1 font-bold text-text-primary">Dashboard Financiero</h1>
-        <p className="text-body-sm text-text-secondary mt-1">
-          ¿Estás bien o estás jodido este mes? Aquí lo sabes en segundos.
-        </p>
+        <CycleInfo 
+          cycleData={currentCycle} 
+          exchangeRate={exchangeRateData?.rate} 
+          isLoading={cycleLoading || rateLoading}
+        />
       </div>
 
       {/* ZONA DE DECISIÓN - 5 Métricas Críticas */}

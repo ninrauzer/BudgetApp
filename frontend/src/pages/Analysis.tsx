@@ -1,8 +1,9 @@
-import { Calendar, TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, BarChart3, PieChart as PieChartIcon, ListChecks, AlertTriangle, Clock, Zap, Eye, EyeOff } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, BarChart3, PieChart as PieChartIcon, ListChecks, AlertTriangle, Clock, Zap, Eye, EyeOff } from 'lucide-react';
 import { ResponsivePie } from '@nivo/pie';
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsiveLine } from '@nivo/line';
-import { useCurrentCycle, useCategoryAnalysis, useTrends, useAnalysisSummary, useBudgetComparison, useTransactions } from '@/lib/hooks/useApi';
+import { useCurrentCycle, useCategoryAnalysis, useTrends, useAnalysisSummary, useBudgetComparison, useTransactions, useExchangeRate } from '@/lib/hooks/useApi';
+import { CycleInfo } from '@/components/ui/cycle-info';
 import CategoryIcon from '../components/CategoryIcon';
 import BudgetComparisonSection from '../components/BudgetComparisonSection';
 import ChartCard from '../components/ChartCard';
@@ -23,10 +24,11 @@ type TabType = 'summary' | 'charts' | 'details';
 
 export default function Analysis() {
   const { data: currentCycle } = useCurrentCycle();
+  const { data: exchangeRate, isLoading: rateLoading } = useExchangeRate();
   const [selectedCycleOffset, setSelectedCycleOffset] = useState(0); // 0 = current, -1 = previous, etc.
   const [displayCurrency, setDisplayCurrency] = useState<'PEN' | 'USD'>('PEN');
-  const [exchangeRate, setExchangeRate] = useState<number | null>(null);
-  const [rateLoading, setRateLoading] = useState(false);
+  const [exchangeRateState, setExchangeRateState] = useState<number | null>(null);
+  const [rateLoadingState, setRateLoadingState] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('summary');
   const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
   const { applyDemoScale } = useDemoMode();
@@ -55,18 +57,18 @@ export default function Analysis() {
   // Fetch exchange rate when switching to USD
   useEffect(() => {
     if (displayCurrency === 'USD') {
-      setRateLoading(true);
+      setRateLoadingState(true);
       exchangeRateApi.getRate()
-        .then(data => setExchangeRate(data.rate))
+        .then(data => setExchangeRateState(data.rate))
         .catch(err => console.error('Error fetching exchange rate:', err))
-        .finally(() => setRateLoading(false));
+        .finally(() => setRateLoadingState(false));
     }
   }, [displayCurrency]);
 
   // Convert amount based on display currency
   const convertAmount = (amountPEN: number) => {
-    if (displayCurrency === 'USD' && exchangeRate) {
-      return amountPEN / exchangeRate;
+    if (displayCurrency === 'USD' && exchangeRateState) {
+      return amountPEN / exchangeRateState;
     }
     return amountPEN;
   };
@@ -635,10 +637,15 @@ export default function Analysis() {
         <div>
           <h1 className="text-h1 font-bold text-text-primary">Análisis Financiero</h1>
           {cycleParams ? (
-            <p className="text-body-sm text-text-secondary mt-1 flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              Ciclo: {cycleParams.cycleName} ({new Date(cycleParams.startDate).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })} - {new Date(cycleParams.endDate).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })})
-            </p>
+            <CycleInfo 
+              cycleData={{
+                cycle_name: cycleParams.cycleName,
+                start_date: cycleParams.startDate,
+                end_date: cycleParams.endDate
+              }} 
+              exchangeRate={exchangeRateState} 
+              isLoading={rateLoadingState} 
+            />
           ) : (
             <p className="text-body-sm text-text-secondary mt-1">
               Visualiza tus patrones de gasto e ingresos
