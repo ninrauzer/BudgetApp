@@ -116,8 +116,8 @@ def get_cycle_dates(cycle_name: str, db=None) -> dict | None:
     if cycle_name not in MONTH_NAMES:
         return None
     
-    # Get billing cycle start day from settings (default to 1 if not found)
-    start_day = 1
+    # Get billing cycle start day from settings (default to 23 if not found)
+    start_day = 23
     if db:
         try:
             from app.models.category import Setting
@@ -125,15 +125,35 @@ def get_cycle_dates(cycle_name: str, db=None) -> dict | None:
             if setting and setting.value:
                 start_day = int(setting.value)
         except Exception:
-            start_day = 1
+            start_day = 23
     
     # Find the month number for the cycle_name
     month_num = MONTH_NAMES.index(cycle_name) + 1
     
-    # Calculate dates for this cycle in current year
-    # If the cycle is in the future, use current year; otherwise, check if we need previous year
+    # Get current date and use get_cycle_for_date to find the reference cycle
+    # Then calculate the target cycle relative to that
     current_date = datetime.now()
-    year = current_date.year
+    current_cycle = get_cycle_for_date(start_day, current_date)
+    current_cycle_month = MONTH_NAMES.index(current_cycle["cycle_name"]) + 1
+    
+    # Calculate month offset from current cycle to target cycle
+    # If target month is before current month, it's in the future relative to current cycle
+    if month_num > current_cycle_month:
+        # Target is in the future - use current year
+        year = current_date.year
+    else:
+        # Target is in the past or current - could be next year
+        # Check if target month (as a cycle end) has already passed
+        # The cycle ends on the last day of target_month
+        end_candidate = _safe_date(current_date.year, month_num, start_day)
+        end_date_obj = end_candidate - timedelta(days=1)
+        
+        if end_date_obj.date() < current_date.date():
+            # This cycle has already ended in current year, use next year
+            year = current_date.year + 1
+        else:
+            # This cycle is still ahead or we need to match with current cycle logic
+            year = current_date.year
     
     # The cycle ends in the month matching cycle_name
     cycle_end_temp = _safe_date(year, month_num, start_day)
@@ -141,11 +161,6 @@ def get_cycle_dates(cycle_name: str, db=None) -> dict | None:
     
     # Start is one month before end
     cycle_start = cycle_end_temp - relativedelta(months=1)
-    
-    # If calculated dates are in the future and we want current/past data, adjust year
-    if cycle_start > current_date:
-        cycle_start = cycle_start - relativedelta(years=1)
-        cycle_end = cycle_end - relativedelta(years=1)
     
     return {
         "start_date": cycle_start.date(),
