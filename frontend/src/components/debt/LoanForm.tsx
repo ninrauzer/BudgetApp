@@ -118,8 +118,10 @@ export default function LoanForm({ loan, onClose, onSuccess }: LoanFormProps) {
         original_amount: parseFloat(formData.original_amount),
         annual_rate: parseFloat(formData.annual_rate),
         total_installments: parseInt(formData.total_installments),
+        monthly_payment: calculatedPayment || 0,  // Include calculated payment
         base_installments_paid: parseInt(formData.base_installments_paid),
         start_date: formData.start_date,
+        payment_frequency: 'monthly',
         payment_day: parseInt(formData.payment_day),
         currency: formData.currency,
         notes: formData.notes || undefined
