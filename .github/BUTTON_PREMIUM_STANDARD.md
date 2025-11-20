@@ -24,8 +24,8 @@ Los botones en BudgetApp ahora tienen efecto premium con:
 <Button>Primary Action</Button>
 ```
 **Estilos:**
-- Gradiente: `from-primary to-blue-600`
-- Sombra: `shadow-lg shadow-primary/40 hover:shadow-primary/50`
+- Gradiente: `from-purple-500 via-purple-600 to-indigo-600`
+- Sombra: `shadow-lg shadow-purple-500/40 hover:shadow-purple-500/50`
 - Hover: `hover:shadow-xl scale-105`
 - Color texto: `text-white`
 - Uso: Acciones principales, confirmar, guardar
@@ -48,7 +48,7 @@ Los botones en BudgetApp ahora tienen efecto premium con:
 **Estilos:**
 - Borde: `border-2 border-border`
 - Fondo: `bg-white`
-- Hover: `border-primary hover:bg-primary/5`
+- Hover: `border-purple-500 hover:bg-purple-50/50`
 - Color texto: `text-text-primary`
 - Uso: Cancelar, descartar, alternativas
 
@@ -69,7 +69,7 @@ Los botones en BudgetApp ahora tienen efecto premium con:
 ```
 **Estilos:**
 - Sin fondo
-- Hover: `bg-surface-soft text-primary`
+- Hover: `bg-surface-soft text-purple-600`
 - Color texto: `text-text-primary`
 - Uso: Acciones terciarias, opcionales
 
@@ -80,7 +80,7 @@ Los botones en BudgetApp ahora tienen efecto premium con:
 **Estilos:**
 - Sin fondo
 - Subrayado al hover
-- Color: `text-primary`
+- Color: `text-purple-600`
 - Uso: Enlaces dentro de contenido
 
 ---
@@ -129,7 +129,7 @@ Los botones en BudgetApp ahora tienen efecto premium con:
 ### 1. Gradientes Vibrantes
 ```tsx
 // Primary
-from-primary to-blue-600
+from-purple-500 via-purple-600 to-indigo-600
 
 // Destructive
 from-red-500 to-red-600
@@ -141,8 +141,8 @@ from-surface-soft to-gray-100
 ### 2. Sombras con Color
 ```tsx
 // Primary
-shadow-lg shadow-primary/40
-hover:shadow-xl shadow-primary/50
+shadow-lg shadow-purple-500/40
+hover:shadow-xl shadow-purple-500/50
 
 // Destructive
 shadow-lg shadow-red-500/40
