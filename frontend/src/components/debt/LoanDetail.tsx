@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { X, Download, Calendar, DollarSign } from 'lucide-react'
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { ResponsiveBar } from '@nivo/bar'
+import { ResponsiveLine } from '@nivo/line'
 
 interface LoanDetailProps {
   loanId: number
@@ -302,65 +303,79 @@ export default function LoanDetail({ loanId, onClose }: LoanDetailProps) {
                 <h3 className="font-semibold text-text-primary mb-4">
                   Composición de Cuotas (Primeras 36)
                 </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis 
-                      dataKey="cuota" 
-                      tick={{ fontSize: 12 }}
-                      stroke="#6b7280"
-                    />
-                    <YAxis 
-                      tick={{ fontSize: 12 }}
-                      stroke="#6b7280"
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: '#fff',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Legend />
-                    <Bar dataKey="Capital" fill="#22c55e" name="Capital" />
-                    <Bar dataKey="Interés" fill="#f97316" name="Interés" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div style={{ height: '300px' }}>
+                  <ResponsiveBar
+                    data={chartData}
+                    keys={['Capital', 'Interés']}
+                    indexBy="cuota"
+                    margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
+                    padding={0.3}
+                    colors={['#22c55e', '#f97316']}
+                    borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+                    axisBottom={{
+                      tickSize: 5,
+                      tickPadding: 5,
+                      tickRotation: 0,
+                      legend: 'Cuota',
+                      legendPosition: 'middle',
+                      legendOffset: 40
+                    }}
+                    axisLeft={{
+                      tickSize: 5,
+                      tickPadding: 5,
+                      tickRotation: 0,
+                      legend: 'Monto',
+                      legendPosition: 'middle',
+                      legendOffset: -40
+                    }}
+                    motionConfig="stiff"
+                  />
+                </div>
               </div>
-
-              {/* Gráfico de área: Evolución del saldo */}
+              {/* Gráfico de línea: Evolución del saldo */}
               <div>
                 <h3 className="font-semibold text-text-primary mb-4">
                   Evolución del Saldo
                 </h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <AreaChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis 
-                      dataKey="cuota" 
-                      tick={{ fontSize: 12 }}
-                      stroke="#6b7280"
-                    />
-                    <YAxis 
-                      tick={{ fontSize: 12 }}
-                      stroke="#6b7280"
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: '#fff',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="Saldo" 
-                      stroke="#3b82f6" 
-                      fill="#93c5fd" 
-                      name="Saldo Restante"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <div style={{ height: '250px' }}>
+                  <ResponsiveLine
+                    data={[
+                      {
+                        id: 'Saldo Restante',
+                        data: chartData.map(d => ({
+                          x: String(d.cuota),
+                          y: d.Saldo
+                        }))
+                      }
+                    ]}
+                    margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
+                    xScale={{ type: 'point' }}
+                    yScale={{ type: 'linear', min: 'auto', max: 'auto' }}
+                    curve="monotoneX"
+                    colors={['#3b82f6']}
+                    lineWidth={2}
+                    pointSize={4}
+                    enableArea={true}
+                    areaOpacity={0.2}
+                    axisBottom={{
+                      tickSize: 5,
+                      tickPadding: 5,
+                      tickRotation: 0,
+                      legend: 'Cuota',
+                      legendPosition: 'middle',
+                      legendOffset: 40
+                    }}
+                    axisLeft={{
+                      tickSize: 5,
+                      tickPadding: 5,
+                      tickRotation: 0,
+                      legend: 'Saldo',
+                      legendPosition: 'middle',
+                      legendOffset: -40
+                    }}
+                    motionConfig="stiff"
+                  />
+                </div>
               </div>
             </div>
           )}

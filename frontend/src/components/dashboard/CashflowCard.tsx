@@ -3,8 +3,9 @@
  */
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { useMonthlyCashflow } from '../../hooks/useDashboardMetrics';
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { ResponsiveLine } from '@nivo/line';
 import { formatCurrencyISO } from '@/lib/format';
+import { useMemo } from 'react';
 
 export function CashflowCard() {
   const { data, isLoading } = useMonthlyCashflow();
@@ -33,19 +34,31 @@ export function CashflowCard() {
         {data.is_positive ? '+' : '-'}{formatCurrencyISO(Math.abs(data.balance), 'PEN')}
       </p>
 
-      {/* Sparkline */}
+      {/* Sparkline con Nivo */}
       <div className="mb-2 mt-2" style={{ width: '100%', height: '48px' }}>
-        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-          <LineChart data={data.daily_data}>
-            <Line 
-              type="monotone" 
-              dataKey="balance" 
-              stroke="rgba(255,255,255,0.8)" 
-              strokeWidth={2} 
-              dot={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <ResponsiveLine
+          data={useMemo(() => [
+            {
+              id: 'balance',
+              data: (data.daily_data || []).map((d: any) => ({
+                x: String(d.day || 0),
+                y: d.balance || 0
+              }))
+            }
+          ], [data.daily_data])}
+          margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+          xScale={{ type: 'point' }}
+          yScale={{ type: 'linear' }}
+          curve="monotoneX"
+          colors={['rgba(255,255,255,0.8)']}
+          lineWidth={2}
+          pointSize={0}
+          enableArea={false}
+          enableGridX={false}
+          enableGridY={false}
+          enableCrosshair={false}
+          motionConfig="stiff"
+        />
       </div>
 
       {/* Stats */}
