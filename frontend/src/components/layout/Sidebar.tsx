@@ -8,7 +8,8 @@ import {
   Wallet,
   PanelLeftClose,
   PanelLeftOpen,
-  CreditCard
+  CreditCard,
+  Palette
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/contexts/SidebarContext'
@@ -21,6 +22,7 @@ const navigation = [
   { name: 'Tarjetas de Crédito', href: '/credit-cards', icon: CreditCard },
   { name: 'Deudas', href: '/debts', icon: CreditCard },
   { name: 'Cuentas', href: '/accounts', icon: Wallet },
+  { name: 'UI Kit', href: '/ui-kit', icon: Palette },
   { name: 'Configuración', href: '/settings', icon: Settings },
 ]
 
