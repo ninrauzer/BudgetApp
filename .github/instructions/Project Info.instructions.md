@@ -179,9 +179,11 @@ cd backend
 ## 🎨 Stack Tecnológico
 - **Frontend**: React 18, TypeScript, Vite 7, Tailwind CSS 3
 - **Backend**: FastAPI, SQLAlchemy, Uvicorn
-- **Base de datos**: SQLite
+- **Base de datos**: PostgreSQL 13+ (WSL2 en 192.168.126.127:5432)
+  - `budgetapp_prod`: Base de producción (Docker)
+  - `budgetapp_dev`: Base de desarrollo (local VSCode)
 - **Estado**: TanStack Query (React Query)
-- **Gráficos**: Recharts + Nivo (POC en progreso)
+- **Gráficos**: Nivo (POC en progreso)
 - **Iconos**: Lucide React
 
 ## 📊 Animaciones en Nivo Charts
