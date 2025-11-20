@@ -1,7 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
-import EnvironmentBanner from '@/components/EnvironmentBanner'
 import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext'
 import { cn } from '@/lib/utils'
 import { ToastProvider } from '@/components/toast/ToastContext'
@@ -12,7 +11,6 @@ function AppLayoutContent() {
   
   return (
     <div className="min-h-screen bg-background">
-      <EnvironmentBanner />
       <Sidebar />
       <Header />
       <div className={cn(

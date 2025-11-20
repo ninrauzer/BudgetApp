@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import ThemeToggle from '../ThemeToggle'
+import EnvironmentBadge from '../EnvironmentBadge'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +30,10 @@ export function Header() {
         </div>
 
         {/* Right section */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          {/* Environment Badge */}
+          <EnvironmentBadge />
+          
           {/* Theme Toggle */}
           <ThemeToggle />
           
