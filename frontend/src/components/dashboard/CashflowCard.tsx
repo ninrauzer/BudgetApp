@@ -5,10 +5,12 @@ import { TrendingUp, TrendingDown } from 'lucide-react';
 import { useMonthlyCashflow } from '../../hooks/useDashboardMetrics';
 import { ResponsiveLine } from '@nivo/line';
 import { formatCurrencyISO } from '@/lib/format';
-import { useMemo } from 'react';
 
 export function CashflowCard() {
-  const { data, isLoading } = useMonthlyCashflow();
+  const { data: rawData, isLoading } = useMonthlyCashflow();
+  
+  // Descongelar el objeto para evitar React error #310
+  const data = rawData ? JSON.parse(JSON.stringify(rawData)) : null;
 
   if (isLoading || !data) {
     return (
@@ -22,6 +24,15 @@ export function CashflowCard() {
   const gradient = data.is_positive 
     ? 'bg-gradient-to-br from-cyan-400/90 to-cyan-500/90' 
     : 'bg-gradient-to-br from-rose-400/90 to-rose-500/90';
+
+  // Preparar datos para Nivo (sin useMemo para evitar React error #310)
+  const chartData = [{
+    id: 'balance',
+    data: (data.daily_data || []).map((d: any) => ({
+      x: String(d.day || 0),
+      y: d.balance || 0
+    }))
+  }];
 
   return (
     <div className={`rounded-2xl p-4 text-white shadow-lg backdrop-blur-md ${gradient} transition-all duration-200 hover:-translate-y-1 hover:shadow-xl`}>
@@ -37,15 +48,7 @@ export function CashflowCard() {
       {/* Sparkline con Nivo */}
       <div className="mb-2 mt-2" style={{ width: '100%', height: '48px' }}>
         <ResponsiveLine
-          data={useMemo(() => [
-            {
-              id: 'balance',
-              data: (data.daily_data || []).map((d: any) => ({
-                x: String(d.day || 0),
-                y: d.balance || 0
-              }))
-            }
-          ], [data.daily_data])}
+          data={chartData}
           margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
           xScale={{ type: 'point' }}
           yScale={{ type: 'linear' }}
