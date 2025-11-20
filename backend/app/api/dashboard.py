@@ -15,6 +15,7 @@ from app.models.category import Category
 from app.models.account import Account
 from app.models.billing_cycle import BillingCycle
 from app.models.loan import Loan, LoanStatus
+from app.models.credit_card import CreditCard
 from app.schemas.dashboard import (
     DashboardSummary, MonthlyAvailable, SpendingStatus, 
     MonthlyCashflow, DailyDataPoint, DebtSummary,
@@ -460,23 +461,23 @@ def get_debt_summary(
 @router.get("/upcoming-payments", response_model=UpcomingPayments)
 def get_upcoming_payments(db: Session = Depends(get_db)):
     """
-    Próximos pagos de préstamos en los siguientes 7 días.
+    Próximos pagos en los siguientes 7 días:
+    - Pagos de préstamos (loan.payment_day)
+    - Pagos de tarjetas de crédito (credit_card.payment_due_day)
     Compara con saldo disponible del ciclo actual.
     """
     today = date.today()
     seven_days_later = today + timedelta(days=7)
     
-    # Préstamos activos
-    active_loans = db.query(Loan).filter(Loan.status == LoanStatus.ACTIVE).all()
-    
-    # Calcular próximos pagos basados en payment_day
     upcoming_payments = []
     total_amount = 0.0
+    
+    # 1. PRÉSTAMOS ACTIVOS
+    active_loans = db.query(Loan).filter(Loan.status == LoanStatus.ACTIVE).all()
     
     for loan in active_loans:
         if loan.payment_day:
             # Determinar la próxima fecha de pago
-            # Si el día de pago ya pasó este mes, es el próximo mes
             if today.day <= loan.payment_day:
                 payment_month = today.month
                 payment_year = today.year
@@ -504,6 +505,40 @@ def get_upcoming_payments(db: Session = Depends(get_db)):
                 ))
                 
                 total_amount += loan.monthly_payment
+    
+    # 2. TARJETAS DE CRÉDITO ACTIVAS
+    active_cards = db.query(CreditCard).filter(CreditCard.is_active == True).all()
+    
+    for card in active_cards:
+        if card.payment_due_day:
+            # Determinar la próxima fecha de pago
+            if today.day <= card.payment_due_day:
+                payment_month = today.month
+                payment_year = today.year
+            else:
+                next_month = today + timedelta(days=30)
+                payment_month = next_month.month
+                payment_year = next_month.year
+            
+            # Ajustar si el día no existe en ese mes
+            last_day_of_month = monthrange(payment_year, payment_month)[1]
+            payment_day = min(card.payment_due_day, last_day_of_month)
+            payment_date = date(payment_year, payment_month, payment_day)
+            
+            # Si está dentro de los próximos 7 días
+            if today <= payment_date <= seven_days_later:
+                days_until_due = (payment_date - today).days
+                
+                upcoming_payments.append(UpcomingPayment(
+                    loan_id=card.id,
+                    loan_name=card.name,
+                    entity=card.bank,
+                    amount=float(card.current_balance),  # Saldo actual como pago requerido
+                    payment_date=payment_date.isoformat(),
+                    days_until_due=days_until_due
+                ))
+                
+                total_amount += float(card.current_balance)
     
     # Obtener saldo disponible del ciclo actual
     billing_cycle = db.query(BillingCycle).filter(BillingCycle.is_active == True).first()
