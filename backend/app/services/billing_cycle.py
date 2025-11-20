@@ -142,7 +142,7 @@ def get_cycle_dates(cycle_name: str, db=None) -> dict | None:
         cycle_start = _safe_date(year - 1, 12, start_day)
     else:
         # Other months
-        cycle_end = _safe_date(year, month_num, start_day) - timedelta(days=1)
+        cycle_end = _safe_date(year, month_num + 1, start_day) - timedelta(days=1)
         cycle_start = _safe_date(year, month_num - 1, start_day)
     
     # If this cycle is in the future, use the previous year's cycle instead
@@ -154,6 +154,7 @@ def get_cycle_dates(cycle_name: str, db=None) -> dict | None:
         else:
             cycle_end = _safe_date(year, month_num, start_day) - timedelta(days=1)
             cycle_start = _safe_date(year, month_num - 1, start_day)
+        print(f"DEBUG after adjustment: cycle_start={cycle_start.date()}, cycle_end={cycle_end.date()}")
     
     return {
         "start_date": cycle_start.date(),

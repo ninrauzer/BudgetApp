@@ -31,7 +31,7 @@ def create_initial_categories(db: Session):
         Category(name="Salario", type="income", parent_id=income_root.id, icon="💼", color="#66BB6A"),
         Category(name="Freelance", type="income", parent_id=income_root.id, icon="💻", color="#81C784"),
         Category(name="Inversiones", type="income", parent_id=income_root.id, icon="📈", color="#4CAF50"),
-        Category(name="Otros Ingresos", type="income", parent_id=income_root.id, icon="➕", color="#A5D6A7"),
+        Category(name="Otros Ingresos", type="income", parent_id=income_root.id, icon="Plus", color="#A5D6A7"),
     ]
     
     # Expense subcategories
