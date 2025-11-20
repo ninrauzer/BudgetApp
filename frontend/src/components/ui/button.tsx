@@ -3,20 +3,20 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl text-sm font-bold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:scale-105 active:scale-95",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-white shadow-button hover:bg-primary-hover hover:shadow-xl",
+          "bg-gradient-to-br from-primary to-blue-600 text-white shadow-lg shadow-primary/40 hover:shadow-xl hover:shadow-primary/50 focus-visible:ring-primary",
         destructive:
-          "bg-danger text-white shadow-button hover:bg-danger-hover hover:shadow-xl",
+          "bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg shadow-red-500/40 hover:shadow-xl hover:shadow-red-500/50 focus-visible:ring-red-500",
         outline:
-          "border-2 border-border bg-surface shadow-sm hover:bg-surface-soft hover:border-primary",
+          "border-2 border-border bg-white text-text-primary shadow-sm hover:border-primary hover:shadow-md hover:bg-primary/5",
         secondary:
-          "bg-surface-soft text-text-primary shadow-sm hover:bg-surface",
-        ghost: "hover:bg-surface-soft hover:text-text-primary",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-gradient-to-br from-surface-soft to-gray-100 text-text-primary shadow-sm hover:from-surface hover:to-gray-200 hover:shadow-md",
+        ghost: "text-text-primary hover:bg-surface-soft hover:text-primary",
+        link: "text-primary underline-offset-4 hover:underline hover:text-primary-hover",
       },
       size: {
         default: "h-11 px-5 py-3",

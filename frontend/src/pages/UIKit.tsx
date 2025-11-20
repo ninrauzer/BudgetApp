@@ -46,20 +46,42 @@ export default function UIKit() {
       <section className="px-8 space-y-6">
         <div>
           <h2 className="text-2xl font-extrabold text-text-primary">Botones</h2>
-          <p className="text-sm text-text-secondary">Variantes y tamaños</p>
+          <p className="text-sm text-text-secondary">Variantes y tamaños con efecto premium</p>
         </div>
         <Card>
-          <CardContent className="pt-6 space-y-4">
-            <div className="flex flex-wrap gap-2">
-              <Button><Plus className="w-4 h-4" />Primary</Button>
-              <Button variant="secondary">Secondary</Button>
-              <Button variant="outline">Outline</Button>
-              <Button variant="destructive">Destructive</Button>
+          <CardContent className="pt-6 space-y-6">
+            {/* Variantes */}
+            <div>
+              <p className="text-sm font-bold text-text-primary mb-3">Variantes</p>
+              <div className="flex flex-wrap gap-3">
+                <Button><Plus className="w-4 h-4" />Primary</Button>
+                <Button variant="secondary">Secondary</Button>
+                <Button variant="outline">Outline</Button>
+                <Button variant="destructive">Destructive</Button>
+                <Button variant="ghost">Ghost</Button>
+                <Button variant="link">Link</Button>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm">Small</Button>
-              <Button size="default">Default</Button>
-              <Button size="lg">Large</Button>
+
+            {/* Tamaños */}
+            <div>
+              <p className="text-sm font-bold text-text-primary mb-3">Tamaños</p>
+              <div className="flex flex-wrap gap-3 items-center">
+                <Button size="sm">Small</Button>
+                <Button size="default">Default</Button>
+                <Button size="lg">Large</Button>
+                <Button size="icon"><Plus className="w-5 h-5" /></Button>
+              </div>
+            </div>
+
+            {/* Estados */}
+            <div>
+              <p className="text-sm font-bold text-text-primary mb-3">Estados</p>
+              <div className="flex flex-wrap gap-3">
+                <Button>Normal</Button>
+                <Button disabled>Deshabilitado</Button>
+                <Button size="lg"><Plus className="w-5 h-5" />Con Icon</Button>
+              </div>
             </div>
           </CardContent>
         </Card>
