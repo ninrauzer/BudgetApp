@@ -7,7 +7,7 @@ from typing import Optional
 
 from app.services.exchange_rate import get_exchange_rate
 
-router = APIRouter(prefix="/api", tags=["exchange-rate"])
+router = APIRouter(tags=["exchange-rate"])
 
 
 @router.get("/exchange-rate")
