@@ -54,7 +54,7 @@ export default function Budget() {
           <h1 className="text-h1 font-bold text-text-primary">
             Presupuesto {viewType === 'annual' ? selectedYear : `${selectedCycle} ${selectedYear}`}
           </h1>
-          <CycleInfo cycleData={currentCycle} exchangeRate={exchangeRate?.rate} isLoading={cycleLoading || rateLoading} />
+          <CycleInfo cycleData={currentCycle} isLoading={cycleLoading} />
         </div>
 
         <div className="flex items-center gap-3">

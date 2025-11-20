@@ -643,7 +643,6 @@ export default function Analysis() {
                 start_date: cycleParams.startDate,
                 end_date: cycleParams.endDate
               }} 
-              exchangeRate={exchangeRateState} 
               isLoading={rateLoadingState} 
             />
           ) : (

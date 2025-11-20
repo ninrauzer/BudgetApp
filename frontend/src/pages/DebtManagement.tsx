@@ -9,7 +9,7 @@
 
 import { useState } from 'react';
 import { PiggyBank, ListChecks, Calculator } from 'lucide-react';
-import { useCurrentCycle, useExchangeRate } from '@/lib/hooks/useApi';
+import { useCurrentCycle } from '@/lib/hooks/useApi';
 import { CycleInfo } from '@/components/ui/cycle-info';
 import DebtDashboard from '@/components/debt/DebtDashboard';
 import LoanList from '@/components/debt/LoanList';
@@ -20,7 +20,6 @@ type TabType = 'dashboard' | 'loans' | 'simulator';
 export default function DebtManagement() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const { data: currentCycle, isLoading: cycleLoading } = useCurrentCycle();
-  const { data: exchangeRate, isLoading: rateLoading } = useExchangeRate();
 
   return (
     <div className="px-8 py-6 space-y-6">
@@ -30,7 +29,7 @@ export default function DebtManagement() {
           <h1 className="text-3xl font-extrabold text-text-primary tracking-tight">
             Gestión de Deudas
           </h1>
-          <CycleInfo cycleData={currentCycle} exchangeRate={exchangeRate?.rate} isLoading={cycleLoading || rateLoading} />
+          <CycleInfo cycleData={currentCycle} isLoading={cycleLoading} />
         </div>
       </div>
 

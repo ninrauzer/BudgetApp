@@ -1,23 +1,21 @@
-import { Calendar, DollarSign } from 'lucide-react';
-
 interface CycleInfoProps {
   cycleData?: {
     cycle_name: string;
     start_date: string;
     end_date: string;
   } | null;
-  exchangeRate?: number | null;
   isLoading?: boolean;
 }
 
 /**
- * CycleInfo - Muestra el ciclo actual y tipo de cambio USD/PEN como texto
+ * CycleInfo - Muestra solo el ciclo actual como texto
+ * El exchange rate se muestra en el header global
  * Componente reutilizable para todas las páginas con datos monetarios
  */
-export function CycleInfo({ cycleData, exchangeRate, isLoading = false }: CycleInfoProps) {
+export function CycleInfo({ cycleData, isLoading = false }: CycleInfoProps) {
   if (isLoading || !cycleData) {
     return (
-      <div className="h-5 w-80 bg-gray-200 rounded animate-pulse" />
+      <div className="h-5 w-60 bg-gray-200 rounded animate-pulse" />
     );
   }
 
@@ -33,7 +31,7 @@ export function CycleInfo({ cycleData, exchangeRate, isLoading = false }: CycleI
 
   return (
     <p className="text-sm text-text-secondary">
-      Ciclo: {cycleData.cycle_name} ({startDate} - {endDate}) {exchangeRate && `• USD/PEN ${exchangeRate.toFixed(2)}`}
+      Ciclo: {cycleData.cycle_name} ({startDate} - {endDate})
     </p>
   );
 }

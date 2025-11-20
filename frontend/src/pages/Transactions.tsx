@@ -235,7 +235,7 @@ export default function Transactions() {
           <div>
             <h1 className="text-3xl font-bold text-text-primary">Transacciones</h1>
             {currentCycle && (
-              <CycleInfo cycleData={currentCycle} exchangeRate={exchangeRate} isLoading={rateLoading} />
+              <CycleInfo cycleData={currentCycle} isLoading={rateLoading} />
             )}
           </div>
           <div className="flex gap-3 items-center">

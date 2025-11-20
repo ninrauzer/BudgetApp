@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowUpDown, Wallet, TrendingUp, TrendingDown, MoreVertical, Plus, Pencil, Trash2 } from 'lucide-react';
-import { useAccounts, useTransactions, useTransfers, useDeleteTransfer, useCreateAccount, useUpdateAccount, useDeleteAccount, useCurrentCycle, useExchangeRate } from '@/lib/hooks/useApi';
+import { useAccounts, useTransactions, useTransfers, useDeleteTransfer, useCreateAccount, useUpdateAccount, useDeleteAccount, useCurrentCycle } from '@/lib/hooks/useApi';
 import { useDemoMode } from '@/lib/hooks/useDemoMode';
 import { CycleInfo } from '@/components/ui/cycle-info';
 import { useToast } from '@/components/toast/ToastContext';
@@ -30,7 +30,6 @@ export default function Accounts() {
   const updateAccountMutation = useUpdateAccount();
   const deleteAccountMutation = useDeleteAccount();
   const { data: currentCycle, isLoading: cycleLoading } = useCurrentCycle();
-  const { data: exchangeRate, isLoading: rateLoading } = useExchangeRate();
   const { pushToast } = useToast();
 
   // Close actions menu when clicking outside
@@ -137,7 +136,7 @@ export default function Accounts() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-text-primary">Cuentas</h1>
-          <CycleInfo cycleData={currentCycle} exchangeRate={exchangeRate?.rate} isLoading={cycleLoading || rateLoading} />
+          <CycleInfo cycleData={currentCycle} isLoading={cycleLoading} />
         </div>
         <div className="flex items-center gap-3">
             <button

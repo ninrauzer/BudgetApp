@@ -1,4 +1,4 @@
-import { useRecentTransactions, useCurrentCycle, useExchangeRate } from '@/lib/hooks/useApi';
+import { useRecentTransactions, useCurrentCycle } from '@/lib/hooks/useApi';
 import { formatCurrencyISO } from '@/lib/format';
 import CategoryIcon from '@/components/CategoryIcon';
 import { useDemoMode } from '@/lib/hooks/useDemoMode';
@@ -18,7 +18,6 @@ export default function Dashboard() {
   const { obfuscateDescription } = useDemoMode();
   const { data: transactions = [], isLoading: transactionsLoading } = useRecentTransactions(5);
   const { data: currentCycle, isLoading: cycleLoading } = useCurrentCycle();
-  const { data: exchangeRateData, isLoading: rateLoading } = useExchangeRate();
 
   return (
     <div className="space-y-8">
@@ -27,8 +26,7 @@ export default function Dashboard() {
         <h1 className="text-h1 font-bold text-text-primary">Dashboard Financiero</h1>
         <CycleInfo 
           cycleData={currentCycle} 
-          exchangeRate={exchangeRateData?.rate} 
-          isLoading={cycleLoading || rateLoading}
+          isLoading={cycleLoading}
         />
       </div>
 

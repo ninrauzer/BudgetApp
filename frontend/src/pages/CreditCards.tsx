@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useCreditCards, useInstallments, useCreateCreditCard, useCreateInstallment } from '@/hooks/useCreditCards';
-import { useCurrentCycle, useExchangeRate } from '@/lib/hooks/useApi';
+import { useCurrentCycle } from '@/lib/hooks/useApi';
 import { CycleInfo } from '@/components/ui/cycle-info';
 import { CreditCardCard } from '@/components/credit-cards/CreditCardCard';
 import { InstallmentsList } from '@/components/credit-cards/InstallmentsList';
@@ -16,7 +16,6 @@ export default function CreditCardsPage() {
   const createInstallment = useCreateInstallment();
   const [showModal, setShowModal] = useState(false);
   const { data: currentCycle, isLoading: cycleLoading } = useCurrentCycle();
-  const { data: exchangeRate, isLoading: rateLoading } = useExchangeRate();
 
   const handleCreate = () => {
     // Datos por defecto para agilizar creación inicial
@@ -53,7 +52,7 @@ export default function CreditCardsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-text-primary tracking-tight">Tarjetas de Crédito</h1>
-        <CycleInfo cycleData={currentCycle} exchangeRate={exchangeRate?.rate} isLoading={cycleLoading || rateLoading} />
+        <CycleInfo cycleData={currentCycle} isLoading={cycleLoading} />
       </div>
 
       <div className="flex items-center gap-4">
