@@ -1,5 +1,4 @@
 import { Calendar, TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, BarChart3, PieChart as PieChartIcon, ListChecks, AlertTriangle, Clock, Zap, Eye, EyeOff } from 'lucide-react';
-import { ResponsiveContainer, Treemap, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 import { ResponsivePie } from '@nivo/pie';
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsiveLine } from '@nivo/line';
@@ -35,7 +34,7 @@ export default function Analysis() {
   
 
   // Required chart ids (ensure new charts get appended if missing in saved order)
-  const REQUIRED_CHART_IDS = ['pie', 'budgetVsReal', 'treemap', 'trends'];
+  const REQUIRED_CHART_IDS = ['pie', 'budgetVsReal', 'trends'];
 
   // Chart order state with localStorage persistence (auto-adding missing ids)
   const [chartOrder, setChartOrder] = useState<string[]>(() => {
@@ -230,13 +229,6 @@ export default function Analysis() {
     Ahorro: convertAmount(t.income - t.expense),
     Meta: convertAmount((t.income * 0.2)), // 20% savings goal
   })).reverse() || [];
-
-  // Prepare Treemap data
-  const treemapData = expenseData.slice(0, 12).map((c, index) => ({
-    name: c.category_name,
-    size: c.total,
-    fill: COLORS[index % COLORS.length],
-  }));
 
   // Projections and Alerts calculations
   const projections = useMemo(() => {
@@ -530,55 +522,6 @@ export default function Analysis() {
             ) : (
               <div className="h-[400px] flex items-center justify-center text-text-secondary">
                 No hay datos de comparación
-              </div>
-            )}
-          </div>
-        </div>
-      </ChartCard>
-    ),
-    treemap: (
-      <ChartCard key="treemap" id="treemap">
-        <div className="bg-surface border border-border rounded-3xl shadow-card overflow-hidden">
-          <div className="p-6 border-b border-border">
-            <h2 className="text-xl font-extrabold text-text-primary">Distribución de Gastos</h2>
-            <p className="text-sm text-text-secondary mt-1">Vista jerárquica por categoría</p>
-          </div>
-          <div className="p-6">
-            {treemapData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={400}>
-                <Treemap
-                  data={treemapData}
-                  dataKey="size"
-                  stroke="#fff"
-                  content={({ x, y, width, height, name, size }) => {
-                    if (width < 60 || height < 40) return <g />;
-                    return (
-                      <g>
-                        <rect
-                          x={x}
-                          y={y}
-                          width={width}
-                          height={height}
-                          style={{
-                            fill: treemapData.find(d => d.name === name)?.fill || '#8B5CF6',
-                            stroke: '#fff',
-                            strokeWidth: 2,
-                          }}
-                        />
-                        <text x={x + width / 2} y={y + height / 2 - 6} textAnchor="middle" fill="#fff" fontSize={width > 120 ? 12 : 10} fontWeight="600" style={{ pointerEvents: 'none' }}>
-                          {name}
-                        </text>
-                        <text x={x + width / 2} y={y + height / 2 + 8} textAnchor="middle" fill="#fff" fontSize={width > 120 ? 11 : 9} fontWeight="500" style={{ pointerEvents: 'none' }}>
-                          {formatAmount(size as number)}
-                        </text>
-                      </g>
-                    );
-                  }}
-                />
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[400px] flex items-center justify-center text-text-secondary">
-                No hay datos de gastos
               </div>
             )}
           </div>
@@ -1024,37 +967,6 @@ export default function Analysis() {
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Weekly Trend Chart */}
-          <div className="bg-surface/90 backdrop-blur-md border border-border rounded-2xl p-8 shadow-card">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl shadow-button">
-                <BarChart3 className="w-5 h-5 text-white" strokeWidth={2.5} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-text-primary">Tendencia Semanal</h3>
-                <p className="text-xs text-text-secondary">Distribución de gastos a lo largo del ciclo</p>
-              </div>
-            </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={weeklyTrendData}>
-                <defs>
-                  <linearGradient id="colorGastos" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#F59E0B" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis dataKey="name" stroke="#6B7280" style={{ fontSize: '12px' }} />
-                <YAxis stroke="#6B7280" style={{ fontSize: '12px' }} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: '8px' }}
-                  formatter={(value: number) => formatAmount(value)}
-                />
-                <Area type="monotone" dataKey="Gastos" stroke="#F59E0B" strokeWidth={2} fillOpacity={1} fill="url(#colorGastos)" />
-              </AreaChart>
-            </ResponsiveContainer>
           </div>
             </>
           )}
