@@ -13,11 +13,19 @@ import {
   ProblemCategoryCard
 } from '@/components/dashboard';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function Dashboard() {
   const { obfuscateDescription } = useDemoMode();
   const { data: transactions = [], isLoading: transactionsLoading } = useRecentTransactions(5);
   const { data: currentCycle, isLoading: cycleLoading } = useCurrentCycle();
+  const queryClient = useQueryClient();
+
+  // Refetch upcoming payments on mount to ensure fresh data
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ['upcoming-payments'] });
+  }, [queryClient])
 
   return (
     <div className="space-y-8">
