@@ -140,9 +140,13 @@ def get_cycle_dates(cycle_name: str, db=None) -> dict | None:
         # January cycle: previous month is December
         cycle_end = _safe_date(year, 1, start_day) - timedelta(days=1)
         cycle_start = _safe_date(year - 1, 12, start_day)
+    elif month_num == 12:
+        # December cycle: next month is January (of next year)
+        cycle_end = _safe_date(year, 12, start_day) - timedelta(days=1)
+        cycle_start = _safe_date(year, 11, start_day)
     else:
         # Other months
-        cycle_end = _safe_date(year, month_num + 1, start_day) - timedelta(days=1)
+        cycle_end = _safe_date(year, month_num, start_day) - timedelta(days=1)
         cycle_start = _safe_date(year, month_num - 1, start_day)
     
     # If this cycle is in the future, use the previous year's cycle instead
@@ -151,6 +155,9 @@ def get_cycle_dates(cycle_name: str, db=None) -> dict | None:
         if month_num == 1:
             cycle_end = _safe_date(year, 1, start_day) - timedelta(days=1)
             cycle_start = _safe_date(year - 1, 12, start_day)
+        elif month_num == 12:
+            cycle_end = _safe_date(year, 12, start_day) - timedelta(days=1)
+            cycle_start = _safe_date(year, 11, start_day)
         else:
             cycle_end = _safe_date(year, month_num, start_day) - timedelta(days=1)
             cycle_start = _safe_date(year, month_num - 1, start_day)
