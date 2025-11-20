@@ -244,24 +244,24 @@ export default function QuickAddRow({ onSave, categories, accounts, recentTransa
           <button
             type="button"
             onClick={() => handleChange('type', 'income')}
-            className={`flex-1 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-sm ${
+            className={`flex-1 flex items-center justify-center px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-sm ${
               formData.type === 'income'
                 ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-emerald-500/30'
                 : 'bg-white border-2 border-border/50 text-text-secondary hover:border-emerald-500 hover:text-emerald-500 hover:shadow-md'
             }`}
           >
-            +
+            <Plus className="w-4 h-4" />
           </button>
           <button
             type="button"
             onClick={() => handleChange('type', 'expense')}
-            className={`flex-1 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-sm ${
+            className={`flex-1 flex items-center justify-center px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-sm ${
               formData.type === 'expense'
                 ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-red-500/30'
                 : 'bg-white border-2 border-border/50 text-text-secondary hover:border-red-500 hover:text-red-500 hover:shadow-md'
             }`}
           >
-            -
+            <X className="w-4 h-4" />
           </button>
         </div>
       </td>
