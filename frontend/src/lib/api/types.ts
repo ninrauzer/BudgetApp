@@ -235,14 +235,16 @@ export interface BillingCycle {
   id: number;
   name: string;
   start_day: number;
+  next_override_date?: string | null;  // Manual override for next cycle start date
   is_active: boolean;
 }
 
 export interface CurrentCycleInfo {
-  cycle_name: string;      // e.g., "Enero"
+  cycle_name: string;       // e.g., "Enero"
   start_date: string;       // e.g., "2024-12-23"
   end_date: string;         // e.g., "2025-01-22"
   start_day: number;        // e.g., 23
+  next_override_date?: string | null;  // Manual override if exists
 }
 
 // Analysis Types

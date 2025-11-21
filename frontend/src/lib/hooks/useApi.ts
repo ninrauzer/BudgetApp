@@ -435,7 +435,7 @@ export const useUpdateBillingCycle = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (startDay: number) => billingCycleApi.update(startDay),
+    mutationFn: (payload: { start_day: number; next_override_date?: string | null }) => billingCycleApi.update(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['billingCycle'] });
       queryClient.invalidateQueries({ queryKey: ['currentCycle'] });

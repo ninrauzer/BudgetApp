@@ -300,10 +300,8 @@ export const billingCycleApi = {
     return data;
   },
 
-  update: async (startDay: number): Promise<BillingCycle> => {
-    const { data } = await apiClient.put<BillingCycle>('/settings/billing-cycle', {
-      start_day: startDay,
-    });
+  update: async (payload: { start_day: number; next_override_date?: string | null }): Promise<BillingCycle> => {
+    const { data } = await apiClient.put<BillingCycle>('/settings/billing-cycle', payload);
     return data;
   },
 

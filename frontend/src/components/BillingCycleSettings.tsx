@@ -1,25 +1,38 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Calendar, Check, X } from 'lucide-react';
+import { Calendar, Check, X, AlertCircle } from 'lucide-react';
 import { useBillingCycle, useCurrentCycle, useUpdateBillingCycle } from '@/lib/hooks/useApi';
 
 export default function BillingCycleSettings() {
-  const { data: billingCycle, isLoading: isCycleLoading } = useBillingCycle();
-  const { data: currentCycleInfo, isLoading: isInfoLoading } = useCurrentCycle();
+  const { data: billingCycle, isLoading: isCycleLoading, refetch: refetchCycle } = useBillingCycle();
+  const { data: currentCycleInfo, isLoading: isInfoLoading, refetch: refetchCycleInfo } = useCurrentCycle();
   const updateMutation = useUpdateBillingCycle();
   
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  
+  // Override state
+  const [isEditingOverride, setIsEditingOverride] = useState(false);
+  const [overrideDate, setOverrideDate] = useState<string>('');
+  const [overrideReason, setOverrideReason] = useState<string>('');
+  const [isSavingOverride, setIsSavingOverride] = useState(false);
 
   useEffect(() => {
     if (billingCycle && !isEditing) {
       setSelectedDay(billingCycle.start_day);
+      // Set override date if exists
+      if (billingCycle.next_override_date) {
+        setOverrideDate(billingCycle.next_override_date);
+      }
     }
   }, [billingCycle, isEditing]);
 
   const handleSave = async () => {
     if (selectedDay === null) return;
     try {
-      await updateMutation.mutateAsync(selectedDay);
+      await updateMutation.mutateAsync({
+        start_day: selectedDay,
+        next_override_date: billingCycle?.next_override_date || null
+      });
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating billing cycle:', error);
@@ -109,6 +122,144 @@ export default function BillingCycleSettings() {
               </p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Override Section */}
+      {currentCycleInfo && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-600 rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-amber-500 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-white" strokeWidth={2.5} />
+            </div>
+            <h3 className="font-bold text-amber-900 dark:text-amber-100">Ajuste Manual de Ciclo</h3>
+          </div>
+          
+          <p className="text-sm text-amber-800 dark:text-amber-200 mb-4">
+            Si el ciclo debe cambiar por un feriado o cambio corporativo, puedes especificar una fecha diferente para el próximo ciclo.
+          </p>
+          
+          {!isEditingOverride ? (
+            <div className="space-y-3">
+              {billingCycle?.next_override_date ? (
+                <div className="bg-white dark:bg-amber-900/40 p-4 rounded-xl border-2 border-amber-200 dark:border-amber-600">
+                  <p className="text-sm text-text-secondary mb-1">Próximo ciclo ajustado a:</p>
+                  <p className="text-lg font-bold text-amber-900 dark:text-amber-100">
+                    {new Date(billingCycle.next_override_date).toLocaleDateString('es-PE', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-amber-800 dark:text-amber-200">No hay ajustes manuales configurados</p>
+              )}
+              
+              <button
+                onClick={() => setIsEditingOverride(true)}
+                className="w-full px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold text-sm transition-all"
+              >
+                {billingCycle?.next_override_date ? 'Cambiar Ajuste' : 'Agregar Ajuste'}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4 bg-white dark:bg-surface p-4 rounded-xl">
+              <div>
+                <label className="text-sm font-bold text-text-primary mb-2 block">
+                  Nueva fecha del ciclo
+                </label>
+                <input
+                  type="date"
+                  value={overrideDate}
+                  onChange={(e) => setOverrideDate(e.target.value)}
+                  className="w-full px-4 py-3 bg-surface border-2 border-border rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-bold text-text-primary mb-2 block">
+                  Razón (opcional)
+                </label>
+                <input
+                  type="text"
+                  value={overrideReason}
+                  onChange={(e) => setOverrideReason(e.target.value)}
+                  placeholder="Ej: Feriado, fin de semana, cambio corporativo"
+                  className="w-full px-4 py-3 bg-surface border-2 border-border rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={async () => {
+                    if (!overrideDate || !billingCycle) return;
+                    setIsSavingOverride(true);
+                    try {
+                      await updateMutation.mutateAsync({
+                        start_day: billingCycle.start_day,
+                        next_override_date: overrideDate
+                      });
+                      setIsEditingOverride(false);
+                      setOverrideReason('');
+                      refetchCycle();
+                      refetchCycleInfo();
+                    } catch (error) {
+                      console.error('Error saving override:', error);
+                    } finally {
+                      setIsSavingOverride(false);
+                    }
+                  }}
+                  disabled={!overrideDate || isSavingOverride}
+                  className="flex-1 px-4 py-3 bg-success hover:bg-success-hover text-white rounded-lg font-bold shadow-button transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Check className="w-5 h-5" />
+                  Guardar Ajuste
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setIsEditingOverride(false);
+                    setOverrideDate(billingCycle?.next_override_date || '');
+                    setOverrideReason('');
+                  }}
+                  className="flex-1 px-4 py-3 bg-surface border-2 border-border text-text-primary hover:bg-surface-soft rounded-lg font-bold transition-all flex items-center justify-center gap-2"
+                >
+                  <X className="w-5 h-5" />
+                  Cancelar
+                </button>
+                
+                {billingCycle?.next_override_date && (
+                  <button
+                    onClick={async () => {
+                      if (!billingCycle) return;
+                      setIsSavingOverride(true);
+                      try {
+                        await updateMutation.mutateAsync({
+                          start_day: billingCycle.start_day,
+                          next_override_date: null
+                        });
+                        setIsEditingOverride(false);
+                        setOverrideDate('');
+                        setOverrideReason('');
+                        refetchCycle();
+                        refetchCycleInfo();
+                      } catch (error) {
+                        console.error('Error deleting override:', error);
+                      } finally {
+                        setIsSavingOverride(false);
+                      }
+                    }}
+                    disabled={isSavingOverride}
+                    className="px-4 py-3 bg-danger hover:bg-danger-hover text-white rounded-lg font-bold shadow-button transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <X className="w-5 h-5" />
+                    Eliminar
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
