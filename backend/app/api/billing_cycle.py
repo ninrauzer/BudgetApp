@@ -62,5 +62,6 @@ def get_current_cycle(db: Session = Depends(get_db)):
         cycle_name=cycle_info["cycle_name"],
         start_date=cycle_info["start_date"],
         end_date=cycle_info["end_date"],
-        start_day=cycle.start_day
+        start_day=cycle.start_day,
+        next_override_date=cycle.next_override_date
     )
