@@ -4,6 +4,7 @@ import ImportExcelModal from '../components/ImportExcelModal';
 import CategoryCRUD from '../components/CategoryCRUD';
 import QuickTemplateCRUD from '../components/QuickTemplateCRUD';
 import BillingCycleSettings from '../components/BillingCycleSettings';
+import TimezoneSelector from '../components/TimezoneSelector';
 import CategoryIcon from '../components/CategoryIcon';
 import { useAccounts } from '@/lib/hooks/useApi';
 import { useDefaultAccount } from '../contexts/DefaultAccountContext';
@@ -231,6 +232,9 @@ export default function Settings() {
               </button>
             </div>
           </div>
+
+          {/* Timezone Selector */}
+          <TimezoneSelector />
 
           {/* Theme (placeholder) */}
           <div className="flex items-center justify-between p-4 bg-surface-soft rounded-xl border border-border">

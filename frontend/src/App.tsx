@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AppLayout } from './components/layout/AppLayout'
 import { DefaultAccountProvider } from './contexts/DefaultAccountContext'
 import { DefaultCurrencyProvider } from './contexts/DefaultCurrencyContext'
+import { TimezoneProvider } from './contexts/TimezoneContext'
 import Dashboard from './pages/Dashboard'
 import Transactions from './pages/Transactions'
 import Budget from './pages/Budget'
@@ -14,25 +15,27 @@ import UIKit from './pages/UIKit'
 
 function App() {
   return (
-    <DefaultAccountProvider>
-      <DefaultCurrencyProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<AppLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="transactions" element={<Transactions />} />
-              <Route path="budget" element={<Budget />} />
-              <Route path="analysis" element={<Analysis />} />
-              <Route path="debts" element={<DebtManagement />} />
-              <Route path="credit-cards" element={<CreditCardsPage />} />
-              <Route path="accounts" element={<Accounts />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="ui-kit" element={<UIKit />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </DefaultCurrencyProvider>
-    </DefaultAccountProvider>
+    <TimezoneProvider>
+      <DefaultAccountProvider>
+        <DefaultCurrencyProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<AppLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="transactions" element={<Transactions />} />
+                <Route path="budget" element={<Budget />} />
+                <Route path="analysis" element={<Analysis />} />
+                <Route path="debts" element={<DebtManagement />} />
+                <Route path="credit-cards" element={<CreditCardsPage />} />
+                <Route path="accounts" element={<Accounts />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="ui-kit" element={<UIKit />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </DefaultCurrencyProvider>
+      </DefaultAccountProvider>
+    </TimezoneProvider>
   )
 }
 
