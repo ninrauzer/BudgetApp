@@ -101,14 +101,19 @@ export default function TransactionModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // FIX TIMEZONE: El input date tiene un offset de -1 día, así que sumamos 1
+    const dateObj = new Date(formData.date + 'T00:00:00');
+    dateObj.setDate(dateObj.getDate() + 1);
+    const correctedDate = dateObj.toISOString().split('T')[0];
+    
     // Add loan_id to form data if selected
     const dataToSave = {
       ...formData,
+      date: correctedDate, // Usar fecha corregida
       loan_id: selectedLoanId || undefined
     };
     
-    // DEBUG: Alert con la fecha que se envía
-    alert(`ENVIANDO TRANSACCIÓN\nFecha en formData: ${formData.date}\nTipo: ${typeof formData.date}\nFecha en dataToSave: ${dataToSave.date}`);
+    console.log('DEBUG:', formData.date, '→', correctedDate);
     
     // Save transaction (loan_id will be automatically linked in backend)
     onSave(dataToSave);

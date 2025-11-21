@@ -15,13 +15,14 @@ def _safe_date(year: int, month: int, day: int) -> datetime:
     return datetime(year, month, min(day, last_day))
 
 
-def get_cycle_for_date(start_day: int, reference_date: datetime = None) -> dict:
+def get_cycle_for_date(start_day: int, reference_date: datetime = None, override_date: datetime = None) -> dict:
     """
     Calculate the billing cycle that contains the given date.
     
     Args:
         start_day: Day of month when cycle starts (1-31)
         reference_date: Date to check (defaults to today)
+        override_date: Optional manual override for cycle start date (e.g., moved from 23 to 21)
     
     Returns:
         dict with cycle_name, start_date, end_date
@@ -33,10 +34,38 @@ def get_cycle_for_date(start_day: int, reference_date: datetime = None) -> dict:
             "start_date": "2024-12-23",
             "end_date": "2025-01-22"
         }
+        
+        With override:
+        start_day=23, reference_date=2025-11-20, override_date=2025-11-21
+        Returns: {
+            "cycle_name": "Noviembre",
+            "start_date": "2025-11-21",
+            "end_date": "2025-12-20"
+        }
     """
     if reference_date is None:
         reference_date = datetime.now()
     
+    # Check if override exists and applies to current reference date
+    if override_date is not None:
+        override_datetime = override_date if isinstance(override_date, datetime) else datetime.combine(override_date, datetime.min.time())
+        
+        # If override is in the past relative to reference, check if it still applies
+        if override_datetime <= reference_date:
+            # Calculate what the end date would be with this override
+            cycle_end_temp = override_datetime + relativedelta(months=1)
+            cycle_end = cycle_end_temp - timedelta(days=1)
+            
+            # If reference_date is within this overridden cycle, use it
+            if override_datetime <= reference_date <= cycle_end:
+                cycle_name = MONTH_NAMES[cycle_end.month - 1]
+                return {
+                    "cycle_name": cycle_name,
+                    "start_date": override_datetime.strftime("%Y-%m-%d"),
+                    "end_date": cycle_end.strftime("%Y-%m-%d")
+                }
+    
+    # Normal calculation (no override or override doesn't apply)
     # Determine which cycle we're in
     if reference_date.day >= start_day:
         cycle_start = _safe_date(reference_date.year, reference_date.month, start_day)

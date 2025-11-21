@@ -56,8 +56,8 @@ def get_dashboard_summary(
         period_start = datetime.strptime(start_date, "%Y-%m-%d").date()
         period_end = datetime.strptime(end_date, "%Y-%m-%d").date()
     else:
-        # Use current billing cycle
-        cycle_info = get_cycle_for_date(billing_cycle.start_day)
+        # Use current billing cycle (with override if exists)
+        cycle_info = get_cycle_for_date(billing_cycle.start_day, override_date=billing_cycle.next_override_date)
         period_start = datetime.strptime(cycle_info["start_date"], "%Y-%m-%d").date()
         period_end = datetime.strptime(cycle_info["end_date"], "%Y-%m-%d").date()
     
@@ -547,7 +547,7 @@ def get_upcoming_payments(db: Session = Depends(get_db)):
         db.add(billing_cycle)
         db.commit()
     
-    cycle_info = get_cycle_for_date(billing_cycle.start_day)
+    cycle_info = get_cycle_for_date(billing_cycle.start_day, override_date=billing_cycle.next_override_date)
     period_start = datetime.strptime(cycle_info["start_date"], "%Y-%m-%d").date()
     period_end = datetime.strptime(cycle_info["end_date"], "%Y-%m-%d").date()
     

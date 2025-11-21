@@ -55,7 +55,8 @@ def get_current_cycle(db: Session = Depends(get_db)):
         db.commit()
         db.refresh(cycle)
     
-    cycle_info = get_cycle_for_date(cycle.start_day)
+    # Pass override_date if it exists
+    cycle_info = get_cycle_for_date(cycle.start_day, override_date=cycle.next_override_date)
     
     return CurrentCycleInfo(
         cycle_name=cycle_info["cycle_name"],
