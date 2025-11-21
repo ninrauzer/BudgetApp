@@ -3,6 +3,7 @@ import { ResponsivePie } from '@nivo/pie';
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsiveLine } from '@nivo/line';
 import { useCurrentCycle, useCategoryAnalysis, useTrends, useAnalysisSummary, useBudgetComparison, useTransactions, useExchangeRate } from '@/lib/hooks/useApi';
+import { useQuery } from '@tanstack/react-query';
 import { CycleInfo } from '@/components/ui/cycle-info';
 import CategoryIcon from '../components/CategoryIcon';
 import BudgetComparisonSection from '../components/BudgetComparisonSection';
@@ -21,6 +22,24 @@ const COLORS = ['#10B981', '#F43F5E', '#EC4899', '#8B5CF6', '#3B82F6', '#F59E0B'
 
 type TabType = 'summary' | 'charts' | 'details';
 
+interface MonthCycleInfo {
+  month: number;
+  month_name: string;
+  start_date: string;
+  end_date: string;
+  days: number;
+  has_override: boolean;
+  override_reason: string | null;
+  is_current: boolean;
+  is_past: boolean;
+}
+
+interface YearCyclesResponse {
+  year: number;
+  start_day: number;
+  months: MonthCycleInfo[];
+}
+
 
 
 export default function Analysis() {
@@ -34,6 +53,17 @@ export default function Analysis() {
   const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
   const { applyDemoScale } = useDemoMode();
   const [animatedPieData, setAnimatedPieData] = useState<Array<{ id: string; label: string; value: number }>>([]);
+  
+  // Fetch all cycles for the current year
+  const currentYear = new Date().getFullYear();
+  const { data: yearCycles } = useQuery<YearCyclesResponse>({
+    queryKey: ['billing-cycle-year', currentYear],
+    queryFn: async () => {
+      const response = await fetch(`/api/settings/billing-cycle/year/${currentYear}`);
+      if (!response.ok) throw new Error('Failed to fetch billing cycles');
+      return response.json();
+    },
+  });
   
 
   // Required chart ids (ensure new charts get appended if missing in saved order)
@@ -94,9 +124,9 @@ export default function Analysis() {
     }
   };
   
-  // Calculate cycle dates based on selection
+  // Calculate cycle dates based on selection using actual billing cycles from backend
   const cycleParams = useMemo(() => {
-    if (!currentCycle) return undefined;
+    if (!currentCycle || !yearCycles) return undefined;
     
     if (selectedCycleOffset === 0) {
       return {
@@ -106,29 +136,24 @@ export default function Analysis() {
       };
     }
     
-    // Calculate offset cycle dates
-    const userTimezone = getUserTimezone();
-    const currentStartDate = parseLocalDate(currentCycle.start_date, userTimezone);
-    const currentEndDate = parseLocalDate(currentCycle.end_date, userTimezone);
+    // Find current cycle in yearCycles
+    const currentCycleIndex = yearCycles.months.findIndex(c => c.is_current);
+    if (currentCycleIndex === -1) return undefined;
     
-    // Move back/forward by number of cycles
-    const monthsOffset = selectedCycleOffset;
-    currentStartDate.setMonth(currentStartDate.getMonth() + monthsOffset);
-    currentEndDate.setMonth(currentEndDate.getMonth() + monthsOffset);
+    // Calculate target cycle index with offset
+    const targetIndex = currentCycleIndex + selectedCycleOffset;
     
-    // Calculate cycle name - use the month where the cycle ENDS
-    const monthNames = [
-      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-    ];
-    const cycleName = monthNames[currentEndDate.getMonth()];
+    // Check if target index is valid
+    if (targetIndex < 0 || targetIndex >= yearCycles.months.length) return undefined;
+    
+    const targetCycle = yearCycles.months[targetIndex];
     
     return {
-      startDate: currentStartDate.toISOString().split('T')[0],
-      endDate: currentEndDate.toISOString().split('T')[0],
-      cycleName: cycleName
+      startDate: targetCycle.start_date,
+      endDate: targetCycle.end_date,
+      cycleName: targetCycle.month_name
     };
-  }, [currentCycle, selectedCycleOffset]);
+  }, [currentCycle, yearCycles, selectedCycleOffset]);
   
   const { data: categoryData, isLoading: categoryLoading } = useCategoryAnalysis(
     cycleParams?.startDate, 
