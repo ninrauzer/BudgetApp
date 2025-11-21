@@ -2,6 +2,7 @@ import { Pencil, Trash2, TrendingUp, TrendingDown, Copy, StickyNote } from 'luci
 import type { TransactionWithDetails } from '@/lib/api';
 import CategoryIcon from './CategoryIcon';
 import type { ReactNode } from 'react';
+import { formatLocalDate } from '@/lib/utils/dateParser';
 
 interface TransactionTableProps {
   transactions: TransactionWithDetails[];
@@ -87,7 +88,7 @@ export default function TransactionTable({
                 className="hover:bg-surface-soft/60 transition-colors"
               >
                 <td className="px-6 py-4 text-text-primary font-medium text-sm">
-                  {new Date(transaction.date).toLocaleDateString('es-PE', {
+                  {formatLocalDate(transaction.date, 'es-PE', {
                     day: '2-digit',
                     month: 'short',
                     year: 'numeric'
