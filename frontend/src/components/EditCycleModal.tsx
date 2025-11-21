@@ -66,6 +66,7 @@ export default function EditCycleModal({ isOpen, onClose, month, year, cycleInfo
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['billing-cycle-year', year] });
+      queryClient.invalidateQueries({ queryKey: ['currentCycle'] }); // Refresh current cycle display
       onClose();
     },
   });
@@ -81,6 +82,7 @@ export default function EditCycleModal({ isOpen, onClose, month, year, cycleInfo
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['billing-cycle-year', year] });
+      queryClient.invalidateQueries({ queryKey: ['currentCycle'] }); // Refresh current cycle display
       onClose();
     },
   });
