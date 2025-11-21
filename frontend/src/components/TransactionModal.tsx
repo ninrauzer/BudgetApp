@@ -37,10 +37,13 @@ export default function TransactionModal({
   const { defaultAccountId } = useDefaultAccount();
   const { defaultCurrency } = useDefaultCurrency();
   
-  // Get today's date in local timezone (not UTC)
+  // Get today's date in YYYY-MM-DD format without timezone conversion
   const getLocalDateString = () => {
     const today = new Date();
-    return today.toLocaleDateString('en-CA'); // Format: YYYY-MM-DD
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const [formData, setFormData] = useState<Partial<Transaction>>({
@@ -101,28 +104,18 @@ export default function TransactionModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // FIX TIMEZONE: El input date tiene un offset de -1 día, así que sumamos 1
-    const dateObj = new Date(formData.date + 'T00:00:00');
-    dateObj.setDate(dateObj.getDate() + 1);
-    const correctedDate = dateObj.toISOString().split('T')[0];
-    
     // Add loan_id to form data if selected
     const dataToSave = {
       ...formData,
-      date: correctedDate, // Usar fecha corregida
+      date: formData.date, // Use date as-is (YYYY-MM-DD format from input)
       loan_id: selectedLoanId || undefined
     };
-    
-    console.log('DEBUG:', formData.date, '→', correctedDate);
     
     // Save transaction (loan_id will be automatically linked in backend)
     onSave(dataToSave);
   };
 
   const handleChange = (field: keyof Transaction, value: any) => {
-    if (field === 'date') {
-      console.log('FECHA CAMBIADA A:', value, 'tipo:', typeof value);
-    }
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Reset loan selection if category changes
@@ -138,11 +131,6 @@ export default function TransactionModal({
   const isLoanCategory = selectedCategory?.name === 'Préstamos Bancarios';
 
   if (!isOpen) return null;
-
-  // TEST ALERT
-  if (typeof window !== 'undefined') {
-    console.log('Modal abierto, formData.date:', formData.date);
-  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
