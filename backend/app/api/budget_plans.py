@@ -2,7 +2,7 @@
 Budget Plans Router
 Endpoints para gestión de planes presupuestarios basados en ciclos de facturación
 """
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import date, datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -633,11 +633,16 @@ def clone_year_budget(
 @router.get("/comparison/{cycle_name}")
 def get_budget_vs_actual(
     cycle_name: str,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """
     Comparar presupuesto vs gastos/ingresos reales de un ciclo
     Retorna datos para mostrar en Analysis page
+    
+    Si se proveen start_date y end_date, se usan directamente.
+    Si no, se calculan basándose en el cycle_name y billing_cycle_start_day.
     """
     # Obtener planes del ciclo
     plans = db.query(BudgetPlan).filter(
@@ -664,51 +669,57 @@ def get_budget_vs_actual(
         }
     
     # Obtener fechas del ciclo
-    # Obtener el billing cycle de la BD
-    from app.models.billing_cycle import BillingCycle
-    billing_cycle = db.query(BillingCycle).filter(BillingCycle.is_active == True).first()
-    
-    if not billing_cycle:
-        # Default to day 1 if no billing cycle found
-        billing_cycle_start_day = 1
+    if start_date and end_date:
+        # Usar fechas provistas directamente (ya consideran overrides)
+        cycle_start = datetime.strptime(start_date, "%Y-%m-%d")
+        cycle_end = datetime.strptime(end_date, "%Y-%m-%d")
     else:
-        billing_cycle_start_day = billing_cycle.start_day
-    
-    # Validar nombre del ciclo
-    if cycle_name not in MONTH_NAMES:
-        return {
-            "cycle_name": cycle_name,
-            "start_date": None,
-            "end_date": None,
-            "categories": [],
-            "summary": {
-                "total_budgeted_income": 0,
-                "total_actual_income": 0,
-                "total_budgeted_expense": 0,
-                "total_actual_expense": 0,
-                "total_budgeted_saving": 0,
-                "total_actual_saving": 0,
-                "overall_compliance": 0
+        # Calcular fechas usando el método antiguo (legacy)
+        # Obtener el billing cycle de la BD
+        from app.models.billing_cycle import BillingCycle
+        billing_cycle = db.query(BillingCycle).filter(BillingCycle.is_active == True).first()
+        
+        if not billing_cycle:
+            # Default to day 1 if no billing cycle found
+            billing_cycle_start_day = 1
+        else:
+            billing_cycle_start_day = billing_cycle.start_day
+        
+        # Validar nombre del ciclo
+        if cycle_name not in MONTH_NAMES:
+            return {
+                "cycle_name": cycle_name,
+                "start_date": None,
+                "end_date": None,
+                "categories": [],
+                "summary": {
+                    "total_budgeted_income": 0,
+                    "total_actual_income": 0,
+                    "total_budgeted_expense": 0,
+                    "total_actual_expense": 0,
+                    "total_budgeted_saving": 0,
+                    "total_actual_saving": 0,
+                    "overall_compliance": 0
+                }
             }
-        }
-    
-    # Calcular fechas del ciclo usando el billing_cycle_start_day
-    month_num = MONTH_NAMES.index(cycle_name) + 1
-    current_date = datetime.now()
-    year = current_date.year
-    
-    # El ciclo termina en el mes del cycle_name, el día antes del start_day
-    from dateutil.relativedelta import relativedelta
-    cycle_end_temp = _safe_date(year, month_num, billing_cycle_start_day)
-    cycle_end = cycle_end_temp - timedelta(days=1)
-    
-    # El inicio es un mes antes del end_temp
-    cycle_start = cycle_end_temp - relativedelta(months=1)
-    
-    # Si las fechas están en el futuro, ajustar al año pasado (normalizando tipos)
-    if cycle_start.date() > current_date.date():
-        cycle_start = (cycle_start - relativedelta(years=1))
-        cycle_end = (cycle_end - relativedelta(years=1))
+        
+        # Calcular fechas del ciclo usando el billing_cycle_start_day
+        month_num = MONTH_NAMES.index(cycle_name) + 1
+        current_date = datetime.now()
+        year = current_date.year
+        
+        # El ciclo termina en el mes del cycle_name, el día antes del start_day
+        from dateutil.relativedelta import relativedelta
+        cycle_end_temp = _safe_date(year, month_num, billing_cycle_start_day)
+        cycle_end = cycle_end_temp - timedelta(days=1)
+        
+        # El inicio es un mes antes del end_temp
+        cycle_start = cycle_end_temp - relativedelta(months=1)
+        
+        # Si las fechas están en el futuro, ajustar al año pasado (normalizando tipos)
+        if cycle_start.date() > current_date.date():
+            cycle_start = (cycle_start - relativedelta(years=1))
+            cycle_end = (cycle_end - relativedelta(years=1))
     
     cycle_dates = {
         "start_date": cycle_start,

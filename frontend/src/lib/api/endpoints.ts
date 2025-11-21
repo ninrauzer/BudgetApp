@@ -251,8 +251,13 @@ export const budgetPlansApi = {
   },
 
   // Comparación con real (para Analysis)
-  getComparison: async (cycleName: string): Promise<BudgetComparison> => {
-    const { data } = await apiClient.get<BudgetComparison>(`/budget-plans/comparison/${cycleName}`);
+  getComparison: async (cycleName: string, startDate?: string, endDate?: string): Promise<BudgetComparison> => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    const queryString = params.toString();
+    const url = `/budget-plans/comparison/${cycleName}${queryString ? `?${queryString}` : ''}`;
+    const { data } = await apiClient.get<BudgetComparison>(url);
     return data;
   },
 };

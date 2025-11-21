@@ -242,10 +242,10 @@ export const useAnnualBudgetGrid = (year: number) => {
   });
 };
 
-export const useBudgetComparison = (cycleName: string) => {
+export const useBudgetComparison = (cycleName: string, startDate?: string, endDate?: string) => {
   return useQuery({
-    queryKey: ['budgetPlans', 'comparison', cycleName],
-    queryFn: () => budgetPlansApi.getComparison(cycleName),
+    queryKey: ['budgetPlans', 'comparison', cycleName, startDate, endDate],
+    queryFn: () => budgetPlansApi.getComparison(cycleName, startDate, endDate),
     enabled: !!cycleName,
   });
 };

@@ -164,7 +164,11 @@ export default function Analysis() {
     cycleParams?.startDate,
     cycleParams?.endDate
   );
-  const { data: budgetComparison } = useBudgetComparison(cycleParams?.cycleName || '');
+  const { data: budgetComparison } = useBudgetComparison(
+    cycleParams?.cycleName || '', 
+    cycleParams?.startDate, 
+    cycleParams?.endDate
+  );
 
   // Calculate days in current cycle
   const daysInCycle = useMemo(() => {
