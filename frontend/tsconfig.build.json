@@ -16,7 +16,6 @@
     "noUncheckedIndexedAccess": false,
     
     /* Disable all checks for unknown types */
-    "suppressImplicitAnyIndexErrors": true,
     "noPropertyAccessFromIndexSignature": false,
     
     /* Keep essential settings */

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Calendar, Check, X, AlertCircle } from 'lucide-react';
 import { useBillingCycle, useCurrentCycle, useUpdateBillingCycle } from '@/lib/hooks/useApi';
+import { formatLocalDate } from '@/lib/utils/dateParser';
 
 export default function BillingCycleSettings() {
   const { data: billingCycle, isLoading: isCycleLoading, refetch: refetchCycle } = useBillingCycle();
@@ -103,22 +104,14 @@ export default function BillingCycleSettings() {
             <div>
               <p className="text-sm text-text-secondary">Desde:</p>
               <p className="font-bold text-text-primary">
-                {new Date(currentCycleInfo.start_date).toLocaleDateString('es-PE', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
+                {formatLocalDate(currentCycleInfo.start_date)}
               </p>
             </div>
             
             <div>
               <p className="text-sm text-text-secondary">Hasta:</p>
               <p className="font-bold text-text-primary">
-                {new Date(currentCycleInfo.end_date).toLocaleDateString('es-PE', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
+                {formatLocalDate(currentCycleInfo.end_date)}
               </p>
             </div>
           </div>

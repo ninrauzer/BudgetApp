@@ -1,3 +1,5 @@
+import { formatLocalDate } from '@/lib/utils/dateParser';
+
 interface CycleInfoProps {
   cycleData?: {
     cycle_name: string;
@@ -19,12 +21,12 @@ export function CycleInfo({ cycleData, isLoading = false }: CycleInfoProps) {
     );
   }
 
-  const startDate = new Date(cycleData.start_date).toLocaleDateString('es-PE', { 
+  const startDate = formatLocalDate(cycleData.start_date, 'es-PE', { 
     day: 'numeric', 
     month: 'short' 
   });
   
-  const endDate = new Date(cycleData.end_date).toLocaleDateString('es-PE', { 
+  const endDate = formatLocalDate(cycleData.end_date, 'es-PE', { 
     day: 'numeric', 
     month: 'short' 
   });

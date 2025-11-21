@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useCurrentCycle } from '@/lib/hooks/useApi';
 import { exchangeRateApi } from '@/lib/api';
+import { formatLocalDate } from '@/lib/utils/dateParser';
 
 export function CycleExchangeInfo() {
   const { data: currentCycle } = useCurrentCycle();
@@ -16,8 +17,8 @@ export function CycleExchangeInfo() {
     return null;
   }
 
-  const startDate = new Date(currentCycle.start_date).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' });
-  const endDate = new Date(currentCycle.end_date).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' });
+  const startDate = formatLocalDate(currentCycle.start_date, 'es-PE', { day: 'numeric', month: 'short' });
+  const endDate = formatLocalDate(currentCycle.end_date, 'es-PE', { day: 'numeric', month: 'short' });
 
   return (
     <p className="text-sm text-text-secondary mt-1">

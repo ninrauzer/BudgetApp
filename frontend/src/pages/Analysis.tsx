@@ -15,6 +15,7 @@ import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { useDemoMode } from '@/lib/hooks/useDemoMode';
 import { formatCurrencyISO, formatBudget } from '@/lib/format';
+import { parseLocalDate } from '@/lib/utils/dateParser';
 
 const COLORS = ['#10B981', '#F43F5E', '#EC4899', '#8B5CF6', '#3B82F6', '#F59E0B', '#06B6D4', '#84CC16'];
 
@@ -106,8 +107,8 @@ export default function Analysis() {
     }
     
     // Calculate offset cycle dates
-    const currentStartDate = new Date(currentCycle.start_date);
-    const currentEndDate = new Date(currentCycle.end_date);
+    const currentStartDate = parseLocalDate(currentCycle.start_date);
+    const currentEndDate = parseLocalDate(currentCycle.end_date);
     
     // Move back/forward by number of cycles
     const monthsOffset = selectedCycleOffset;
