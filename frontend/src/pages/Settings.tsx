@@ -10,7 +10,7 @@ import { useAccounts } from '@/lib/hooks/useApi';
 import { useDefaultAccount } from '../contexts/DefaultAccountContext';
 import { useDefaultCurrency } from '../contexts/DefaultCurrencyContext';
 
-type SettingsTab = 'general' | 'categories' | 'templates';
+type SettingsTab = 'general' | 'categories' | 'templates' | 'billing-cycle';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
@@ -53,6 +53,17 @@ export default function Settings() {
             CATEGORÍAS
           </button>
           <button
+            onClick={() => setActiveTab('billing-cycle')}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+              activeTab === 'billing-cycle'
+                ? 'bg-primary text-white shadow-button'
+                : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
+            }`}
+          >
+            <Calendar className="w-4 h-4" strokeWidth={2.5} />
+            CICLO
+          </button>
+          <button
             onClick={() => setActiveTab('templates')}
             className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
               activeTab === 'templates'
@@ -61,7 +72,7 @@ export default function Settings() {
             }`}
           >
             <Zap className="w-4 h-4" strokeWidth={2.5} />
-            PLANTILLAS RÁPIDAS
+            PLANTILLAS
           </button>
         </div>
       </div>
@@ -247,21 +258,6 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* Billing Cycle Section */}
-      <div className="bg-surface border border-border rounded-3xl p-8 shadow-card">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-gradient-to-br from-green-400 to-green-500 rounded-2xl shadow-button">
-            <Calendar className="w-6 h-6 text-white" strokeWidth={2.5} />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-text-primary">Ciclo de Facturación</h2>
-            <p className="text-sm text-text-secondary">Configura el inicio de tu ciclo de pagos personalizado</p>
-          </div>
-        </div>
-
-        <BillingCycleSettings />
-      </div>
-
       {/* About Section */}
       <div className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-3xl p-8 shadow-card">
         <div className="flex items-center gap-3 mb-4">
@@ -291,6 +287,27 @@ export default function Settings() {
           </div>
 
           <CategoryCRUD />
+        </div>
+      )}
+
+      {/* BILLING CYCLE TAB */}
+      {activeTab === 'billing-cycle' && (
+        <div className="space-y-6">
+          {/* Header Card */}
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-200 dark:border-green-700 rounded-3xl p-8 shadow-card">
+            <div className="flex items-center gap-4">
+              <div className="p-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl shadow-lg">
+                <Calendar className="w-8 h-8 text-white" strokeWidth={2.5} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-text-primary">Ciclo de Facturación</h2>
+                <p className="text-text-secondary mt-1">Administra tus ciclos de pago mensuales y ajustes personalizados</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Billing Cycle Settings */}
+          <BillingCycleSettings />
         </div>
       )}
 
