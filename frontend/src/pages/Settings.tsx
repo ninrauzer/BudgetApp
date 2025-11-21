@@ -4,6 +4,8 @@ import ImportExcelModal from '../components/ImportExcelModal';
 import CategoryCRUD from '../components/CategoryCRUD';
 import QuickTemplateCRUD from '../components/QuickTemplateCRUD';
 import BillingCycleSettings from '../components/BillingCycleSettings';
+import BillingCycleGrid from '../components/BillingCycleGrid';
+import EditCycleModal from '../components/EditCycleModal';
 import TimezoneSelector from '../components/TimezoneSelector';
 import CategoryIcon from '../components/CategoryIcon';
 import { useAccounts } from '@/lib/hooks/useApi';
@@ -12,12 +14,35 @@ import { useDefaultCurrency } from '../contexts/DefaultCurrencyContext';
 
 type SettingsTab = 'general' | 'categories' | 'templates' | 'billing-cycle';
 
+interface MonthCycleInfo {
+  month: number;
+  month_name: string;
+  start_date: string;
+  end_date: string;
+  days: number;
+  has_override: boolean;
+  override_reason: string | null;
+  is_current: boolean;
+  is_past: boolean;
+}
+
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isEditCycleModalOpen, setIsEditCycleModalOpen] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<number>(1);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedCycleInfo, setSelectedCycleInfo] = useState<MonthCycleInfo | null>(null);
   const { data: accounts = [] } = useAccounts();
   const { defaultAccountId, setDefaultAccountId } = useDefaultAccount();
   const { defaultCurrency, setDefaultCurrency } = useDefaultCurrency();
+
+  const handleEditMonth = (month: number, year: number, cycleInfo: MonthCycleInfo) => {
+    setSelectedMonth(month);
+    setSelectedYear(year);
+    setSelectedCycleInfo(cycleInfo);
+    setIsEditCycleModalOpen(true);
+  };
 
   return (
     <div className="w-full space-y-6">
@@ -306,8 +331,20 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* Billing Cycle Settings */}
+          {/* Current Cycle Info */}
           <BillingCycleSettings />
+
+          {/* Annual Grid */}
+          <BillingCycleGrid onEditMonth={handleEditMonth} />
+
+          {/* Edit Cycle Modal */}
+          <EditCycleModal
+            isOpen={isEditCycleModalOpen}
+            onClose={() => setIsEditCycleModalOpen(false)}
+            month={selectedMonth}
+            year={selectedYear}
+            cycleInfo={selectedCycleInfo}
+          />
         </div>
       )}
 

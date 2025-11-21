@@ -148,6 +148,13 @@ def get_year_cycles(year: int, db: Session = Depends(get_db)):
     today = date.today()
     
     for month in range(1, 13):
+        # For naming: if start_day > 1, the cycle covers the NEXT month
+        # Example: cycle starting Oct 23 covers November, so it's called "Noviembre"
+        # Only use current month name if start_day is 1
+        display_month = month
+        if cycle.start_day > 1:
+            display_month = month + 1 if month < 12 else 1
+        
         override = override_map.get(month)
         override_date = override.override_start_date if override else None
         
@@ -159,7 +166,7 @@ def get_year_cycles(year: int, db: Session = Depends(get_db)):
         
         months_info.append(MonthCycleInfo(
             month=month,
-            month_name=_get_month_name(month),
+            month_name=_get_month_name(display_month),
             start_date=cycle_start.isoformat(),
             end_date=cycle_end.isoformat(),
             days=(cycle_end - cycle_start).days + 1,
