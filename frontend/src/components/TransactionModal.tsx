@@ -107,6 +107,12 @@ export default function TransactionModal({
       loan_id: selectedLoanId || undefined
     };
     
+    // DEBUG: Log exactamente qué se envía
+    console.log('🔍 DEBUG - Transacción a enviar:');
+    console.log('   date (formData):', formData.date, 'tipo:', typeof formData.date);
+    console.log('   dataToSave.date:', dataToSave.date, 'tipo:', typeof dataToSave.date);
+    console.log('   JSON stringificado:', JSON.stringify({ date: dataToSave.date }));
+    
     // Save transaction (loan_id will be automatically linked in backend)
     onSave(dataToSave);
   };
