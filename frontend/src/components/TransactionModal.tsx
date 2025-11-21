@@ -107,11 +107,8 @@ export default function TransactionModal({
       loan_id: selectedLoanId || undefined
     };
     
-    // DEBUG: Log exactamente qué se envía
-    console.log('🔍 DEBUG - Transacción a enviar:');
-    console.log('   date (formData):', formData.date, 'tipo:', typeof formData.date);
-    console.log('   dataToSave.date:', dataToSave.date, 'tipo:', typeof dataToSave.date);
-    console.log('   JSON stringificado:', JSON.stringify({ date: dataToSave.date }));
+    // DEBUG: Alert con la fecha que se envía
+    alert(`ENVIANDO TRANSACCIÓN\nFecha en formData: ${formData.date}\nTipo: ${typeof formData.date}\nFecha en dataToSave: ${dataToSave.date}`);
     
     // Save transaction (loan_id will be automatically linked in backend)
     onSave(dataToSave);
@@ -244,12 +241,8 @@ export default function TransactionModal({
           </div>
 
           {/* Exchange Rate Display */}
-          {formData.date && formData.amount && (
-            <ExchangeRateDisplay 
-              currency={formData.currency}
-              date={formData.date}
-              amount={formData.amount}
-            />
+          {formData.date && formData.amount && formData.currency === 'USD' && (
+            <ExchangeRateDisplay />
           )}
 
           {/* Description */}
