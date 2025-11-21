@@ -84,10 +84,11 @@ def _get_month_name(month: int) -> str:
     ]
     return month_names[month - 1]
 
-def _calculate_cycle_for_month(year: int, month: int, start_day: int, override_date: Optional[date] = None) -> tuple[date, date]:
+def _calculate_cycle_for_month(year: int, month: int, start_day: int, override_date: Optional[date] = None, next_month_override: Optional[date] = None) -> tuple[date, date]:
     """
     Calculate start and end dates for a specific month's cycle.
     If override_date is provided, use it as the start date.
+    If next_month_override is provided, use it to calculate the end date.
     """
     if override_date:
         cycle_start = override_date
@@ -104,7 +105,10 @@ def _calculate_cycle_for_month(year: int, month: int, start_day: int, override_d
                 cycle_start = date(year, month + 1, 1) - timedelta(days=1)
     
     # Calculate end date (day before next cycle)
-    if month == 12:
+    # First check if next month has an override
+    if next_month_override:
+        next_cycle_start = next_month_override
+    elif month == 12:
         # December cycle ends when January cycle would start
         try:
             next_cycle_start = date(year + 1, 1, start_day)
@@ -158,7 +162,14 @@ def get_year_cycles(year: int, db: Session = Depends(get_db)):
         override = override_map.get(month)
         override_date = override.override_start_date if override else None
         
-        cycle_start, cycle_end = _calculate_cycle_for_month(year, month, cycle.start_day, override_date)
+        # Check if next month has an override (affects end date of current cycle)
+        next_month = month + 1 if month < 12 else 1
+        next_override = override_map.get(next_month)
+        next_override_date = next_override.override_start_date if next_override else None
+        
+        cycle_start, cycle_end = _calculate_cycle_for_month(
+            year, month, cycle.start_day, override_date, next_override_date
+        )
         
         # Determine if this is current or past
         is_current = cycle_start <= today <= cycle_end
