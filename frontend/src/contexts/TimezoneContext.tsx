@@ -18,6 +18,9 @@ export function TimezoneProvider({ children }: { children: ReactNode }) {
   const setTimezone = (tz: string) => {
     setTimezoneState(tz);
     localStorage.setItem('userTimezone', tz);
+    
+    // Dispatch custom event to notify components of timezone change
+    window.dispatchEvent(new CustomEvent('timezoneChanged', { detail: tz }));
   };
 
   return (

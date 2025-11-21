@@ -3,7 +3,7 @@ import { Search, Filter, X, Calendar } from 'lucide-react';
 import type { TransactionFilters } from '@/lib/api';
 import type { Category, Account } from '@/lib/api';
 import { useCurrentCycle, useBillingCycle } from '@/lib/hooks/useApi';
-import { parseLocalDate } from '@/lib/utils/dateParser';
+import { parseLocalDate, getUserTimezone } from '@/lib/utils/dateParser';
 
 interface TransactionFiltersProps {
   filters: TransactionFilters;
@@ -26,7 +26,8 @@ export default function TransactionFiltersComponent({
   const getCycleDates = (offset: number = 0) => {
     if (!billingCycle || !currentCycle) return { start_date: '', end_date: '' };
     
-    const currentStart = parseLocalDate(currentCycle.start_date);
+    const userTimezone = getUserTimezone();
+    const currentStart = parseLocalDate(currentCycle.start_date, userTimezone);
     const start = new Date(currentStart);
     start.setMonth(start.getMonth() + offset);
     

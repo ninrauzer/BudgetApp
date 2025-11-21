@@ -1,4 +1,4 @@
-import { formatLocalDate } from '@/lib/utils/dateParser';
+import { formatLocalDate, getUserTimezone } from '@/lib/utils/dateParser';
 
 interface CycleInfoProps {
   cycleData?: {
@@ -21,15 +21,17 @@ export function CycleInfo({ cycleData, isLoading = false }: CycleInfoProps) {
     );
   }
 
+  const userTimezone = getUserTimezone();
+
   const startDate = formatLocalDate(cycleData.start_date, 'es-PE', { 
     day: 'numeric', 
     month: 'short' 
-  });
+  }, userTimezone);
   
   const endDate = formatLocalDate(cycleData.end_date, 'es-PE', { 
     day: 'numeric', 
     month: 'short' 
-  });
+  }, userTimezone);
 
   return (
     <p className="text-sm text-text-secondary">

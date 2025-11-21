@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Calendar, Check, X, AlertCircle } from 'lucide-react';
 import { useBillingCycle, useCurrentCycle, useUpdateBillingCycle } from '@/lib/hooks/useApi';
-import { formatLocalDate } from '@/lib/utils/dateParser';
+import { formatLocalDate, getUserTimezone } from '@/lib/utils/dateParser';
 
 export default function BillingCycleSettings() {
   const { data: billingCycle, isLoading: isCycleLoading, refetch: refetchCycle } = useBillingCycle();
@@ -16,6 +16,9 @@ export default function BillingCycleSettings() {
   const [overrideDate, setOverrideDate] = useState<string>('');
   const [overrideReason, setOverrideReason] = useState<string>('');
   const [isSavingOverride, setIsSavingOverride] = useState(false);
+  
+  // Get user's timezone preference
+  const userTimezone = getUserTimezone();
 
   useEffect(() => {
     if (billingCycle && !isEditing) {
@@ -104,14 +107,14 @@ export default function BillingCycleSettings() {
             <div>
               <p className="text-sm text-text-secondary">Desde:</p>
               <p className="font-bold text-text-primary">
-                {formatLocalDate(currentCycleInfo.start_date)}
+                {formatLocalDate(currentCycleInfo.start_date, 'es-PE', { year: 'numeric', month: 'long', day: 'numeric' }, userTimezone)}
               </p>
             </div>
             
             <div>
               <p className="text-sm text-text-secondary">Hasta:</p>
               <p className="font-bold text-text-primary">
-                {formatLocalDate(currentCycleInfo.end_date)}
+                {formatLocalDate(currentCycleInfo.end_date, 'es-PE', { year: 'numeric', month: 'long', day: 'numeric' }, userTimezone)}
               </p>
             </div>
           </div>

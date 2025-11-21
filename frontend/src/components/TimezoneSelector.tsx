@@ -42,6 +42,17 @@ export default function TimezoneSelector() {
   const currentTimezoneInfo = Object.values(TIMEZONES)
     .flat()
     .find(tz => tz.value === timezone);
+  
+  const handleTimezoneChange = (newTimezone: string) => {
+    setTimezone(newTimezone);
+    setIsExpanded(false);
+    
+    // Force a page reload to apply timezone changes everywhere
+    // This is the simplest way to ensure all components re-render with new timezone
+    setTimeout(() => {
+      window.location.reload();
+    }, 300);
+  };
 
   return (
     <div className="p-4 bg-surface-soft rounded-xl border border-border">
@@ -83,10 +94,7 @@ export default function TimezoneSelector() {
                 {zones.map((tz) => (
                   <button
                     key={tz.value}
-                    onClick={() => {
-                      setTimezone(tz.value);
-                      setIsExpanded(false);
-                    }}
+                    onClick={() => handleTimezoneChange(tz.value)}
                     className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-all ${
                       timezone === tz.value
                         ? 'bg-primary text-white shadow-sm'
