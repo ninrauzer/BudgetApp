@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Loader2, TrendingUp, TrendingDown, Calendar, Star, StickyNote, Wallet, ChevronDown, ChevronUp, Copy } from 'lucide-react';
-import { useAnnualBudgetGrid, useCategories, useUpdateBudgetCell, useCloneYear } from '@/lib/hooks/useApi';
+import { useAnnualBudgetGrid, useCategories, useUpdateBudgetCell, useCloneYear, useCurrentCycle } from '@/lib/hooks/useApi';
 import CategoryIcon from '@/components/CategoryIcon';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/toast/ToastContext';
@@ -24,9 +24,10 @@ export default function BudgetAnnualView({ year, displayCurrency = 'PEN', exchan
   const updateCell = useUpdateBudgetCell();
   const cloneYear = useCloneYear();
   const { pushToast } = useToast();
+  const { data: currentCycle } = useCurrentCycle();
   
-  // Current cycle highlight (assumption: billing cycle aligns with calendar month)
-  const currentMonthName = MONTHS[new Date().getMonth()];
+  // Current cycle highlight - use actual billing cycle name from backend
+  const currentMonthName = currentCycle?.cycle_name || MONTHS[new Date().getMonth()];
   
   // Collapsible summary cards state
   const [isCardsCollapsed, setIsCardsCollapsed] = useState(false);
