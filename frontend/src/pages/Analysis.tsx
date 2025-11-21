@@ -16,7 +16,7 @@ import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { useDemoMode } from '@/lib/hooks/useDemoMode';
 import { formatCurrencyISO, formatBudget } from '@/lib/format';
-import { parseLocalDate, getUserTimezone } from '@/lib/utils/dateParser';
+import { parseLocalDate, getUserTimezone, formatLocalDate } from '@/lib/utils/dateParser';
 
 const COLORS = ['#10B981', '#F43F5E', '#EC4899', '#8B5CF6', '#3B82F6', '#F59E0B', '#06B6D4', '#84CC16'];
 
@@ -1279,7 +1279,7 @@ function CategoryTransactionsList({ categoryId, startDate, endDate, displayCurre
                 <p className="font-semibold text-text-primary text-sm truncate">{tx.description}</p>
                 <div className="flex items-center gap-3 mt-1">
                   <span className="text-xs text-text-secondary">
-                    {new Date(tx.date).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })}
+                    {formatLocalDate(tx.date, 'es-PE', { day: '2-digit', month: 'short' })}
                   </span>
                   {tx.account_name && (
                     <span className="text-xs text-text-secondary">• {tx.account_name}</span>
