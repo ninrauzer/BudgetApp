@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Plus, TrendingUp, TrendingDown, Loader2, Trash2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Loader2, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import TransactionTable from '../components/TransactionTable';
 import TransactionFiltersComponent from '../components/TransactionFilters';
 import TransactionModal from '../components/TransactionModal';
 import QuickAddRow from '../components/QuickAddRow';
 import FloatingActionButton from '../components/FloatingActionButton';
 import { CycleInfo } from '@/components/ui/cycle-info';
-import { useQuery } from '@tanstack/react-query';
 import { 
   useTransactions, 
   useCategories, 
@@ -22,24 +21,6 @@ import { formatCurrencyISO } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useDefaultAccount } from '../contexts/DefaultAccountContext';
 import { useDemoMode } from '@/lib/hooks/useDemoMode';
-
-interface MonthCycleInfo {
-  month: number;
-  month_name: string;
-  start_date: string;
-  end_date: string;
-  days: number;
-  has_override: boolean;
-  override_reason: string | null;
-  is_current: boolean;
-  is_past: boolean;
-}
-
-interface YearCyclesResponse {
-  year: number;
-  start_day: number;
-  months: MonthCycleInfo[];
-}
 
 export default function Transactions() {
   const { defaultAccountId } = useDefaultAccount();
@@ -57,17 +38,6 @@ export default function Transactions() {
   // Get current billing cycle info
   const { data: currentCycle } = useCurrentCycle();
 
-  // Fetch all cycles for the current year to enable navigation
-  const currentYear = new Date().getFullYear();
-  const { data: yearCycles } = useQuery<YearCyclesResponse>({
-    queryKey: ['billing-cycle-year', currentYear],
-    queryFn: async () => {
-      const response = await fetch(`/api/settings/billing-cycle/year/${currentYear}`);
-      if (!response.ok) throw new Error('Failed to fetch billing cycles');
-      return response.json();
-    },
-  });
-
   // Set initial filters to current cycle dates
   useEffect(() => {
     if (currentCycle && !filtersInitialized) {
@@ -78,59 +48,6 @@ export default function Transactions() {
       setFiltersInitialized(true);
     }
   }, [currentCycle, filtersInitialized]);
-
-  // Cycle navigation functions
-  const navigateToCycle = (cycleInfo: MonthCycleInfo) => {
-    setFilters({
-      ...filters,
-      start_date: cycleInfo.start_date,
-      end_date: cycleInfo.end_date,
-    });
-  };
-
-  const navigateToPreviousCycle = () => {
-    if (!yearCycles || !filters.start_date) return;
-    
-    const currentCycleIndex = yearCycles.months.findIndex(
-      cycle => cycle.start_date === filters.start_date
-    );
-    
-    // If not found, try to find the current cycle (fallback)
-    const actualIndex = currentCycleIndex === -1 
-      ? yearCycles.months.findIndex(cycle => cycle.is_current)
-      : currentCycleIndex;
-    
-    if (actualIndex > 0) {
-      navigateToCycle(yearCycles.months[actualIndex - 1]);
-    }
-  };
-
-  const navigateToNextCycle = () => {
-    if (!yearCycles || !filters.start_date) return;
-    
-    const currentCycleIndex = yearCycles.months.findIndex(
-      cycle => cycle.start_date === filters.start_date
-    );
-    
-    // If not found, try to find the current cycle (fallback)
-    const actualIndex = currentCycleIndex === -1 
-      ? yearCycles.months.findIndex(cycle => cycle.is_current)
-      : currentCycleIndex;
-    
-    if (actualIndex >= 0 && actualIndex < yearCycles.months.length - 1) {
-      navigateToCycle(yearCycles.months[actualIndex + 1]);
-    }
-  };
-
-  const navigateToCurrentCycle = () => {
-    if (currentCycle) {
-      setFilters({
-        ...filters,
-        start_date: currentCycle.start_date,
-        end_date: currentCycle.end_date,
-      });
-    }
-  };
 
   // Fetch exchange rate when switching to USD
   useEffect(() => {
@@ -327,56 +244,11 @@ export default function Transactions() {
     <div className="w-full space-y-6">
         {/* Header with Collapse Button */}
         <div className="flex items-center justify-between">
-          <div className="space-y-2">
+          <div>
             <h1 className="text-3xl font-bold text-text-primary">Transacciones</h1>
-            <div className="flex items-center gap-3">
-              {currentCycle && (
-                <CycleInfo cycleData={currentCycle} isLoading={rateLoading} />
-              )}
-              
-              {/* Cycle Navigation */}
-              {yearCycles && filters.start_date && (() => {
-                const currentIndex = yearCycles.months.findIndex(c => c.start_date === filters.start_date);
-                const actualIndex = currentIndex === -1 
-                  ? yearCycles.months.findIndex(c => c.is_current)
-                  : currentIndex;
-                
-                return (
-                  <div className="flex items-center gap-2 bg-surface border border-border rounded-xl p-1">
-                    <button
-                      onClick={navigateToPreviousCycle}
-                      disabled={actualIndex <= 0}
-                      className="p-2 text-text-secondary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                      title="Ciclo anterior"
-                    >
-                      <ChevronLeft className="w-4 h-4" strokeWidth={2.5} />
-                    </button>
-                    
-                    <button
-                      onClick={navigateToCurrentCycle}
-                      className={cn(
-                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                        filters.start_date === currentCycle?.start_date
-                          ? "bg-primary text-white"
-                          : "text-text-secondary hover:text-text-primary hover:bg-surface-soft"
-                      )}
-                      title="Ir al ciclo actual"
-                    >
-                      Actual
-                    </button>
-                    
-                    <button
-                      onClick={navigateToNextCycle}
-                      disabled={actualIndex >= yearCycles.months.length - 1 || actualIndex === -1}
-                      className="p-2 text-text-secondary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                      title="Ciclo siguiente"
-                    >
-                      <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
-                    </button>
-                  </div>
-                );
-              })()}
-            </div>
+            {currentCycle && (
+              <CycleInfo cycleData={currentCycle} isLoading={rateLoading} />
+            )}
           </div>
           <div className="flex gap-3 items-center">
             {/* Collapse Toggle Button */}
