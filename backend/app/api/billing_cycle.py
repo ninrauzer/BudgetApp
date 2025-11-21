@@ -63,7 +63,48 @@ def get_current_cycle(db: Session = Depends(get_db)):
         db.commit()
         db.refresh(cycle)
     
-    # Pass override_date if it exists
+    # Get current date
+    today = date.today()
+    current_year = today.year
+    
+    # Query overrides for current year
+    overrides = db.query(BillingCycleOverride).filter(
+        BillingCycleOverride.billing_cycle_id == cycle.id,
+        BillingCycleOverride.year == current_year
+    ).all()
+    
+    override_map = {o.month: o for o in overrides}
+    
+    # Find which month cycle contains today
+    for month in range(1, 13):
+        override = override_map.get(month)
+        override_date = override.override_start_date if override else None
+        
+        # Check if next month has an override (affects end date)
+        next_month = month + 1 if month < 12 else 1
+        next_override = override_map.get(next_month)
+        next_override_date = next_override.override_start_date if next_override else None
+        
+        cycle_start, cycle_end = _calculate_cycle_for_month(
+            current_year, month, cycle.start_day, override_date, next_override_date
+        )
+        
+        if cycle_start <= today <= cycle_end:
+            # Found the current cycle
+            # Calculate display month (shifts by 1 if start_day > 1)
+            display_month = month
+            if cycle.start_day > 1:
+                display_month = month + 1 if month < 12 else 1
+            
+            return CurrentCycleInfo(
+                cycle_name=_get_month_name(display_month),
+                start_date=cycle_start.isoformat(),
+                end_date=cycle_end.isoformat(),
+                start_day=cycle.start_day,
+                next_override_date=None  # Deprecated field
+            )
+    
+    # Fallback: shouldn't reach here, but return default if no cycle found
     cycle_info = get_cycle_for_date(cycle.start_day, override_date=cycle.next_override_date)
     
     return CurrentCycleInfo(
