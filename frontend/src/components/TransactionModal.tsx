@@ -115,6 +115,9 @@ export default function TransactionModal({
   };
 
   const handleChange = (field: keyof Transaction, value: any) => {
+    if (field === 'date') {
+      console.log('FECHA CAMBIADA A:', value, 'tipo:', typeof value);
+    }
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Reset loan selection if category changes
@@ -130,6 +133,11 @@ export default function TransactionModal({
   const isLoanCategory = selectedCategory?.name === 'Préstamos Bancarios';
 
   if (!isOpen) return null;
+
+  // TEST ALERT
+  if (typeof window !== 'undefined') {
+    console.log('Modal abierto, formData.date:', formData.date);
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
