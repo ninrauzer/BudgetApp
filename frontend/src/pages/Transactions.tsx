@@ -95,8 +95,13 @@ export default function Transactions() {
       cycle => cycle.start_date === filters.start_date
     );
     
-    if (currentCycleIndex > 0) {
-      navigateToCycle(yearCycles.months[currentCycleIndex - 1]);
+    // If not found, try to find the current cycle (fallback)
+    const actualIndex = currentCycleIndex === -1 
+      ? yearCycles.months.findIndex(cycle => cycle.is_current)
+      : currentCycleIndex;
+    
+    if (actualIndex > 0) {
+      navigateToCycle(yearCycles.months[actualIndex - 1]);
     }
   };
 
@@ -107,8 +112,13 @@ export default function Transactions() {
       cycle => cycle.start_date === filters.start_date
     );
     
-    if (currentCycleIndex < yearCycles.months.length - 1) {
-      navigateToCycle(yearCycles.months[currentCycleIndex + 1]);
+    // If not found, try to find the current cycle (fallback)
+    const actualIndex = currentCycleIndex === -1 
+      ? yearCycles.months.findIndex(cycle => cycle.is_current)
+      : currentCycleIndex;
+    
+    if (actualIndex >= 0 && actualIndex < yearCycles.months.length - 1) {
+      navigateToCycle(yearCycles.months[actualIndex + 1]);
     }
   };
 
@@ -325,40 +335,47 @@ export default function Transactions() {
               )}
               
               {/* Cycle Navigation */}
-              {yearCycles && filters.start_date && (
-                <div className="flex items-center gap-2 bg-surface border border-border rounded-xl p-1">
-                  <button
-                    onClick={navigateToPreviousCycle}
-                    disabled={!yearCycles.months.some((c, i) => i > 0 && c.start_date === filters.start_date)}
-                    className="p-2 text-text-secondary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                    title="Ciclo anterior"
-                  >
-                    <ChevronLeft className="w-4 h-4" strokeWidth={2.5} />
-                  </button>
-                  
-                  <button
-                    onClick={navigateToCurrentCycle}
-                    className={cn(
-                      "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                      filters.start_date === currentCycle?.start_date
-                        ? "bg-primary text-white"
-                        : "text-text-secondary hover:text-text-primary hover:bg-surface-soft"
-                    )}
-                    title="Ir al ciclo actual"
-                  >
-                    Actual
-                  </button>
-                  
-                  <button
-                    onClick={navigateToNextCycle}
-                    disabled={!yearCycles.months.some((c, i) => i < yearCycles.months.length - 1 && c.start_date === filters.start_date)}
-                    className="p-2 text-text-secondary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                    title="Ciclo siguiente"
-                  >
-                    <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
-                  </button>
-                </div>
-              )}
+              {yearCycles && filters.start_date && (() => {
+                const currentIndex = yearCycles.months.findIndex(c => c.start_date === filters.start_date);
+                const actualIndex = currentIndex === -1 
+                  ? yearCycles.months.findIndex(c => c.is_current)
+                  : currentIndex;
+                
+                return (
+                  <div className="flex items-center gap-2 bg-surface border border-border rounded-xl p-1">
+                    <button
+                      onClick={navigateToPreviousCycle}
+                      disabled={actualIndex <= 0}
+                      className="p-2 text-text-secondary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                      title="Ciclo anterior"
+                    >
+                      <ChevronLeft className="w-4 h-4" strokeWidth={2.5} />
+                    </button>
+                    
+                    <button
+                      onClick={navigateToCurrentCycle}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                        filters.start_date === currentCycle?.start_date
+                          ? "bg-primary text-white"
+                          : "text-text-secondary hover:text-text-primary hover:bg-surface-soft"
+                      )}
+                      title="Ir al ciclo actual"
+                    >
+                      Actual
+                    </button>
+                    
+                    <button
+                      onClick={navigateToNextCycle}
+                      disabled={actualIndex >= yearCycles.months.length - 1 || actualIndex === -1}
+                      className="p-2 text-text-secondary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                      title="Ciclo siguiente"
+                    >
+                      <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
+                    </button>
+                  </div>
+                );
+              })()}
             </div>
           </div>
           <div className="flex gap-3 items-center">
