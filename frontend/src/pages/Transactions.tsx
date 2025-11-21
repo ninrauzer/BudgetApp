@@ -37,6 +37,16 @@ export default function Transactions() {
   // Get current billing cycle info
   const { data: currentCycle } = useCurrentCycle();
 
+  // Set initial filters to current cycle dates
+  useEffect(() => {
+    if (currentCycle && Object.keys(filters).length === 0) {
+      setFilters({
+        start_date: currentCycle.start_date,
+        end_date: currentCycle.end_date,
+      });
+    }
+  }, [currentCycle]);
+
   // Fetch exchange rate when switching to USD
   useEffect(() => {
     if (displayCurrency === 'USD') {
