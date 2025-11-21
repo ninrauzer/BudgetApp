@@ -37,9 +37,15 @@ export default function TransactionModal({
   const { defaultAccountId } = useDefaultAccount();
   const { defaultCurrency } = useDefaultCurrency();
   
+  // Get today's date in local timezone (not UTC)
+  const getLocalDateString = () => {
+    const today = new Date();
+    return today.toLocaleDateString('en-CA'); // Format: YYYY-MM-DD
+  };
+
   const [formData, setFormData] = useState<Partial<Transaction>>({
     type: 'expense',
-    date: new Date().toISOString().split('T')[0],
+    date: getLocalDateString(),
     amount: 0,
     description: '',
     category_id: undefined,
@@ -67,7 +73,7 @@ export default function TransactionModal({
     } else {
       setFormData({
         type: 'expense',
-        date: new Date().toISOString().split('T')[0],
+        date: getLocalDateString(),
         amount: 0,
         description: '',
         category_id: undefined,
