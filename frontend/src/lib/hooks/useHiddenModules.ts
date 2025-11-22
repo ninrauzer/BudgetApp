@@ -34,6 +34,8 @@ export function useHiddenModules() {
   useEffect(() => {
     try {
       localStorage.setItem(HIDDEN_MODULES_KEY, JSON.stringify(hiddenModules));
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent('hiddenModulesChanged', { detail: hiddenModules }));
     } catch (error) {
       console.error('Error saving hidden modules:', error);
     }
