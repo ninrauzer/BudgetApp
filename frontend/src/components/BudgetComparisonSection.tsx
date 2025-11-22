@@ -1,17 +1,30 @@
-import { TrendingUp, TrendingDown, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, CheckCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { useBudgetComparison } from '@/lib/hooks/useApi';
+import { useBudgetComparison, useTransactions } from '@/lib/hooks/useApi';
 import CategoryIcon from '@/components/CategoryIcon';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { useState } from 'react';
+import { formatLocalDate } from '@/lib/utils/dateParser';
+import { formatCurrencyISO } from '@/lib/format';
 
 interface BudgetComparisonSectionProps {
   cycleName: string;
   displayCurrency?: 'PEN' | 'USD';
+  startDate?: string;
+  endDate?: string;
+  applyDemoScale?: (value: number) => number;
 }
 
-export default function BudgetComparisonSection({ cycleName, displayCurrency = 'PEN' }: BudgetComparisonSectionProps) {
-  const { data: comparison, isLoading } = useBudgetComparison(cycleName);
+export default function BudgetComparisonSection({ 
+  cycleName, 
+  displayCurrency = 'PEN',
+  startDate,
+  endDate,
+  applyDemoScale = (v) => v
+}: BudgetComparisonSectionProps) {
+  const { data: comparison, isLoading } = useBudgetComparison(cycleName, startDate, endDate);
+  const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
 
   if (isLoading) {
     return (
@@ -218,7 +231,16 @@ export default function BudgetComparisonSection({ cycleName, displayCurrency = '
               .filter(c => c.category_type === 'income')
               .sort((a, b) => b.actual - a.actual)
               .map((category, index) => (
-                <CategoryComparisonRow key={`income-${category.category_id}-${index}`} category={category} displayCurrency={displayCurrency} />
+                <CategoryComparisonRow 
+                  key={`income-${category.category_id}-${index}`} 
+                  category={category} 
+                  displayCurrency={displayCurrency}
+                  expandedCategory={expandedCategory}
+                  setExpandedCategory={setExpandedCategory}
+                  startDate={startDate}
+                  endDate={endDate}
+                  applyDemoScale={applyDemoScale}
+                />
               ))}
           </div>
         )}
@@ -234,7 +256,16 @@ export default function BudgetComparisonSection({ cycleName, displayCurrency = '
               .filter(c => c.category_type === 'expense')
               .sort((a, b) => b.actual - a.actual)
               .map((category, index) => (
-                <CategoryComparisonRow key={`expense-${category.category_id}-${index}`} category={category} displayCurrency={displayCurrency} />
+                <CategoryComparisonRow 
+                  key={`expense-${category.category_id}-${index}`} 
+                  category={category} 
+                  displayCurrency={displayCurrency}
+                  expandedCategory={expandedCategory}
+                  setExpandedCategory={setExpandedCategory}
+                  startDate={startDate}
+                  endDate={endDate}
+                  applyDemoScale={applyDemoScale}
+                />
               ))}
           </div>
         )}
@@ -256,15 +287,34 @@ interface CategoryComparisonRowProps {
     compliance_percentage: number;
   };
   displayCurrency: 'PEN' | 'USD';
+  expandedCategory: number | null;
+  setExpandedCategory: (id: number | null) => void;
+  startDate?: string;
+  endDate?: string;
+  applyDemoScale: (value: number) => number;
 }
 
-function CategoryComparisonRow({ category, displayCurrency }: CategoryComparisonRowProps) {
+function CategoryComparisonRow({ 
+  category, 
+  displayCurrency,
+  expandedCategory,
+  setExpandedCategory,
+  startDate,
+  endDate,
+  applyDemoScale
+}: CategoryComparisonRowProps) {
   const isOverBudget = category.compliance_percentage > 100;
   const isNearLimit = category.compliance_percentage > 80 && category.compliance_percentage <= 100;
   const isIncome = category.category_type === 'income';
+  const isExpanded = expandedCategory === category.category_id;
 
   return (
-    <Card className="bg-surface border-border rounded-3xl shadow-card hover:shadow-lg transition-all">
+    <div className="border border-border rounded-2xl overflow-hidden">
+      {/* Category Card - Clickable */}
+      <Card 
+        className="bg-surface border-0 rounded-none shadow-none hover:bg-surface-soft transition-all cursor-pointer"
+        onClick={() => setExpandedCategory(isExpanded ? null : category.category_id)}
+      >
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
           {/* Category Info */}
@@ -308,45 +358,143 @@ function CategoryComparisonRow({ category, displayCurrency }: CategoryComparison
             </div>
           </div>
 
-          {/* Progress Indicator */}
-          <div className="w-32">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-text-muted">Usado</span>
-              <span className={cn(
-                "text-sm font-bold",
-                isIncome
-                  ? (isOverBudget ? "text-error" : isNearLimit ? "text-warning" : "text-success")
-                  : (isOverBudget ? "text-orange-700" : isNearLimit ? "text-orange-600" : "text-orange-500")
-              )}>
-                {category.compliance_percentage.toFixed(0)}%
-              </span>
+          {/* Progress Indicator + Eye Icon */}
+          <div className="flex items-center gap-3">
+            <div className="w-32">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-text-muted">Usado</span>
+                <span className={cn(
+                  "text-sm font-bold",
+                  isIncome
+                    ? (isOverBudget ? "text-error" : isNearLimit ? "text-warning" : "text-success")
+                    : (isOverBudget ? "text-orange-700" : isNearLimit ? "text-orange-600" : "text-orange-500")
+                )}>
+                  {category.compliance_percentage.toFixed(0)}%
+                </span>
+              </div>
+              <Progress 
+                value={Math.min(category.compliance_percentage, 100)} 
+                className={cn(
+                  "h-2",
+                  isIncome 
+                    ? (isOverBudget ? "bg-red-100" : isNearLimit ? "bg-warning/20" : "bg-success/20")
+                    : (isOverBudget ? "bg-orange-100" : isNearLimit ? "bg-orange-100" : "bg-orange-50")
+                )}
+                indicatorClassName={cn(
+                  isIncome 
+                    ? (isOverBudget ? "bg-red-400" : isNearLimit ? "bg-warning" : "bg-success")
+                    : (isOverBudget ? "bg-orange-600" : isNearLimit ? "bg-orange-500" : "bg-orange-400")
+                )}
+              />
+              {isOverBudget && (
+                <p className={cn(
+                  "text-xs font-bold mt-1",
+                  isIncome ? "text-error" : "text-orange-700"
+                )}>
+                  +{(category.compliance_percentage - 100).toFixed(0)}% sobre límite
+                </p>
+              )}
             </div>
-            <Progress 
-              value={Math.min(category.compliance_percentage, 100)} 
-              className={cn(
-                "h-2",
-                isIncome 
-                  ? (isOverBudget ? "bg-red-100" : isNearLimit ? "bg-warning/20" : "bg-success/20")
-                  : (isOverBudget ? "bg-orange-100" : isNearLimit ? "bg-orange-100" : "bg-orange-50")
+            
+            {/* Eye Icon */}
+            <div className="flex-shrink-0">
+              {isExpanded ? (
+                <EyeOff className={cn(
+                  "w-5 h-5 transition-colors",
+                  isIncome ? "text-success" : "text-orange-600"
+                )} />
+              ) : (
+                <Eye className={cn(
+                  "w-5 h-5 transition-colors",
+                  isIncome ? "text-text-secondary hover:text-success" : "text-text-secondary hover:text-orange-600"
+                )} />
               )}
-              indicatorClassName={cn(
-                isIncome 
-                  ? (isOverBudget ? "bg-red-400" : isNearLimit ? "bg-warning" : "bg-success")
-                  : (isOverBudget ? "bg-orange-600" : isNearLimit ? "bg-orange-500" : "bg-orange-400")
-              )}
-            />
-            {isOverBudget && (
-              <p className={cn(
-                "text-xs font-bold mt-1",
-                isIncome ? "text-error" : "text-orange-700"
-              )}>
-                +{(category.compliance_percentage - 100).toFixed(0)}% sobre límite
-              </p>
-            )}
+            </div>
           </div>
         </div>
       </CardContent>
     </Card>
+    
+    {/* Transactions List - Expandible */}
+    {isExpanded && startDate && endDate && (
+      <CategoryTransactionsList 
+        categoryId={category.category_id}
+        startDate={startDate}
+        endDate={endDate}
+        displayCurrency={displayCurrency}
+        applyDemoScale={applyDemoScale}
+      />
+    )}
+    </div>
+  );
+}
+
+// Component for displaying transactions of a category
+interface CategoryTransactionsListProps {
+  categoryId: number;
+  startDate: string;
+  endDate: string;
+  displayCurrency: 'PEN' | 'USD';
+  applyDemoScale: (value: number) => number;
+}
+
+function CategoryTransactionsList({ categoryId, startDate, endDate, displayCurrency, applyDemoScale }: CategoryTransactionsListProps) {
+  const { data: transactionsResponse, isLoading } = useTransactions({
+    category_id: categoryId,
+    start_date: startDate,
+    end_date: endDate,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="p-6 bg-white border-t border-border">
+        <div className="flex items-center justify-center gap-2">
+          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          <span className="text-sm text-text-secondary">Cargando transacciones...</span>
+        </div>
+      </div>
+    );
+  }
+
+  const transactions = transactionsResponse?.items || [];
+
+  if (transactions.length === 0) {
+    return (
+      <div className="p-6 bg-white border-t border-border">
+        <p className="text-sm text-text-secondary text-center">No hay transacciones</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white border-t border-border">
+      <div className="divide-y divide-border">
+        {transactions.map((tx) => (
+          <div key={tx.id} className="p-4 hover:bg-surface-soft transition-colors">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-text-primary text-sm truncate">{tx.description}</p>
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="text-xs text-text-secondary">
+                    {formatLocalDate(tx.date, 'es-PE', { day: '2-digit', month: 'short' })}
+                  </span>
+                  {tx.account_name && (
+                    <span className="text-xs text-text-secondary">• {tx.account_name}</span>
+                  )}
+                </div>
+              </div>
+              <div className="text-right">
+                <p className={`font-bold text-sm ${
+                  tx.type === 'income' ? 'text-emerald-600' : 'text-orange-600'
+                }`}>
+                  {tx.type === 'income' ? '+' : '-'} {formatCurrencyISO(applyDemoScale(tx.amount), displayCurrency, { decimals: 2 })}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

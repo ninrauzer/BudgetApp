@@ -1109,198 +1109,22 @@ export default function Analysis() {
                 </div>
               </div>
               <div className="border-t border-border pt-6">
-                <BudgetComparisonSection cycleName={cycleParams.cycleName} displayCurrency={displayCurrency} />
+                <BudgetComparisonSection 
+                  cycleName={cycleParams.cycleName} 
+                  displayCurrency={displayCurrency}
+                  startDate={cycleParams.startDate}
+                  endDate={cycleParams.endDate}
+                  applyDemoScale={applyDemoScale}
+                />
               </div>
             </div>
           )}
-
-          {/* All Categories - Full width */}
-          <div className="bg-surface border border-border rounded-3xl shadow-card overflow-hidden">
-            <div className="p-8 border-b border-border bg-gradient-to-r from-purple-50 to-indigo-50">
-              <h2 className="text-xl font-extrabold text-text-primary">Todas las Categorías</h2>
-              <p className="text-sm text-text-secondary mt-2">Detalle completo de cada categoría con actividad durante el ciclo</p>
-            </div>
-            <div className="p-8">
-              {topCategories.length > 0 ? (
-                <div className="space-y-6">
-                  {/* Income Categories */}
-                  {topCategories.filter(cat => cat.category_type === 'income').length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-bold text-emerald-600 uppercase tracking-wider mb-3 px-2">Ingresos</h3>
-                      <div className="space-y-3">
-                        {topCategories.filter(cat => cat.category_type === 'income').map((cat, index) => (
-                          <div key={`category-${cat.category_id}-${index}`} className="border border-border rounded-2xl overflow-hidden">
-                            {/* Category Header - Clickeable */}
-                            <div 
-                              className="flex items-center justify-between p-5 bg-surface-soft hover:bg-surface transition-colors cursor-pointer group"
-                              onClick={() => setExpandedCategory(expandedCategory === cat.category_id ? null : cat.category_id)}
-                            >
-                              <div className="flex items-center gap-3 flex-1">
-                                <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                                  <CategoryIcon iconName={cat.category_icon} size={24} className="text-emerald-600" />
-                                </div>
-                                <div>
-                                  <p className="font-semibold text-text-primary tracking-tight">{cat.category_name}</p>
-                                  <p className="text-xs text-text-secondary mt-0.5">
-                                    {cat.count} {cat.count === 1 ? 'transacción' : 'transacciones'}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <p className="font-extrabold text-emerald-600 text-lg">{formatAmount(cat.total)}</p>
-                                {expandedCategory === cat.category_id ? (
-                                  <EyeOff className="w-5 h-5 text-text-secondary group-hover:text-emerald-600 transition-colors" />
-                                ) : (
-                                  <Eye className="w-5 h-5 text-text-secondary group-hover:text-emerald-600 transition-colors" />
-                                )}
-                              </div>
-                            </div>
-                            
-                            {/* Transactions List - Expandible */}
-                            {expandedCategory === cat.category_id && (
-                              <CategoryTransactionsList 
-                                categoryId={cat.category_id}
-                                startDate={cycleParams?.startDate}
-                                endDate={cycleParams?.endDate}
-                                displayCurrency={displayCurrency}
-                                applyDemoScale={applyDemoScale}
-                              />
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Expense Categories */}
-                  {topCategories.filter(cat => cat.category_type === 'expense').length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-bold text-orange-600 uppercase tracking-wider mb-3 px-2">Gastos</h3>
-                      <div className="space-y-3">
-                        {topCategories.filter(cat => cat.category_type === 'expense').map((cat, index) => (
-                          <div key={`category-${cat.category_id}-${index}`} className="border border-border rounded-2xl overflow-hidden">
-                            {/* Category Header - Clickeable */}
-                            <div 
-                              className="flex items-center justify-between p-5 bg-surface-soft hover:bg-surface transition-colors cursor-pointer group"
-                              onClick={() => setExpandedCategory(expandedCategory === cat.category_id ? null : cat.category_id)}
-                            >
-                              <div className="flex items-center gap-3 flex-1">
-                                <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
-                                  <CategoryIcon iconName={cat.category_icon} size={24} className="text-orange-600" />
-                                </div>
-                                <div>
-                                  <p className="font-semibold text-text-primary tracking-tight">{cat.category_name}</p>
-                                  <p className="text-xs text-text-secondary mt-0.5">
-                                    {cat.count} {cat.count === 1 ? 'transacción' : 'transacciones'}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <p className="font-extrabold text-orange-600 text-lg">{formatAmount(cat.total)}</p>
-                                {expandedCategory === cat.category_id ? (
-                                  <EyeOff className="w-5 h-5 text-text-secondary group-hover:text-orange-600 transition-colors" />
-                                ) : (
-                                  <Eye className="w-5 h-5 text-text-secondary group-hover:text-orange-600 transition-colors" />
-                                )}
-                              </div>
-                            </div>
-                            
-                            {/* Transactions List - Expandible */}
-                            {expandedCategory === cat.category_id && (
-                              <CategoryTransactionsList 
-                                categoryId={cat.category_id}
-                                startDate={cycleParams?.startDate}
-                                endDate={cycleParams?.endDate}
-                                displayCurrency={displayCurrency}
-                                applyDemoScale={applyDemoScale}
-                              />
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-text-secondary">No hay categorías</div>
-              )}
-            </div>
-          </div>
             </>
           )}
         </div>
       )}
 
 
-    </div>
-  );
-}
-
-// Component for displaying transactions of a category
-interface CategoryTransactionsListProps {
-  categoryId: number;
-  startDate?: string;
-  endDate?: string;
-  displayCurrency: 'PEN' | 'USD';
-  applyDemoScale: (amount: number) => number;
-}
-
-function CategoryTransactionsList({ categoryId, startDate, endDate, displayCurrency, applyDemoScale }: CategoryTransactionsListProps) {
-  const { data: transactionsResponse, isLoading } = useTransactions({
-    category_id: categoryId,
-    start_date: startDate,
-    end_date: endDate,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="p-6 bg-white border-t border-border">
-        <div className="flex items-center justify-center gap-2">
-          <Loader2 className="w-4 h-4 animate-spin text-primary" />
-          <span className="text-sm text-text-secondary">Cargando transacciones...</span>
-        </div>
-      </div>
-    );
-  }
-
-  const transactions = transactionsResponse?.items || [];
-
-  if (transactions.length === 0) {
-    return (
-      <div className="p-6 bg-white border-t border-border">
-        <p className="text-sm text-text-secondary text-center">No hay transacciones</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white border-t border-border">
-      <div className="divide-y divide-border">
-        {transactions.map((tx) => (
-          <div key={tx.id} className="p-4 hover:bg-surface-soft transition-colors">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-text-primary text-sm truncate">{tx.description}</p>
-                <div className="flex items-center gap-3 mt-1">
-                  <span className="text-xs text-text-secondary">
-                    {formatLocalDate(tx.date, 'es-PE', { day: '2-digit', month: 'short' })}
-                  </span>
-                  {tx.account_name && (
-                    <span className="text-xs text-text-secondary">• {tx.account_name}</span>
-                  )}
-                </div>
-              </div>
-              <div className="text-right">
-                <p className={`font-bold text-sm ${
-                  tx.type === 'income' ? 'text-emerald-600' : 'text-orange-600'
-                }`}>
-                  {tx.type === 'income' ? '+' : '-'} {formatCurrencyISO(applyDemoScale(tx.amount), displayCurrency, { decimals: 2 })}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
