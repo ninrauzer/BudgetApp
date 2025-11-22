@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 
 const HIDDEN_MODULES_KEY = 'budgetapp_hidden_modules';
 
 export interface ModuleConfig {
   id: string;
   name: string;
-  canHide: boolean; // Dashboard y Settings no se pueden ocultar
+  canHide: boolean;
 }
 
 export const AVAILABLE_MODULES: ModuleConfig[] = [
@@ -20,7 +21,18 @@ export const AVAILABLE_MODULES: ModuleConfig[] = [
   { id: 'settings', name: 'Configuración', canHide: false },
 ];
 
-export function useHiddenModules() {
+interface HiddenModulesContextType {
+  hiddenModules: string[];
+  toggleModule: (moduleId: string) => void;
+  isModuleHidden: (moduleId: string) => boolean;
+  showModule: (moduleId: string) => void;
+  hideModule: (moduleId: string) => void;
+  resetModules: () => void;
+}
+
+const HiddenModulesContext = createContext<HiddenModulesContextType | undefined>(undefined);
+
+export function HiddenModulesProvider({ children }: { children: ReactNode }) {
   const [hiddenModules, setHiddenModules] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem(HIDDEN_MODULES_KEY);
@@ -34,8 +46,6 @@ export function useHiddenModules() {
   useEffect(() => {
     try {
       localStorage.setItem(HIDDEN_MODULES_KEY, JSON.stringify(hiddenModules));
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('hiddenModulesChanged', { detail: hiddenModules }));
     } catch (error) {
       console.error('Error saving hidden modules:', error);
     }
@@ -78,12 +88,26 @@ export function useHiddenModules() {
     setHiddenModules([]);
   };
 
-  return {
-    hiddenModules,
-    toggleModule,
-    isModuleHidden,
-    showModule,
-    hideModule,
-    resetModules,
-  };
+  return (
+    <HiddenModulesContext.Provider
+      value={{
+        hiddenModules,
+        toggleModule,
+        isModuleHidden,
+        showModule,
+        hideModule,
+        resetModules,
+      }}
+    >
+      {children}
+    </HiddenModulesContext.Provider>
+  );
+}
+
+export function useHiddenModules() {
+  const context = useContext(HiddenModulesContext);
+  if (context === undefined) {
+    throw new Error('useHiddenModules must be used within a HiddenModulesProvider');
+  }
+  return context;
 }

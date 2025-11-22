@@ -11,7 +11,7 @@ import CategoryIcon from '../components/CategoryIcon';
 import { useAccounts } from '@/lib/hooks/useApi';
 import { useDefaultAccount } from '../contexts/DefaultAccountContext';
 import { useDefaultCurrency } from '../contexts/DefaultCurrencyContext';
-import { useHiddenModules, AVAILABLE_MODULES } from '@/lib/hooks/useHiddenModules';
+import { useHiddenModules, AVAILABLE_MODULES } from '@/contexts/HiddenModulesContext';
 
 type SettingsTab = 'general' | 'categories' | 'templates' | 'billing-cycle' | 'modules';
 

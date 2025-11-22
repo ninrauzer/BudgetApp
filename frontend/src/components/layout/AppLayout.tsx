@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext'
+import { HiddenModulesProvider } from '@/contexts/HiddenModulesContext'
 import { cn } from '@/lib/utils'
 import { ToastProvider } from '@/components/toast/ToastContext'
 import ToastViewport from '@/components/toast/ToastViewport'
@@ -30,10 +31,12 @@ function AppLayoutContent() {
 export function AppLayout() {
   return (
     <SidebarProvider>
-      <ToastProvider>
-        <AppLayoutContent />
-        <ToastViewport />
-      </ToastProvider>
+      <HiddenModulesProvider>
+        <ToastProvider>
+          <AppLayoutContent />
+          <ToastViewport />
+        </ToastProvider>
+      </HiddenModulesProvider>
     </SidebarProvider>
   )
 }

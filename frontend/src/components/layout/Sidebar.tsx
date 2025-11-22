@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { 
   LayoutDashboard, 
   Receipt, 
@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/contexts/SidebarContext'
-import { useHiddenModules } from '@/lib/hooks/useHiddenModules'
+import { useHiddenModules } from '@/contexts/HiddenModulesContext'
 
 const mainNavigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard, id: 'dashboard' },
@@ -39,21 +39,8 @@ export function Sidebar() {
   const { isCollapsed, toggleCollapse } = useSidebar()
   const [isBankingOpen, setIsBankingOpen] = useState(true)
   const { isModuleHidden } = useHiddenModules()
-  const [, forceUpdate] = useState({})
 
-  // Listen for changes in hidden modules
-  useEffect(() => {
-    const handleModulesChanged = () => {
-      forceUpdate({}) // Force re-render when modules visibility changes
-    }
-
-    window.addEventListener('hiddenModulesChanged', handleModulesChanged)
-    return () => {
-      window.removeEventListener('hiddenModulesChanged', handleModulesChanged)
-    }
-  }, [])
-
-  // Filter visible items
+  // Filter visible items - will re-render when hiddenModules changes
   const visibleMainNav = mainNavigation.filter(item => !isModuleHidden(item.id))
   const visibleBankingGroup = bankingGroup.filter(item => !isModuleHidden(item.id))
   const visibleBottomNav = bottomNavigation.filter(item => !isModuleHidden(item.id))
