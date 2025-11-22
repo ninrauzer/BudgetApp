@@ -47,11 +47,13 @@ export function useHiddenModules() {
     }
 
     setHiddenModules(prev => {
-      if (prev.includes(moduleId)) {
-        return prev.filter(id => id !== moduleId);
-      } else {
-        return [...prev, moduleId];
-      }
+      const newValue = prev.includes(moduleId)
+        ? prev.filter(id => id !== moduleId)
+        : [...prev, moduleId];
+      
+      // Dispatch custom event to notify Sidebar
+      window.dispatchEvent(new CustomEvent('hiddenModulesChanged', { detail: newValue }));
+      return newValue;
     });
   };
 
@@ -74,6 +76,8 @@ export function useHiddenModules() {
 
   const resetModules = () => {
     setHiddenModules([]);
+    // Dispatch custom event to notify Sidebar
+    window.dispatchEvent(new CustomEvent('hiddenModulesChanged', { detail: [] }));
   };
 
   return {

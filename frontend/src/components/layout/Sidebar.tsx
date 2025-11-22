@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   LayoutDashboard, 
   Receipt, 
@@ -39,6 +39,19 @@ export function Sidebar() {
   const { isCollapsed, toggleCollapse } = useSidebar()
   const [isBankingOpen, setIsBankingOpen] = useState(true)
   const { isModuleHidden } = useHiddenModules()
+  const [, forceUpdate] = useState({})
+
+  // Listen for changes in hidden modules
+  useEffect(() => {
+    const handleModulesChanged = () => {
+      forceUpdate({}) // Force re-render when modules visibility changes
+    }
+
+    window.addEventListener('hiddenModulesChanged', handleModulesChanged)
+    return () => {
+      window.removeEventListener('hiddenModulesChanged', handleModulesChanged)
+    }
+  }, [])
 
   // Filter visible items
   const visibleMainNav = mainNavigation.filter(item => !isModuleHidden(item.id))
