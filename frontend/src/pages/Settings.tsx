@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, Download, Database, FileText, Settings as SettingsIcon, Wallet, Tag, X, Zap, Calendar } from 'lucide-react';
+import { Upload, Download, Database, FileText, Settings as SettingsIcon, Wallet, Tag, X, Zap, Calendar, Eye, EyeOff, LayoutDashboard } from 'lucide-react';
 import ImportExcelModal from '../components/ImportExcelModal';
 import CategoryCRUD from '../components/CategoryCRUD';
 import QuickTemplateCRUD from '../components/QuickTemplateCRUD';
@@ -11,8 +11,9 @@ import CategoryIcon from '../components/CategoryIcon';
 import { useAccounts } from '@/lib/hooks/useApi';
 import { useDefaultAccount } from '../contexts/DefaultAccountContext';
 import { useDefaultCurrency } from '../contexts/DefaultCurrencyContext';
+import { useHiddenModules, AVAILABLE_MODULES } from '@/lib/hooks/useHiddenModules';
 
-type SettingsTab = 'general' | 'categories' | 'templates' | 'billing-cycle';
+type SettingsTab = 'general' | 'categories' | 'templates' | 'billing-cycle' | 'modules';
 
 interface MonthCycleInfo {
   month: number;
@@ -36,6 +37,7 @@ export default function Settings() {
   const { data: accounts = [] } = useAccounts();
   const { defaultAccountId, setDefaultAccountId } = useDefaultAccount();
   const { defaultCurrency, setDefaultCurrency } = useDefaultCurrency();
+  const { toggleModule, isModuleHidden, resetModules } = useHiddenModules();
 
   const handleEditMonth = (month: number, year: number, cycleInfo: MonthCycleInfo) => {
     setSelectedMonth(month);
@@ -98,6 +100,17 @@ export default function Settings() {
           >
             <Zap className="w-4 h-4" strokeWidth={2.5} />
             PLANTILLAS
+          </button>
+          <button
+            onClick={() => setActiveTab('modules')}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+              activeTab === 'modules'
+                ? 'bg-primary text-white shadow-button'
+                : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4" strokeWidth={2.5} />
+            MÓDULOS
           </button>
         </div>
       </div>
@@ -362,6 +375,106 @@ export default function Settings() {
           </div>
 
           <QuickTemplateCRUD />
+        </div>
+      )}
+
+      {/* MODULES TAB */}
+      {activeTab === 'modules' && (
+        <div className="bg-surface border border-border rounded-3xl p-8 shadow-card">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-button">
+              <LayoutDashboard className="w-6 h-6 text-white" strokeWidth={2.5} />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-bold text-text-primary">Visibilidad de Módulos</h2>
+              <p className="text-sm text-text-secondary">Personaliza qué módulos aparecen en el sidebar</p>
+            </div>
+            {AVAILABLE_MODULES.filter(m => m.canHide && isModuleHidden(m.id)).length > 0 && (
+              <button
+                onClick={resetModules}
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-bold hover:shadow-lg hover:scale-105 transition-all"
+              >
+                Mostrar Todos
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            {AVAILABLE_MODULES.map((module) => {
+              const hidden = isModuleHidden(module.id);
+              const disabled = !module.canHide;
+
+              return (
+                <div
+                  key={module.id}
+                  className={`
+                    flex items-center justify-between p-4 rounded-xl border-2 transition-all
+                    ${disabled 
+                      ? 'bg-gray-50 border-gray-200 opacity-60' 
+                      : hidden
+                        ? 'bg-rose-50 border-rose-200 hover:border-rose-300'
+                        : 'bg-white border-border hover:border-primary/30 hover:shadow-md'
+                    }
+                  `}
+                >
+                  <div className="flex items-center gap-3">
+                    {hidden ? (
+                      <EyeOff className="w-5 h-5 text-rose-600" strokeWidth={2.5} />
+                    ) : (
+                      <Eye className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />
+                    )}
+                    <div>
+                      <p className={`font-bold text-sm ${disabled ? 'text-gray-500' : 'text-text-primary'}`}>
+                        {module.name}
+                      </p>
+                      {disabled && (
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          Este módulo no se puede ocultar
+                        </p>
+                      )}
+                      {!disabled && hidden && (
+                        <p className="text-xs text-rose-600 mt-0.5">
+                          Oculto del sidebar
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => toggleModule(module.id)}
+                    disabled={disabled}
+                    className={`
+                      px-4 py-2 rounded-lg font-bold text-xs transition-all
+                      ${disabled 
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                        : hidden
+                          ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:shadow-lg hover:scale-105'
+                          : 'bg-gradient-to-r from-rose-500 to-rose-600 text-white hover:shadow-lg hover:scale-105'
+                      }
+                    `}
+                  >
+                    {hidden ? 'Mostrar' : 'Ocultar'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Info card */}
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <FileText className="w-5 h-5 text-blue-600" strokeWidth={2.5} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-blue-900 mb-1">Nota</h3>
+                <p className="text-xs text-blue-700">
+                  Los módulos ocultos no aparecerán en el sidebar, pero seguirán siendo accesibles mediante URL directa. 
+                  Dashboard y Configuración no se pueden ocultar para mantener funcionalidad esencial.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
