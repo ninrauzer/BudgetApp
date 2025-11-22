@@ -583,7 +583,7 @@ export default function BudgetAnnualView({ year, displayCurrency = 'PEN', exchan
             <tbody>
               {/* Saldo Row (Balance) - First row after header */}
               <tr className={cn(
-                "font-bold border-b-2 sticky top-[48px] z-20"
+                "font-bold border-b-2"
               )}>
                 <td className={cn(
                   "sticky left-0 z-30 border-r border-border px-4 py-4 shadow-md",
