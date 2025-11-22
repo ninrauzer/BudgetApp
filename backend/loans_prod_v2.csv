@@ -1,0 +1,7 @@
+ID;Nombre;Entidad;Monto Original;Deuda Actual (EDITAR AQUÍ);Cuota Mensual Real (EDITAR AQUÍ);Cuotas Totales;Cuotas Pagadas (base);Fecha Inicio;Notas
+1;Prestamo BBVA1;BBVA;15000;1998.99;418.17;47;43;20/11/2022;
+2;Prestamo BBVA 2;BBVA;19900;2651.89;554.78;47;44;5/02/2022;
+3;Prestamo IBK 1;IBK;35582;34754.71;1281.54;48;2;21/11/2025;
+4;Prestamo IBK 2;IBK;49600;32969.64;1050.18;77;40;21/11/2019;
+5;Prestamo Derrama;Derrama;20000;18200;520;60;25;5/12/2020;
+6;Prestamo Santander;Santander;7000;3248.8;350;36;24;5/12/2022;

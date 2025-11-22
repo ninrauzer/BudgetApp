@@ -22,6 +22,7 @@ class Account(Base):
     balance = Column(Float, default=0.0)
     currency = Column(String, default="PEN")
     is_active = Column(Boolean, default=True)
+    is_default = Column(Boolean, default=False)  # Only one account can be default at a time
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships

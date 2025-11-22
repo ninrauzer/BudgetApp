@@ -17,6 +17,7 @@ export interface AccountFormData {
   balance: number;
   currency: 'PEN' | 'USD';
   is_active: boolean;
+  is_default: boolean;
 }
 
 const accountTypes = [
@@ -35,6 +36,7 @@ export default function AccountModal({ isOpen, onClose, onSubmit, account, isPen
     balance: 0,
     currency: 'PEN',
     is_active: true,
+    is_default: false,
   });
   const [errors, setErrors] = useState<Partial<Record<keyof AccountFormData, string>>>({});
 
@@ -47,6 +49,7 @@ export default function AccountModal({ isOpen, onClose, onSubmit, account, isPen
         balance: account.initial_balance || 0,
         currency: account.currency as 'PEN' | 'USD',
         is_active: account.is_active,
+        is_default: account.is_default || false,
       });
     } else {
       setFormData({
@@ -56,6 +59,7 @@ export default function AccountModal({ isOpen, onClose, onSubmit, account, isPen
         balance: 0,
         currency: 'PEN',
         is_active: true,
+        is_default: false,
       });
     }
     setErrors({});
@@ -196,6 +200,25 @@ export default function AccountModal({ isOpen, onClose, onSubmit, account, isPen
             <label htmlFor="is_active" className="text-sm font-medium text-text-primary cursor-pointer">
               Cuenta activa
             </label>
+          </div>
+
+          {/* Cuenta por Defecto */}
+          <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200">
+            <input
+              checked={formData.is_default}
+              onChange={(e) => handleChange('is_default', e.target.checked)}
+              type="checkbox"
+              id="is_default"
+              className="w-5 h-5 rounded border-amber-300 text-amber-600 focus:ring-2 focus:ring-amber-500"
+            />
+            <div className="flex-1">
+              <label htmlFor="is_default" className="text-sm font-semibold text-amber-900 cursor-pointer block">
+                Establecer como cuenta por defecto
+              </label>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Se usará automáticamente en nuevas transacciones
+              </p>
+            </div>
           </div>
 
           {/* Buttons */}

@@ -234,6 +234,11 @@ export default function Accounts() {
                           <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
                             {accountTypeLabel}
                           </span>
+                          {account.is_default && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">
+                              ⭐ Por Defecto
+                            </span>
+                          )}
                         </div>
                         <h3 className="text-xl font-bold text-text-primary mb-1">{account.name}</h3>
                         <p className="text-sm text-text-secondary">{account.currency}</p>

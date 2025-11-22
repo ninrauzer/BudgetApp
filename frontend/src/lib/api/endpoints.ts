@@ -95,6 +95,7 @@ export const accountsApi = {
       initial_balance: typeof a.balance === 'number' && !Number.isNaN(a.balance) ? a.balance : 0,
       current_balance: typeof a.balance === 'number' && !Number.isNaN(a.balance) ? a.balance : 0,
       is_active: a.is_active,
+      is_default: a.is_default || false,
       created_at: a.created_at,
       // El modelo backend no expone updated_at aún; usamos created_at como fallback
       updated_at: a.updated_at ?? a.created_at,
@@ -112,6 +113,7 @@ export const accountsApi = {
       initial_balance: typeof data.balance === 'number' && !Number.isNaN(data.balance) ? data.balance : 0,
       current_balance: typeof data.balance === 'number' && !Number.isNaN(data.balance) ? data.balance : 0,
       is_active: data.is_active,
+      is_default: data.is_default || false,
       created_at: data.created_at,
       updated_at: data.updated_at ?? data.created_at,
     };

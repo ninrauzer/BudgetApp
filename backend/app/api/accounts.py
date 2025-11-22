@@ -43,6 +43,7 @@ def _compute_account_response(account: Account) -> dict:
         "icon": account.icon,
         "currency": account.currency,
         "is_active": account.is_active,
+        "is_default": account.is_default,
         "created_at": account.created_at,
         "updated_at": account.created_at,
         "initial_balance": initial,
@@ -86,7 +87,14 @@ def create_account(account: AccountCreate, db: Session = Depends(get_db)):
     - **balance**: Initial balance (default: 0.0)
     - **currency**: Currency code (default: PEN)
     - **is_active**: Active status (default: true)
+    - **is_default**: Set as default account (default: false)
+    
+    If is_default is True, all other accounts will be set to is_default=False.
     """
+    # Handle default account exclusivity
+    if account.is_default:
+        db.query(Account).update({"is_default": False})
+    
     db_account = Account(**account.model_dump())
     db.add(db_account)
     db.commit()
@@ -100,13 +108,22 @@ def update_account(
     account: AccountUpdate,
     db: Session = Depends(get_db)
 ):
-    """Update an existing account and return computed balances."""
+    """
+    Update an existing account and return computed balances.
+    
+    If is_default is set to True, all other accounts will be set to is_default=False.
+    """
     db_account = db.query(Account).filter(Account.id == account_id).first()
     if not db_account:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Account with id {account_id} not found"
         )
+    
+    # Handle default account exclusivity
+    if account.is_default:
+        db.query(Account).filter(Account.id != account_id).update({"is_default": False})
+    
     for field, value in account.model_dump().items():
         setattr(db_account, field, value)
     db.commit()

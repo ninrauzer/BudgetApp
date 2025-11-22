@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, Download, Database, FileText, Settings as SettingsIcon, Wallet, Tag, X, Zap, Calendar, Eye, EyeOff, LayoutDashboard } from 'lucide-react';
+import { Upload, Download, Database, FileText, Settings as SettingsIcon, Tag, Zap, Calendar, Eye, EyeOff, LayoutDashboard } from 'lucide-react';
 import ImportExcelModal from '../components/ImportExcelModal';
 import CategoryCRUD from '../components/CategoryCRUD';
 import QuickTemplateCRUD from '../components/QuickTemplateCRUD';
@@ -7,9 +7,6 @@ import BillingCycleSettings from '../components/BillingCycleSettings';
 import BillingCycleGrid from '../components/BillingCycleGrid';
 import EditCycleModal from '../components/EditCycleModal';
 import TimezoneSelector from '../components/TimezoneSelector';
-import CategoryIcon from '../components/CategoryIcon';
-import { useAccounts } from '@/lib/hooks/useApi';
-import { useDefaultAccount } from '../contexts/DefaultAccountContext';
 import { useDefaultCurrency } from '../contexts/DefaultCurrencyContext';
 import { useHiddenModules, AVAILABLE_MODULES } from '@/contexts/HiddenModulesContext';
 
@@ -34,8 +31,6 @@ export default function Settings() {
   const [selectedMonth, setSelectedMonth] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedCycleInfo, setSelectedCycleInfo] = useState<MonthCycleInfo | null>(null);
-  const { data: accounts = [] } = useAccounts();
-  const { defaultAccountId, setDefaultAccountId } = useDefaultAccount();
   const { defaultCurrency, setDefaultCurrency } = useDefaultCurrency();
   const { toggleModule, isModuleHidden, resetModules } = useHiddenModules();
 
@@ -177,81 +172,6 @@ export default function Settings() {
         </div>
 
         <div className="space-y-4">
-          {/* Default Account */}
-          <div className="p-4 bg-surface-soft rounded-xl border border-border">
-            <div className="flex items-center gap-3 mb-3">
-              <Wallet className="w-5 h-5 text-primary" strokeWidth={2.5} />
-              <h3 className="font-bold text-text-primary">Cuenta por defecto</h3>
-            </div>
-            <p className="text-sm text-text-secondary mb-4">
-              Esta cuenta se usará automáticamente al crear nuevas transacciones
-            </p>
-            
-            {/* Account Toggle Buttons */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {/* No default option */}
-              <button
-                onClick={() => setDefaultAccountId(null)}
-                className={`p-4 rounded-xl border-2 transition-all text-left ${
-                  defaultAccountId === null
-                    ? 'bg-primary/10 border-primary shadow-sm'
-                    : 'bg-surface border-border hover:border-primary/30'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${
-                    defaultAccountId === null ? 'bg-primary/20' : 'bg-surface-soft'
-                  }`}>
-                    <X className="w-5 h-5 text-text-secondary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold text-text-primary text-sm truncate">
-                      Sin cuenta
-                    </div>
-                    <div className="text-xs text-text-secondary">
-                      Manual
-                    </div>
-                  </div>
-                  {defaultAccountId === null && (
-                    <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-                  )}
-                </div>
-              </button>
-
-              {/* Account options */}
-              {accounts.map((account) => (
-                <button
-                  key={account.id}
-                  onClick={() => setDefaultAccountId(account.id)}
-                  className={`p-4 rounded-xl border-2 transition-all text-left ${
-                    defaultAccountId === account.id
-                      ? 'bg-primary/10 border-primary shadow-sm'
-                      : 'bg-surface border-border hover:border-primary/30'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${
-                      defaultAccountId === account.id ? 'bg-primary/20' : 'bg-surface-soft'
-                    }`}>
-                      <CategoryIcon iconName={account.icon || 'wallet'} size={20} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold text-text-primary text-sm truncate">
-                        {account.name}
-                      </div>
-                      <div className="text-xs text-text-secondary">
-                        {account.type}
-                      </div>
-                    </div>
-                    {defaultAccountId === account.id && (
-                      <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Currency Preference */}
           <div className="p-4 bg-surface-soft rounded-xl border border-border">
             <h3 className="font-bold text-text-primary mb-3">Moneda por defecto</h3>

@@ -15,6 +15,7 @@ class AccountBase(BaseModel):
     balance: float = Field(default=0.0)
     currency: str = Field(default="PEN", max_length=3)  # ISO 4217
     is_active: bool = True
+    is_default: bool = False
 
 
 class AccountCreate(AccountBase):

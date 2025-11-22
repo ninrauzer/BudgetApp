@@ -33,6 +33,7 @@ export interface Account {
   initial_balance: number;
   current_balance: number;
   is_active: boolean;
+  is_default: boolean;
   created_at: string;
   updated_at: string;
 }
