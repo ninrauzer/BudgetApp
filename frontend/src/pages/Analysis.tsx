@@ -639,7 +639,7 @@ export default function Analysis() {
                           className="w-3 h-3 rounded-full shadow-sm" 
                           style={{ backgroundColor: point.color }}
                         />
-                        <span className="font-bold text-text-primary">{point.serieId}</span>
+                        <span className="font-bold text-text-primary">{point.seriesId}</span>
                       </div>
                       <div className="text-sm text-text-secondary">
                         {point.data.x}: {formatAmount(Number(point.data.y))}

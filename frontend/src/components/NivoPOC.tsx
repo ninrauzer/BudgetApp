@@ -167,7 +167,6 @@ export default function NivoPOC({ pieData, budgetComparisonData, displayCurrency
                   innerRadius={0.5}
                   padAngle={2}
                   cornerRadius={0}
-                  activeOuterRadiusOffset={8}
                   colors={colors}
                   defs={[
                     {
@@ -272,7 +271,6 @@ export default function NivoPOC({ pieData, budgetComparisonData, displayCurrency
                   motionConfig="wobbly"
                   transitionMode="pushIn"
                   activeInnerRadiusOffset={8}
-                  activeOuterRadiusOffset={8}
                 />
               </div>
             ) : (
@@ -353,7 +351,7 @@ export default function NivoPOC({ pieData, budgetComparisonData, displayCurrency
                     format: (value) => `${(value / 1000).toFixed(0)}k`,
                   }}
                   enableLabel={true}
-                  label={(d) => `${(d.value / 1000).toFixed(1)}k`}
+                  label={(d) => `${((d.value || 0) / 1000).toFixed(1)}k`}
                   labelSkipWidth={12}
                   labelSkipHeight={12}
                   labelTextColor="#ffffff"
@@ -470,7 +468,7 @@ export default function NivoPOC({ pieData, budgetComparisonData, displayCurrency
                         className="w-3 h-3 rounded-full shadow-sm" 
                         style={{ backgroundColor: point.color }}
                       />
-                      <span className="font-bold text-text-primary">{point.serieId}</span>
+                      <span className="font-bold text-text-primary">{point.seriesId}</span>
                     </div>
                     <div className="text-xs text-text-secondary mb-1">{point.data.xFormatted}</div>
                     <div className="text-sm font-bold text-text-primary">

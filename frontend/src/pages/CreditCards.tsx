@@ -35,7 +35,7 @@ export default function CreditCardsPage() {
     if (!selectedId) {
       throw new Error('Debe seleccionar una tarjeta primero');
     }
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       createInstallment.mutate(
         { ...data, credit_card_id: selectedId },
         {
