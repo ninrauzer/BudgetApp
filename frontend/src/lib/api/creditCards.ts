@@ -196,62 +196,62 @@ export const creditCardsApi = {
   // ========== Credit Cards CRUD ==========
   
   list: async (): Promise<CreditCard[]> => {
-    const response = await apiClient.get('/credit-cards');
+    const response = await apiClient.get('/credit-cards/');
     return response.data;
   },
 
   getById: async (id: number): Promise<CreditCard> => {
-    const response = await apiClient.get(`/credit-cards/${id}`);
+    const response = await apiClient.get(`/credit-cards/${id}/`);
     return response.data;
   },
 
   getSummary: async (id: number): Promise<CreditCardSummary> => {
-    const response = await apiClient.get(`/credit-cards/${id}`);
+    const response = await apiClient.get(`/credit-cards/${id}/`);
     return response.data;
   },
 
   create: async (payload: CreateCreditCardPayload): Promise<CreditCard> => {
-    const response = await apiClient.post('/credit-cards', payload);
+    const response = await apiClient.post('/credit-cards/', payload);
     return response.data;
   },
 
   update: async (id: number, payload: Partial<CreateCreditCardPayload>): Promise<CreditCard> => {
-    const response = await apiClient.put(`/credit-cards/${id}`, payload);
+    const response = await apiClient.put(`/credit-cards/${id}/`, payload);
     return response.data;
   },
 
   delete: async (id: number): Promise<{ message: string }> => {
-    const response = await apiClient.delete(`/credit-cards/${id}`);
+    const response = await apiClient.delete(`/credit-cards/${id}/`);
     return response.data;
   },
 
   // ========== Installments ==========
 
   listInstallments: async (cardId: number): Promise<Installment[]> => {
-    const response = await apiClient.get(`/credit-cards/${cardId}/installments`);
+    const response = await apiClient.get(`/credit-cards/${cardId}/installments/`);
     return response.data;
   },
 
   createInstallment: async (payload: CreateInstallmentPayload): Promise<Installment> => {
     const { credit_card_id, ...data } = payload;
-    const response = await apiClient.post(`/credit-cards/${credit_card_id}/installments`, data);
+    const response = await apiClient.post(`/credit-cards/${credit_card_id}/installments/`, data);
     return response.data;
   },
 
   updateInstallment: async (id: number, current_installment: number): Promise<Installment> => {
-    const response = await apiClient.put(`/credit-cards/installments/${id}`, { current_installment });
+    const response = await apiClient.put(`/credit-cards/installments/${id}/`, { current_installment });
     return response.data;
   },
 
   deleteInstallment: async (id: number): Promise<{ message: string }> => {
-    const response = await apiClient.delete(`/credit-cards/installments/${id}`);
+    const response = await apiClient.delete(`/credit-cards/installments/${id}/`);
     return response.data;
   },
 
   // ========== Statements ==========
 
   listStatements: async (cardId: number, limit?: number): Promise<Statement[]> => {
-    const response = await apiClient.get(`/credit-cards/${cardId}/statements`, {
+    const response = await apiClient.get(`/credit-cards/${cardId}/statements/`, {
       params: { limit }
     });
     return response.data;
@@ -259,7 +259,7 @@ export const creditCardsApi = {
 
   createStatement: async (payload: CreateStatementPayload): Promise<Statement> => {
     const { credit_card_id, ...data } = payload;
-    const response = await apiClient.post(`/credit-cards/${credit_card_id}/statements`, data);
+    const response = await apiClient.post(`/credit-cards/${credit_card_id}/statements/`, data);
     return response.data;
   },
 
@@ -270,7 +270,7 @@ export const creditCardsApi = {
     targetMonth?: number,
     targetYear?: number
   ): Promise<CycleTimeline> => {
-    const response = await apiClient.get(`/credit-cards/${cardId}/cycle-timeline`, {
+    const response = await apiClient.get(`/credit-cards/${cardId}/cycle-timeline/`, {
       params: { target_month: targetMonth, target_year: targetYear }
     });
     return response.data;
@@ -282,7 +282,7 @@ export const creditCardsApi = {
     installments?: number,
     teaInstallments?: number
   ): Promise<PurchaseAdvisor> => {
-    const response = await apiClient.get(`/credit-cards/${cardId}/purchase-advisor`, {
+    const response = await apiClient.get(`/credit-cards/${cardId}/purchase-advisor/`, {
       params: {
         amount,
         installments,
