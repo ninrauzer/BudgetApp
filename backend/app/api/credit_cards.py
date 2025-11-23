@@ -440,3 +440,439 @@ async def get_payoff_projection(
         status_code=501,
         detail="Proyección de pago pendiente de implementación"
     )
+
+
+# ============================================================================
+# Billing Cycle Timeline & Calculator
+# ============================================================================
+
+@router.get("/{card_id}/cycle-timeline")
+async def get_cycle_timeline(
+    card_id: int,
+    target_month: Optional[int] = Query(None, description="Mes objetivo (1-12)"),
+    target_year: Optional[int] = Query(None, description="Año objetivo"),
+    db: Session = Depends(get_db)
+):
+    """
+    📅 TIMELINE DEL CICLO DE FACTURACIÓN
+    
+    Muestra el calendario del mes con:
+    - Fecha de corte
+    - Fecha de pago
+    - Días de float (crédito gratis)
+    - Mejor momento para comprar
+    - Zona de riesgo (antes del pago)
+    
+    Ejemplo de respuesta:
+    {
+        "current_cycle": {
+            "statement_date": "2025-11-10",
+            "due_date": "2025-12-05",
+            "days_in_cycle": 25,
+            "days_until_close": 5,
+            "days_until_payment": 18
+        },
+        "timeline": {
+            "best_purchase_window": {
+                "start": "2025-11-11",  # Justo después del corte
+                "end": "2025-11-20",
+                "float_days": 55,  # Días sin intereses
+                "reason": "Máximo período de gracia"
+            },
+            "risk_zone": {
+                "start": "2025-12-01",
+                "end": "2025-12-05",
+                "reason": "Próximo al vencimiento"
+            },
+            "cycle_phases": [
+                {
+                    "phase": "optimal",
+                    "date_range": ["2025-11-11", "2025-11-20"],
+                    "description": "🟢 Mejor momento para comprar"
+                },
+                {
+                    "phase": "normal",
+                    "date_range": ["2025-11-21", "2025-11-30"],
+                    "description": "🟡 Momento regular"
+                },
+                {
+                    "phase": "warning",
+                    "date_range": ["2025-12-01", "2025-12-05"],
+                    "description": "🔴 Evitar compras grandes"
+                }
+            ]
+        },
+        "float_calculator": {
+            "if_buy_today": {
+                "purchase_date": "2025-11-15",
+                "will_appear_on_statement": "2025-12-10",
+                "payment_due": "2026-01-05",
+                "float_days": 51,
+                "message": "Excelente momento - 51 días de crédito gratis"
+            }
+        }
+    }
+    """
+    from datetime import datetime, timedelta
+    from calendar import monthrange
+    
+    # Obtener tarjeta
+    card = db.query(CreditCard).filter(CreditCard.id == card_id).first()
+    if not card:
+        raise HTTPException(status_code=404, detail="Tarjeta no encontrada")
+    
+    if not card.statement_close_day or not card.payment_due_day:
+        raise HTTPException(
+            status_code=400,
+            detail="La tarjeta no tiene configurados los días de corte y pago"
+        )
+    
+    # Determinar mes objetivo
+    today = datetime.now().date()
+    if target_month and target_year:
+        reference_date = date(target_year, target_month, 1)
+    else:
+        reference_date = today
+    
+    # Calcular fechas del ciclo actual
+    close_day = card.statement_close_day
+    payment_day = card.payment_due_day
+    
+    # Fecha de corte del mes actual
+    year = reference_date.year
+    month = reference_date.month
+    
+    # Si el día de corte ya pasó este mes, el ciclo actual ya cerró
+    try:
+        statement_date = date(year, month, close_day)
+    except ValueError:
+        # El día no existe en este mes (ej: 31 en feb)
+        days_in_month = monthrange(year, month)[1]
+        statement_date = date(year, month, days_in_month)
+    
+    if today > statement_date:
+        # Ciclo actual ya cerró, mostrar el próximo
+        if month == 12:
+            next_month = 1
+            next_year = year + 1
+        else:
+            next_month = month + 1
+            next_year = year
+        
+        try:
+            statement_date = date(next_year, next_month, close_day)
+        except ValueError:
+            days_in_month = monthrange(next_year, next_month)[1]
+            statement_date = date(next_year, next_month, days_in_month)
+    
+    # Fecha de pago (siguiente mes después del corte)
+    payment_month = statement_date.month + 1 if statement_date.month < 12 else 1
+    payment_year = statement_date.year if statement_date.month < 12 else statement_date.year + 1
+    
+    try:
+        due_date = date(payment_year, payment_month, payment_day)
+    except ValueError:
+        days_in_month = monthrange(payment_year, payment_month)[1]
+        due_date = date(payment_year, payment_month, min(payment_day, days_in_month))
+    
+    # Calcular métricas
+    days_in_cycle = (due_date - statement_date).days
+    days_until_close = (statement_date - today).days if statement_date > today else 0
+    days_until_payment = (due_date - today).days if due_date > today else 0
+    
+    # Ventana óptima de compra (justo después del corte)
+    best_start = statement_date + timedelta(days=1)
+    best_end = statement_date + timedelta(days=10)
+    
+    # Calcular float si compra hoy
+    if today <= statement_date:
+        # Aparecerá en el siguiente corte
+        next_statement = statement_date
+    else:
+        # Aparecerá en el corte del siguiente mes
+        if statement_date.month == 12:
+            next_statement = date(statement_date.year + 1, 1, close_day)
+        else:
+            try:
+                next_statement = date(statement_date.year, statement_date.month + 1, close_day)
+            except ValueError:
+                days_in_month = monthrange(statement_date.year, statement_date.month + 1)[1]
+                next_statement = date(statement_date.year, statement_date.month + 1, days_in_month)
+    
+    # Pago del statement donde aparece
+    next_payment_month = next_statement.month + 1 if next_statement.month < 12 else 1
+    next_payment_year = next_statement.year if next_statement.month < 12 else next_statement.year + 1
+    
+    try:
+        next_payment_date = date(next_payment_year, next_payment_month, payment_day)
+    except ValueError:
+        days_in_month = monthrange(next_payment_year, next_payment_month)[1]
+        next_payment_date = date(next_payment_year, next_payment_month, min(payment_day, days_in_month))
+    
+    float_days = (next_payment_date - today).days
+    
+    # Determinar mensaje según float
+    if float_days >= 45:
+        float_message = f"🟢 Excelente momento - {float_days} días de crédito gratis"
+    elif float_days >= 30:
+        float_message = f"🟡 Buen momento - {float_days} días de float"
+    else:
+        float_message = f"🔴 Poco float - solo {float_days} días"
+    
+    # Zona de riesgo (5 días antes del pago)
+    risk_start = due_date - timedelta(days=5)
+    
+    return {
+        "current_cycle": {
+            "statement_date": statement_date.isoformat(),
+            "due_date": due_date.isoformat(),
+            "days_in_cycle": days_in_cycle,
+            "days_until_close": days_until_close,
+            "days_until_payment": days_until_payment,
+        },
+        "timeline": {
+            "best_purchase_window": {
+                "start": best_start.isoformat(),
+                "end": best_end.isoformat(),
+                "float_days": (due_date - best_start).days,
+                "reason": "Máximo período de gracia - compras no cobran hasta siguiente ciclo"
+            },
+            "risk_zone": {
+                "start": risk_start.isoformat(),
+                "end": due_date.isoformat(),
+                "reason": "Próximo al vencimiento - evitar compras grandes"
+            },
+            "cycle_phases": [
+                {
+                    "phase": "optimal",
+                    "date_range": [best_start.isoformat(), best_end.isoformat()],
+                    "description": "🟢 Mejor momento para comprar - máximo float"
+                },
+                {
+                    "phase": "normal",
+                    "date_range": [best_end.isoformat(), risk_start.isoformat()],
+                    "description": "🟡 Momento regular - float moderado"
+                },
+                {
+                    "phase": "warning",
+                    "date_range": [risk_start.isoformat(), due_date.isoformat()],
+                    "description": "🔴 Evitar compras grandes - próximo vencimiento"
+                }
+            ]
+        },
+        "float_calculator": {
+            "if_buy_today": {
+                "purchase_date": today.isoformat(),
+                "will_appear_on_statement": next_statement.isoformat(),
+                "payment_due": next_payment_date.isoformat(),
+                "float_days": float_days,
+                "message": float_message
+            }
+        }
+    }
+
+
+@router.get("/{card_id}/purchase-advisor")
+async def get_purchase_advisor(
+    card_id: int,
+    amount: Decimal = Query(..., description="Monto de la compra"),
+    installments: Optional[int] = Query(None, description="Número de cuotas (None = revolvente)"),
+    tea_installments: Optional[Decimal] = Query(None, description="TEA para cuotas"),
+    db: Session = Depends(get_db)
+):
+    """
+    💡 ASESOR DE COMPRAS: ¿Cuotas o Revolvente?
+    
+    Compara el costo real de comprar en cuotas vs revolvente
+    y recomienda la mejor opción.
+    
+    Ejemplo:
+        GET /api/credit-cards/1/purchase-advisor?amount=1500&installments=6&tea_installments=17.63
+    
+    Respuesta:
+    {
+        "purchase_amount": 1500.00,
+        "revolvente_option": {
+            "total_to_pay": 1500.00,
+            "interest": 0.00,
+            "condition": "Si pagas el total en el siguiente corte",
+            "tea_effective": 0.00,
+            "pros": ["Sin intereses", "Liberas crédito rápido"],
+            "cons": ["Debes tener liquidez al corte"]
+        },
+        "installments_option": {
+            "installments": 6,
+            "monthly_payment": 258.80,
+            "total_to_pay": 1552.80,
+            "total_interest": 52.80,
+            "tea": 17.63,
+            "pros": ["Pagos fijos mensuales", "No afecta liquidez"],
+            "cons": ["Pagas S/ 52.80 en intereses", "Compromete capacidad por 6 meses"]
+        },
+        "recommendation": {
+            "best_option": "revolvente",
+            "reason": "Ahorras S/ 52.80 si puedes pagar el total",
+            "considerations": [
+                "Requiere S/ 1,500 disponibles en 25 días",
+                "Revolvente solo es mejor si pagas el TOTAL",
+                "Si solo pagas mínimo, intereses suben a 44.99% TEA"
+            ]
+        },
+        "impact_on_credit": {
+            "current_available": 7261.32,
+            "after_purchase": 5761.32,
+            "utilization_before": 44.1,
+            "utilization_after": 55.6,
+            "warning": "Utilización > 50% puede afectar score crediticio"
+        }
+    }
+    """
+    # Obtener tarjeta
+    card = db.query(CreditCard).filter(CreditCard.id == card_id).first()
+    if not card:
+        raise HTTPException(status_code=404, detail="Tarjeta no encontrada")
+    
+    # Validar que haya crédito disponible
+    if amount > card.available_credit:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Crédito insuficiente. Disponible: S/ {card.available_credit}"
+        )
+    
+    # OPCIÓN REVOLVENTE (pago total siguiente corte)
+    revolvente_total = amount
+    revolvente_interest = Decimal("0")
+    revolvente_tea = Decimal("0")
+    
+    revolvente_pros = [
+        "✅ Sin intereses si pagas el total",
+        "✅ Liberas crédito rápido",
+        "✅ Flexibilidad para pagar antes"
+    ]
+    revolvente_cons = [
+        "⚠️ Debes tener liquidez completa al corte",
+        "⚠️ Si no pagas total, intereses suben a {:.2f}% TEA".format(card.revolving_interest_rate or 0)
+    ]
+    
+    # OPCIÓN CUOTAS
+    installments_data = None
+    if installments and installments > 1:
+        # Calcular cuota mensual con TEA
+        tea = tea_installments or Decimal("0")
+        
+        if tea > 0:
+            # Fórmula de cuota con interés compuesto
+            # Cuota = P * (r * (1 + r)^n) / ((1 + r)^n - 1)
+            # donde r = TEA_mensual = (1 + TEA_anual)^(1/12) - 1
+            tea_decimal = tea / Decimal("100")
+            r_monthly = (1 + tea_decimal) ** (Decimal("1") / Decimal("12")) - 1
+            
+            numerator = amount * (r_monthly * ((1 + r_monthly) ** installments))
+            denominator = ((1 + r_monthly) ** installments) - 1
+            monthly_payment = numerator / denominator
+        else:
+            # Sin intereses (cuotas 0% TEA)
+            monthly_payment = amount / installments
+        
+        total_to_pay = monthly_payment * installments
+        total_interest = total_to_pay - amount
+        
+        installments_data = {
+            "installments": installments,
+            "monthly_payment": float(round(monthly_payment, 2)),
+            "total_to_pay": float(round(total_to_pay, 2)),
+            "total_interest": float(round(total_interest, 2)),
+            "tea": float(tea),
+            "pros": [
+                f"✅ Pagos fijos de S/ {monthly_payment:.2f}/mes",
+                "✅ No afecta liquidez inmediata",
+                "✅ Predecible y planificable"
+            ],
+            "cons": [
+                f"⚠️ Pagas S/ {total_interest:.2f} en intereses",
+                f"⚠️ Compromete capacidad por {installments} meses",
+                "⚠️ Menos flexibilidad de pago anticipado"
+            ]
+        }
+    
+    # RECOMENDACIÓN
+    recommendation = None
+    if installments_data:
+        interest_difference = installments_data["total_interest"]
+        
+        if interest_difference <= 50:  # Menos de S/ 50 de diferencia
+            recommendation = {
+                "best_option": "installments",
+                "reason": f"Diferencia mínima (S/ {interest_difference:.2f}) - vale la pena la comodidad de cuotas",
+                "considerations": [
+                    "Ambas opciones son viables",
+                    "Cuotas dan más tranquilidad financiera",
+                    f"Solo {installments} meses de compromiso"
+                ]
+            }
+        elif interest_difference > 200:  # Más de S/ 200
+            recommendation = {
+                "best_option": "revolvente",
+                "reason": f"Ahorras S/ {interest_difference:.2f} si puedes pagar el total",
+                "considerations": [
+                    f"Requiere S/ {amount:.2f} disponibles en ~25 días",
+                    "Revolvente solo es mejor si pagas el TOTAL",
+                    f"Si solo pagas mínimo, intereses suben a {card.revolving_interest_rate}% TEA"
+                ]
+            }
+        else:
+            recommendation = {
+                "best_option": "depends",
+                "reason": f"Depende de tu liquidez - diferencia moderada (S/ {interest_difference:.2f})",
+                "considerations": [
+                    "Si tienes liquidez → Revolvente (ahorras intereses)",
+                    "Si prefieres comodidad → Cuotas (pago predecible)",
+                    "Evalúa tu flujo de caja del próximo mes"
+                ]
+            }
+    else:
+        recommendation = {
+            "best_option": "revolvente",
+            "reason": "Sin cuotas especificadas, revolvente es la única opción",
+            "considerations": [
+                "Paga el total antes del corte para evitar intereses",
+                f"No pagar genera {card.revolving_interest_rate}% TEA"
+            ]
+        }
+    
+    # IMPACTO EN CRÉDITO
+    current_utilization = (float(card.current_balance) / float(card.credit_limit)) * 100
+    new_balance = card.current_balance + amount
+    new_utilization = (float(new_balance) / float(card.credit_limit)) * 100
+    
+    utilization_warning = None
+    if new_utilization > 70:
+        utilization_warning = "⚠️ Utilización > 70% - Muy alto, puede afectar score crediticio"
+    elif new_utilization > 50:
+        utilization_warning = "⚠️ Utilización > 50% - Moderado, monitorear"
+    elif new_utilization > 30:
+        utilization_warning = "✅ Utilización saludable (30-50%)"
+    else:
+        utilization_warning = "✅ Utilización óptima (< 30%)"
+    
+    return {
+        "purchase_amount": float(amount),
+        "revolvente_option": {
+            "total_to_pay": float(revolvente_total),
+            "interest": float(revolvente_interest),
+            "condition": "Si pagas el total en el siguiente corte",
+            "tea_effective": float(revolvente_tea),
+            "pros": revolvente_pros,
+            "cons": revolvente_cons
+        },
+        "installments_option": installments_data,
+        "recommendation": recommendation,
+        "impact_on_credit": {
+            "current_available": float(card.available_credit),
+            "after_purchase": float(card.available_credit - amount),
+            "utilization_before": round(current_utilization, 1),
+            "utilization_after": round(new_utilization, 1),
+            "warning": utilization_warning
+        }
+    }
+

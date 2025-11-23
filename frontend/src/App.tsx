@@ -10,8 +10,7 @@ import Analysis from './pages/Analysis'
 import Accounts from './pages/Accounts'
 import Settings from './pages/Settings'
 import DebtManagement from './pages/DebtManagement'
-import CreditCardsPage from './pages/CreditCards'
-import UIKit from './pages/UIKit'
+import CreditCards from './pages/CreditCards'
 
 function App() {
   return (
@@ -26,10 +25,9 @@ function App() {
                 <Route path="budget" element={<Budget />} />
                 <Route path="analysis" element={<Analysis />} />
                 <Route path="debts" element={<DebtManagement />} />
-                <Route path="credit-cards" element={<CreditCardsPage />} />
+                <Route path="credit-cards" element={<CreditCards />} />
                 <Route path="accounts" element={<Accounts />} />
                 <Route path="settings" element={<Settings />} />
-                <Route path="ui-kit" element={<UIKit />} />
               </Route>
             </Routes>
           </BrowserRouter>

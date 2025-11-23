@@ -15,7 +15,6 @@ export const AVAILABLE_MODULES: ModuleConfig[] = [
   { id: 'analysis', name: 'Análisis', canHide: true },
   { id: 'accounts', name: 'Cuentas', canHide: true },
   { id: 'debts', name: 'Préstamos', canHide: true },
-  { id: 'credit-cards', name: 'Crédito', canHide: true },
   { id: 'ui-kit', name: 'UI Kit', canHide: true },
   { id: 'settings', name: 'Configuración', canHide: false },
 ];
