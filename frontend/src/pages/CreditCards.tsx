@@ -4,15 +4,19 @@ import {
   Calendar, 
   Calculator, 
   AlertCircle,
-  TrendingUp 
+  TrendingUp,
+  Plus
 } from 'lucide-react';
 import { 
   useCreditCards, 
   useCreditCardSummary, 
   useCycleTimeline, 
-  usePurchaseAdvisor 
+  usePurchaseAdvisor,
+  useCreateCreditCard
 } from '@/hooks/useCreditCards';
 import { formatCurrencyISO } from '@/lib/format';
+import CreditCardModal from '@/components/CreditCardModal';
+import type { CreateCreditCardPayload } from '@/lib/api/creditCards';
 
 // Helper para formatear montos en PEN
 const formatCurrency = (amount: number) => formatCurrencyISO(amount, 'PEN');
@@ -22,6 +26,9 @@ export default function CreditCardsPage() {
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const [purchaseAmount, setPurchaseAmount] = useState<string>('');
   const [purchaseInstallments, setPurchaseInstallments] = useState<string>('6');
+  const [showModal, setShowModal] = useState(false);
+
+  const createCardMutation = useCreateCreditCard();
 
   // Seleccionar automáticamente la primera tarjeta
   const firstCardId = cards?.[0]?.id;
@@ -61,7 +68,60 @@ export default function CreditCardsPage() {
 
   if (!cards || cards.length === 0) {
     return (
+      <>
+        <div className="space-y-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Tarjetas de Crédito</h1>
+              <p className="text-sm text-gray-600 mt-1">
+                Gestiona tus tarjetas, planifica compras y optimiza tu crédito
+              </p>
+            </div>
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg hover:from-purple-600 hover:to-indigo-700 transition-colors shadow-lg shadow-purple-500/30 font-medium"
+            >
+              <Plus className="w-5 h-5" strokeWidth={2.5} />
+              Nueva Tarjeta
+            </button>
+          </div>
+
+          <div className="bg-white rounded-2xl border-2 border-gray-200 p-12 text-center">
+            <CreditCardIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" strokeWidth={1.5} />
+            <h2 className="text-xl font-bold text-gray-900 mb-2">No hay tarjetas registradas</h2>
+            <p className="text-gray-600 mb-6">
+              Agrega tu primera tarjeta para comenzar a planificar tus compras
+            </p>
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg hover:from-purple-600 hover:to-indigo-700 transition-colors shadow-lg shadow-purple-500/30 font-medium"
+            >
+              <Plus className="w-5 h-5" strokeWidth={2.5} />
+              Agregar Primera Tarjeta
+            </button>
+          </div>
+        </div>
+
+        <CreditCardModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSubmit={(payload) => {
+            createCardMutation.mutate(payload as CreateCreditCardPayload, {
+              onSuccess: () => {
+                setShowModal(false);
+              }
+            });
+          }}
+          isPending={createCardMutation.isPending}
+        />
+      </>
+    );
+  }
+
+  return (
+    <>
       <div className="space-y-8">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Tarjetas de Crédito</h1>
@@ -69,30 +129,14 @@ export default function CreditCardsPage() {
               Gestiona tus tarjetas, planifica compras y optimiza tu crédito
             </p>
           </div>
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg hover:from-purple-600 hover:to-indigo-700 transition-colors shadow-lg shadow-purple-500/30 font-medium"
+          >
+            <Plus className="w-5 h-5" strokeWidth={2.5} />
+            Nueva Tarjeta
+          </button>
         </div>
-
-        <div className="bg-white rounded-2xl border-2 border-gray-200 p-12 text-center">
-          <CreditCardIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" strokeWidth={1.5} />
-          <h2 className="text-xl font-bold text-gray-900 mb-2">No hay tarjetas registradas</h2>
-          <p className="text-gray-600 mb-6">
-            Agrega tu primera tarjeta para comenzar a planificar tus compras
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Tarjetas de Crédito</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Gestiona tus tarjetas, planifica compras y optimiza tu crédito
-          </p>
-        </div>
-      </div>
 
       {/* Cards List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -492,6 +536,20 @@ export default function CreditCardsPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+
+      <CreditCardModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSubmit={(payload) => {
+          createCardMutation.mutate(payload as CreateCreditCardPayload, {
+            onSuccess: () => {
+              setShowModal(false);
+            }
+          });
+        }}
+        isPending={createCardMutation.isPending}
+      />
+    </>
   );
 }
