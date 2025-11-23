@@ -1,0 +1,107 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                      🍎 BUDGETAPP - MAC SETUP READY 🍎                     ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+📊 CAMBIOS SUBIDOS A GITHUB
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ MAC_SETUP.md
+   └─ Guía completa paso a paso (423 líneas)
+   └─ Instalación Homebrew, Node, Python, PostgreSQL
+   └─ Configuración Windows PostgreSQL remoto
+   └─ Troubleshooting y workflow diario
+
+✅ MAC_QUICKSTART.md
+   └─ Inicio rápido en 3 pasos
+   └─ Requisitos y verificación
+   └─ Script de sincronización datos
+
+✅ setup-mac.sh
+   └─ Script automático de setup
+   └─ Instala todas las dependencias
+   └─ Crea .env automáticamente
+   └─ 153 líneas, 100% automatizado
+
+✅ README.md actualizado
+   └─ Referencias a guías Mac
+   └─ Tabla de documentación completa
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 EN TU MAC - CUANDO LLEGUES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Preparar Windows (una sola vez):
+   • Instalar PostgreSQL 15
+   • Abrir firewall puerto 5432
+   • Crear bases de datos
+   • Notar IP local (ej: 192.168.1.50)
+
+2. En Mac - Ejecutar:
+   $ bash setup-mac.sh
+   
+   Responder:
+   - IP Windows: 192.168.1.50
+   - Contraseña PostgreSQL: ****
+
+3. Desarrollo:
+   Terminal 1: python -m uvicorn app.main:app --reload
+   Terminal 2: npm run dev
+   Navegador: http://localhost:5173
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 DOCUMENTACIÓN EN GITHUB:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+https://github.com/ninrauzer/BudgetApp
+
+├─ MAC_QUICKSTART.md     ← START HERE (3 pasos)
+├─ MAC_SETUP.md          ← Detalle completo
+├─ setup-mac.sh          ← Script automático
+└─ README.md             ← Índice general
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🏗️  ARQUITECTURA FINAL:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Mac (Laptop de Desarrollo)      Windows PC (Servidor)
+├─ Frontend (React 5173)         ├─ PostgreSQL 15 (5432)
+├─ Backend (FastAPI 8000)        ├─ budgetapp_dev
+└─ CLI tools              ────→  ├─ budgetapp_prod
+                                  └─ Datos persistentes
+
+"Windows como servidor centralizado, Mac como cliente de desarrollo"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CARACTERÍSTICAS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ Wolfi Mascot Component
+   ├─ Typing animation (50ms per char)
+   ├─ Web Audio API sounds (mood-specific)
+   ├─ 6 mood variations with custom colors
+   └─ Auto-close after 8 seconds
+
+📊 Credit Card Management
+   ├─ Timeline visualization
+   ├─ Purchase Advisor (revolvente vs cuotas)
+   ├─ Installment tracking
+   └─ Real data from BBVA statement
+
+💰 Budget Planning
+   ├─ Annual & monthly views
+   ├─ Spending analysis
+   ├─ Category management
+   └─ Drag & drop reordering
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ ¡Listo para trabajar en Mac! 🚀
+
+Todos los archivos están en GitHub.
+Cuando llegues a tu Mac: bash setup-mac.sh
+
+¡A disfrutar el desarrollo en Mac! 🍎
