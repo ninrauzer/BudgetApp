@@ -45,23 +45,31 @@ export default function TimelineView({ timeline }: TimelineViewProps) {
           <p className="text-2xl font-black text-gray-900">{progressPercent.toFixed(0)}%</p>
         </div>
 
-        {/* Barra de progreso con línea de corte */}
-        <div className="relative">
-          <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all duration-300 rounded-full"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-
+        {/* Barra de progreso partida por fecha de corte */}
+        <div className="relative flex h-3 rounded-full overflow-hidden bg-gray-200">
+          {/* Parte ANTES del corte - Azul */}
+          <div
+            className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all duration-300"
+            style={{ width: `${statementPercent}%` }}
+          />
+          
+          {/* Separador visual - Línea naranja */}
+          <div className="w-1 bg-orange-500 flex-shrink-0" />
+          
+          {/* Parte DESPUÉS del corte - Gris */}
+          <div
+            className="h-full bg-gray-300 transition-all duration-300"
+            style={{ flex: 1 }}
+          />
+          
           {/* Marcador de fecha de cierre */}
           <div
             className="absolute top-1/2 transform -translate-y-1/2 -translate-x-1/2 mt-2"
             style={{ left: `${statementPercent}%` }}
           >
             <div className="flex flex-col items-center">
-              <div className="w-1 h-8 bg-orange-500 rounded-full"></div>
-              <p className="text-xs font-bold text-orange-600 whitespace-nowrap mt-1">Corte</p>
+              <div className="w-3 h-6 bg-orange-500 rounded-full shadow-lg -mt-2"></div>
+              <p className="text-xs font-bold text-orange-600 whitespace-nowrap mt-3">Corte</p>
               <p className="text-xs text-gray-600 whitespace-nowrap">
                 {statementDate.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })}
               </p>
