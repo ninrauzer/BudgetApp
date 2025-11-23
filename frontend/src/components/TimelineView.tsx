@@ -8,9 +8,14 @@ interface TimelineViewProps {
 
 export default function TimelineView({ timeline }: TimelineViewProps) {
   const today = new Date();
-  const periodStart = new Date(timeline.current_cycle.cycle_start);
+  
+  // Calcular el inicio del ciclo: 23 días antes del cierre
   const statementDate = new Date(timeline.current_cycle.statement_date);
   const dueDate = new Date(timeline.current_cycle.due_date);
+  
+  // El ciclo comienza 23 días antes de la fecha de cierre
+  const periodStart = new Date(statementDate);
+  periodStart.setDate(periodStart.getDate() - 23);
 
   // Calcular el progreso del ciclo
   const totalCycleDays = Math.ceil((dueDate.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24));
