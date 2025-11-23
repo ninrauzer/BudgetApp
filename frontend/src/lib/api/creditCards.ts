@@ -326,7 +326,7 @@ export const creditCardsApi = {
     params.append('amount', amount.toString());
     if (installments !== undefined) params.append('installments', installments.toString());
     if (teaInstallments !== undefined) params.append('tea_installments', teaInstallments.toString());
-    const url = `/api/credit-cards/${cardId}/purchase-advisor${params.toString() ? '?' + params.toString() : ''}`;
+    const url = `/api/credit-cards/${cardId}/purchase-advisor?${params.toString()}`;
     const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch purchase advisor');
     return response.json();
