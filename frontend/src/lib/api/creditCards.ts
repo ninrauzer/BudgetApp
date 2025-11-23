@@ -7,9 +7,9 @@
  * - Estados de cuenta
  * - Timeline de ciclos (mejor momento para comprar)
  * - Asesor de compras (cuotas vs revolvente)
+ * 
+ * Nota: Usa fetch() directamente para evitar problemas con baseURL en axios
  */
-
-import { apiClient } from './client';
 
 // ============================================================================
 // Types
@@ -196,71 +196,108 @@ export const creditCardsApi = {
   // ========== Credit Cards CRUD ==========
   
   list: async (): Promise<CreditCard[]> => {
-    const response = await apiClient.get('/credit-cards/');
-    return response.data;
+    const response = await fetch('/api/credit-cards/');
+    if (!response.ok) throw new Error('Failed to fetch credit cards');
+    return response.json();
   },
 
   getById: async (id: number): Promise<CreditCard> => {
-    const response = await apiClient.get(`/credit-cards/${id}/`);
-    return response.data;
+    const response = await fetch(`/api/credit-cards/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch credit card');
+    return response.json();
   },
 
   getSummary: async (id: number): Promise<CreditCardSummary> => {
-    const response = await apiClient.get(`/credit-cards/${id}/`);
-    return response.data;
+    const response = await fetch(`/api/credit-cards/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch credit card summary');
+    return response.json();
   },
 
   create: async (payload: CreateCreditCardPayload): Promise<CreditCard> => {
-    const response = await apiClient.post('/credit-cards/', payload);
-    return response.data;
+    const response = await fetch('/api/credit-cards/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) throw new Error('Failed to create credit card');
+    return response.json();
   },
 
   update: async (id: number, payload: Partial<CreateCreditCardPayload>): Promise<CreditCard> => {
-    const response = await apiClient.put(`/credit-cards/${id}/`, payload);
-    return response.data;
+    const response = await fetch(`/api/credit-cards/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) throw new Error('Failed to update credit card');
+    return response.json();
   },
 
   delete: async (id: number): Promise<{ message: string }> => {
-    const response = await apiClient.delete(`/credit-cards/${id}/`);
-    return response.data;
+    const response = await fetch(`/api/credit-cards/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete credit card');
+    return response.json();
   },
 
   // ========== Installments ==========
 
   listInstallments: async (cardId: number): Promise<Installment[]> => {
-    const response = await apiClient.get(`/credit-cards/${cardId}/installments/`);
-    return response.data;
+    const response = await fetch(`/api/credit-cards/${cardId}/installments/`);
+    if (!response.ok) throw new Error('Failed to fetch installments');
+    return response.json();
   },
 
   createInstallment: async (payload: CreateInstallmentPayload): Promise<Installment> => {
     const { credit_card_id, ...data } = payload;
-    const response = await apiClient.post(`/credit-cards/${credit_card_id}/installments/`, data);
-    return response.data;
+    const response = await fetch(`/api/credit-cards/${credit_card_id}/installments/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to create installment');
+    return response.json();
   },
 
   updateInstallment: async (id: number, current_installment: number): Promise<Installment> => {
-    const response = await apiClient.put(`/credit-cards/installments/${id}/`, { current_installment });
-    return response.data;
+    const response = await fetch(`/api/credit-cards/installments/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ current_installment }),
+    });
+    if (!response.ok) throw new Error('Failed to update installment');
+    return response.json();
   },
 
   deleteInstallment: async (id: number): Promise<{ message: string }> => {
-    const response = await apiClient.delete(`/credit-cards/installments/${id}/`);
-    return response.data;
+    const response = await fetch(`/api/credit-cards/installments/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete installment');
+    return response.json();
   },
 
   // ========== Statements ==========
 
   listStatements: async (cardId: number, limit?: number): Promise<Statement[]> => {
-    const response = await apiClient.get(`/credit-cards/${cardId}/statements/`, {
-      params: { limit }
-    });
-    return response.data;
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit.toString());
+    const url = `/api/credit-cards/${cardId}/statements/${params.toString() ? '?' + params.toString() : ''}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch statements');
+    return response.json();
   },
 
   createStatement: async (payload: CreateStatementPayload): Promise<Statement> => {
     const { credit_card_id, ...data } = payload;
-    const response = await apiClient.post(`/credit-cards/${credit_card_id}/statements/`, data);
-    return response.data;
+    const response = await fetch(`/api/credit-cards/${credit_card_id}/statements/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to create statement');
+    return response.json();
   },
 
   // ========== Timeline & Advisor ==========
@@ -270,10 +307,13 @@ export const creditCardsApi = {
     targetMonth?: number,
     targetYear?: number
   ): Promise<CycleTimeline> => {
-    const response = await apiClient.get(`/credit-cards/${cardId}/cycle-timeline/`, {
-      params: { target_month: targetMonth, target_year: targetYear }
-    });
-    return response.data;
+    const params = new URLSearchParams();
+    if (targetMonth !== undefined) params.append('target_month', targetMonth.toString());
+    if (targetYear !== undefined) params.append('target_year', targetYear.toString());
+    const url = `/api/credit-cards/${cardId}/cycle-timeline/${params.toString() ? '?' + params.toString() : ''}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch cycle timeline');
+    return response.json();
   },
 
   getPurchaseAdvisor: async (
@@ -282,13 +322,13 @@ export const creditCardsApi = {
     installments?: number,
     teaInstallments?: number
   ): Promise<PurchaseAdvisor> => {
-    const response = await apiClient.get(`/credit-cards/${cardId}/purchase-advisor/`, {
-      params: {
-        amount,
-        installments,
-        tea_installments: teaInstallments
-      }
-    });
-    return response.data;
+    const params = new URLSearchParams();
+    params.append('amount', amount.toString());
+    if (installments !== undefined) params.append('installments', installments.toString());
+    if (teaInstallments !== undefined) params.append('tea_installments', teaInstallments.toString());
+    const url = `/api/credit-cards/${cardId}/purchase-advisor/${params.toString() ? '?' + params.toString() : ''}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch purchase advisor');
+    return response.json();
   },
 };

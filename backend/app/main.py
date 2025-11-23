@@ -25,6 +25,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    redirect_slashes=False,  # Allow both /credit-cards and /credit-cards/
 )
 
 # Configure CORS (Allow React dev server and production)

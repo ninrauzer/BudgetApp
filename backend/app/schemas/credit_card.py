@@ -169,6 +169,8 @@ class CreditCardSummary(BaseModel):
     total_monthly_installments: Decimal = Field(description="Total de cuotas mensuales")
     months_to_payoff_minimum: Optional[int] = Field(None, description="Meses para pagar con mínimo")
     projected_interest_minimum: Optional[Decimal] = Field(None, description="Interés proyectado con mínimo")
+    
+    model_config = {"from_attributes": True}
 
 
 class DebtEvolutionPoint(BaseModel):
