@@ -32,8 +32,30 @@ export default function TimelineView({ timeline }: TimelineViewProps) {
       {/* TIMELINE VISUAL - Línea horizontal con puntos */}
       <div className="mb-12">
         <div className="relative py-8">
-          {/* Línea base horizontal */}
-          <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-300 transform -translate-y-1/2"></div>
+          {/* Línea base con segmentos de color según fases */}
+          <div className="absolute top-1/2 left-0 right-0 h-1 transform -translate-y-1/2 flex">
+            {timeline.timeline.cycle_phases.map((phase, idx) => {
+              const startDate = new Date(phase.date_range[0]);
+              const endDate = new Date(phase.date_range[1]);
+              const periodStart = new Date(timeline.current_cycle.statement_date);
+              periodStart.setDate(periodStart.getDate() - 23);
+              const dueDate = new Date(timeline.current_cycle.due_date);
+              
+              const totalDays = Math.ceil((dueDate.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24));
+              const phaseDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+              const phasePercent = (phaseDays / totalDays) * 100;
+              
+              const bgColor = phase.phase === 'optimal'
+                ? 'bg-emerald-500'
+                : phase.phase === 'normal'
+                ? 'bg-amber-500'
+                : 'bg-red-500';
+              
+              return (
+                <div key={idx} className={`${bgColor} flex-1`} style={{ width: `${phasePercent}%` }} />
+              );
+            })}
+          </div>
 
           {/* Contenedor de puntos */}
           <div className="relative flex justify-between items-center">
