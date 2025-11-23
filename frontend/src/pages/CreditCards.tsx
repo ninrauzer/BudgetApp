@@ -16,6 +16,7 @@ import {
 } from '@/hooks/useCreditCards';
 import { formatCurrencyISO } from '@/lib/format';
 import CreditCardModal from '@/components/CreditCardModal';
+import TimelineView from '@/components/TimelineView';
 import type { CreateCreditCardPayload } from '@/lib/api/creditCards';
 
 // Helper para formatear montos en PEN
@@ -219,139 +220,16 @@ export default function CreditCardsPage() {
         ))}
       </div>
 
-      {/* Timeline & Calculator */}
+      {/* Timeline - Full Width */}
+      {activeCardId && timeline && (
+        <TimelineView timeline={timeline} />
+      )}
+
+      {/* Purchase Advisor & Installments */}
       {activeCardId && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Cycle Timeline */}
-          <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 rounded-lg bg-cyan-100">
-                <Calendar className="w-6 h-6 text-cyan-600" strokeWidth={2} />
-              </div>
-              <div>
-                <h2 className="text-xl font-extrabold text-gray-900">Ciclo de Facturación</h2>
-                <p className="text-xs text-gray-600">¿Cuál es el mejor momento para comprar?</p>
-              </div>
-            </div>
-
-            {timeline ? (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-xs text-gray-600 mb-1">Próximo Corte</p>
-                    <p className="text-lg font-bold text-gray-900">
-                      {new Date(timeline.current_cycle.statement_date).toLocaleDateString('es-PE', {
-                        day: 'numeric',
-                        month: 'short'
-                      })}
-                    </p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      en {timeline.current_cycle.days_until_close} días
-                    </p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-xs text-gray-600 mb-1">Próximo Pago</p>
-                    <p className="text-lg font-bold text-gray-900">
-                      {new Date(timeline.current_cycle.due_date).toLocaleDateString('es-PE', {
-                        day: 'numeric',
-                        month: 'short'
-                      })}
-                    </p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      en {timeline.current_cycle.days_until_payment} días
-                    </p>
-                  </div>
-                </div>
-
-                <div className={`
-                  rounded-lg p-4 border-2
-                  ${timeline.float_calculator.if_buy_today.float_days >= 45
-                    ? 'bg-emerald-50 border-emerald-200'
-                    : timeline.float_calculator.if_buy_today.float_days >= 30
-                    ? 'bg-amber-50 border-amber-200'
-                    : 'bg-rose-50 border-rose-200'
-                  }
-                `}>
-                  <p className="text-sm font-bold text-gray-900 mb-2">Si compras hoy:</p>
-                  <p className={`
-                    text-2xl font-black mb-2
-                    ${timeline.float_calculator.if_buy_today.float_days >= 45
-                      ? 'text-emerald-600'
-                      : timeline.float_calculator.if_buy_today.float_days >= 30
-                      ? 'text-amber-600'
-                      : 'text-rose-600'
-                    }
-                  `}>
-                    {timeline.float_calculator.if_buy_today.float_days} días
-                  </p>
-                  <p className="text-xs text-gray-700">
-                    de crédito gratis hasta el{' '}
-                    {new Date(timeline.float_calculator.if_buy_today.payment_due).toLocaleDateString('es-PE', {
-                      day: 'numeric',
-                      month: 'long'
-                    })}
-                  </p>
-                </div>
-
-                <div className="bg-gradient-to-br from-emerald-400/90 to-emerald-500/90 rounded-lg p-4 text-white">
-                  <p className="text-xs text-white/70 mb-1 uppercase tracking-wider">
-                    🟢 Ventana Óptima
-                  </p>
-                  <p className="text-lg font-bold mb-2">
-                    {new Date(timeline.timeline.best_purchase_window.start).toLocaleDateString('es-PE', {
-                      day: 'numeric',
-                      month: 'short'
-                    })} - {new Date(timeline.timeline.best_purchase_window.end).toLocaleDateString('es-PE', {
-                      day: 'numeric',
-                      month: 'short'
-                    })}
-                  </p>
-                  <p className="text-sm text-white/90">
-                    {timeline.timeline.best_purchase_window.reason}
-                  </p>
-                  <p className="text-xs text-white/70 mt-2">
-                    Hasta {timeline.timeline.best_purchase_window.float_days} días de crédito gratis
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  {timeline.timeline.cycle_phases.map((phase, idx) => (
-                    <div
-                      key={idx}
-                      className={`
-                        rounded-lg p-3 text-sm
-                        ${phase.phase === 'optimal'
-                          ? 'bg-emerald-50 border border-emerald-200'
-                          : phase.phase === 'normal'
-                          ? 'bg-amber-50 border border-amber-200'
-                          : 'bg-rose-50 border border-rose-200'
-                        }
-                      `}
-                    >
-                      <p className="font-bold text-gray-900">{phase.description}</p>
-                      <p className="text-xs text-gray-600 mt-1">
-                        {new Date(phase.date_range[0]).toLocaleDateString('es-PE', {
-                          day: 'numeric',
-                          month: 'short'
-                        })} - {new Date(phase.date_range[1]).toLocaleDateString('es-PE', {
-                          day: 'numeric',
-                          month: 'short'
-                        })}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600 mx-auto mb-2"></div>
-                <p className="text-sm text-gray-600">Cargando timeline...</p>
-              </div>
-            )}
-          </div>
-
-          {/* Purchase Advisor */}
-          <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Purchase Advisor - 2 columns */}
+          <div className="lg:col-span-2 bg-white rounded-2xl border-2 border-gray-200 p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 rounded-lg bg-purple-100">
                 <Calculator className="w-6 h-6 text-purple-600" strokeWidth={2} />
@@ -494,48 +372,43 @@ export default function CreditCardsPage() {
               </div>
             )}
           </div>
-        </div>
-      )}
 
-      {/* Installments Summary */}
-      {cardSummary && cardSummary.active_installments.length > 0 && (
-        <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-lg bg-orange-100">
-              <TrendingUp className="w-6 h-6 text-orange-600" strokeWidth={2} />
-            </div>
-            <div>
-              <h2 className="text-xl font-extrabold text-gray-900">Cuotas Activas</h2>
-              <p className="text-xs text-gray-600">
-                {formatCurrency(cardSummary.total_monthly_installments)}/mes comprometido
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {cardSummary.active_installments.map((installment) => (
-              <div
-                key={installment.id}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div>
-                  <p className="font-bold text-gray-900">{installment.concept}</p>
-                  <p className="text-xs text-gray-600">
-                    Cuota {installment.current_installment}/{installment.total_installments} •{' '}
-                    {formatCurrency(installment.monthly_payment)}/mes
-                  </p>
+          {/* Installments Summary - 1 column */}
+          {cardSummary && cardSummary.active_installments.length > 0 && (
+            <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-lg bg-orange-100">
+                  <TrendingUp className="w-6 h-6 text-orange-600" strokeWidth={2} />
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-gray-900">
-                    {formatCurrency(installment.remaining_capital || 0)}
+                <div>
+                  <h2 className="text-xl font-extrabold text-gray-900">Cuotas Activas</h2>
+                  <p className="text-xs text-gray-600">
+                    {formatCurrency(cardSummary.total_monthly_installments)}/mes
                   </p>
-                  <p className="text-xs text-gray-600">restante</p>
                 </div>
               </div>
-            ))}
-          </div>
+
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {cardSummary.active_installments.map((installment) => (
+                  <div
+                    key={installment.id}
+                    className="p-3 bg-gray-50 rounded-lg border border-gray-200"
+                  >
+                    <p className="font-bold text-sm text-gray-900">{installment.concept.substring(0, 20)}</p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      {installment.current_installment}/{installment.total_installments}
+                    </p>
+                    <p className="text-sm font-bold text-gray-900 mt-1">
+                      {formatCurrency(installment.monthly_payment)}/mes
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
+
       </div>
 
       <CreditCardModal
