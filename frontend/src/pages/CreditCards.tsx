@@ -273,7 +273,8 @@ export default function CreditCardsPage() {
             </div>
 
             {advisor ? (
-              <div className="space-y-4">
+              <div className="space-y-6">
+                {/* Recomendación */}
                 <div className={`
                   rounded-lg p-4 border-2
                   ${advisor.recommendation.best_option === 'revolvente'
@@ -287,88 +288,117 @@ export default function CreditCardsPage() {
                     💡 Recomendación
                   </p>
                   <p className="text-lg font-bold text-gray-900 mb-2">
-                    {advisor.recommendation.best_option === 'revolvente' && 'Pagar en Revolvente'}
-                    {advisor.recommendation.best_option === 'installments' && 'Pagar en Cuotas'}
-                    {advisor.recommendation.best_option === 'depends' && 'Depende de tu liquidez'}
+                    {advisor.recommendation.best_option === 'revolvente' && '✨ Pagar en Revolvente'}
+                    {advisor.recommendation.best_option === 'installments' && '📊 Pagar en Cuotas'}
+                    {advisor.recommendation.best_option === 'depends' && '⚖️ Depende de tu liquidez'}
                   </p>
                   <p className="text-sm text-gray-700">
                     {advisor.recommendation.reason}
                   </p>
                 </div>
 
+                {/* Comparativa de Opciones */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-xs text-gray-600 mb-2">Revolvente</p>
-                    <p className="text-2xl font-black text-gray-900 mb-1">
-                      {formatCurrency(advisor.revolvente_option.total_to_pay)}
-                    </p>
-                    <p className="text-xs text-emerald-600 font-medium">
-                      Sin intereses
-                    </p>
+                  {/* OPCIÓN 1: REVOLVENTE */}
+                  <div className="bg-emerald-50 rounded-xl p-5 border-2 border-emerald-200">
+                    <div className="mb-4">
+                      <p className="text-xs text-emerald-700 font-bold uppercase tracking-wider mb-1">
+                        Opción 1: Revolvente
+                      </p>
+                      <p className="text-xs text-gray-600">Se agrega como deuda revolvente</p>
+                    </div>
+
+                    <div className="space-y-3 bg-white rounded-lg p-3">
+                      <div>
+                        <p className="text-xs text-gray-600">Monto original</p>
+                        <p className="text-lg font-black text-gray-900">{formatCurrency(parseFloat(purchaseAmount) || 0)}</p>
+                      </div>
+                      <div className="border-t pt-2">
+                        <p className="text-xs text-gray-600">Intereses</p>
+                        <p className="text-sm font-bold text-emerald-600">0% (sin intereses)</p>
+                      </div>
+                      <div className="border-t pt-2 bg-emerald-100 rounded p-2">
+                        <p className="text-xs text-emerald-700 font-medium">Total a pagar</p>
+                        <p className="text-xl font-black text-emerald-700">
+                          {formatCurrency(advisor.revolvente_option.total_to_pay)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 text-xs text-emerald-700 bg-emerald-100 rounded p-2">
+                      ✅ Pago flexible en revolvente. Puedes pagar el total o parcialmente.
+                    </div>
                   </div>
 
+                  {/* OPCIÓN 2: CUOTAS */}
                   {advisor.installments_option && (
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-xs text-gray-600 mb-2">
-                        {advisor.installments_option.installments} Cuotas
-                      </p>
-                      <p className="text-2xl font-black text-gray-900 mb-1">
-                        {formatCurrency(advisor.installments_option.total_to_pay)}
-                      </p>
-                      <p className="text-xs text-orange-600 font-medium">
-                        +{formatCurrency(advisor.installments_option.total_interest)} interés
-                      </p>
+                    <div className="bg-blue-50 rounded-xl p-5 border-2 border-blue-200">
+                      <div className="mb-4">
+                        <p className="text-xs text-blue-700 font-bold uppercase tracking-wider mb-1">
+                          Opción 2: En {advisor.installments_option.installments} Cuotas
+                        </p>
+                        <p className="text-xs text-gray-600">Se agrega como cuota fija con intereses</p>
+                      </div>
+
+                      <div className="space-y-3 bg-white rounded-lg p-3">
+                        <div>
+                          <p className="text-xs text-gray-600">Monto original</p>
+                          <p className="text-lg font-black text-gray-900">{formatCurrency(parseFloat(purchaseAmount) || 0)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-600">Cuota mensual</p>
+                          <p className="text-sm font-bold text-blue-600">
+                            {formatCurrency((advisor.installments_option.total_to_pay / advisor.installments_option.installments))}
+                          </p>
+                        </div>
+                        <div className="border-t pt-2">
+                          <p className="text-xs text-gray-600">Intereses ({advisor.installments_option.tea}% TEA)</p>
+                          <p className="text-sm font-bold text-orange-600">
+                            +{formatCurrency(advisor.installments_option.total_interest)}
+                          </p>
+                        </div>
+                        <div className="border-t pt-2 bg-blue-100 rounded p-2">
+                          <p className="text-xs text-blue-700 font-medium">Total a pagar</p>
+                          <p className="text-xl font-black text-blue-700">
+                            {formatCurrency(advisor.installments_option.total_to_pay)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 text-xs text-blue-700 bg-blue-100 rounded p-2">
+                        📅 {advisor.installments_option.installments} cuotas de {formatCurrency((advisor.installments_option.total_to_pay / advisor.installments_option.installments))}
+                      </div>
                     </div>
                   )}
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-xs text-gray-600 mb-2">Impacto en crédito</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">Utilización:</span>
-                    <span className={`
-                      text-sm font-bold
-                      ${advisor.impact_on_credit.utilization_after < 50
-                        ? 'text-emerald-600'
-                        : advisor.impact_on_credit.utilization_after < 70
-                        ? 'text-amber-600'
-                        : 'text-rose-600'
-                      }
-                    `}>
-                      {advisor.impact_on_credit.utilization_before.toFixed(1)}% → {advisor.impact_on_credit.utilization_after.toFixed(1)}%
-                    </span>
+                {/* Resumen de Impacto */}
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 border border-purple-200">
+                  <p className="text-xs text-purple-700 font-bold uppercase tracking-wider mb-3">
+                    📊 Comparativa de Impacto
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-xs text-gray-600">Diferencia de costo</p>
+                      <p className="text-lg font-bold text-orange-600">
+                        +{formatCurrency(advisor.installments_option ? advisor.installments_option.total_interest : 0)}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">por financiamiento</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600">Ahorro si pagas revolvente</p>
+                      <p className="text-lg font-bold text-emerald-600">
+                        {formatCurrency(advisor.installments_option ? advisor.installments_option.total_interest : 0)}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">vs cuotas</p>
+                    </div>
                   </div>
-                  {advisor.impact_on_credit.warning && (
-                    <p className="text-xs text-gray-600 mt-2">
-                      {advisor.impact_on_credit.warning}
-                    </p>
-                  )}
                 </div>
-
-                {advisor.recommendation.considerations.length > 0 && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                    <p className="text-xs text-amber-900 font-bold mb-2 uppercase tracking-wider">
-                      ⚠️ Consideraciones
-                    </p>
-                    <ul className="space-y-1">
-                      {advisor.recommendation.considerations.map((item, idx) => (
-                        <li key={idx} className="text-xs text-amber-900">
-                          • {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            ) : purchaseAmount && parseFloat(purchaseAmount) > 0 ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
-                <p className="text-sm text-gray-600">Calculando...</p>
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500">
-                <Calculator className="w-12 h-12 text-gray-400 mx-auto mb-2" strokeWidth={1.5} />
-                <p className="text-sm">Ingresa un monto para ver la comparación</p>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Calculator className="w-16 h-16 text-gray-200 mb-4" />
+                <p className="text-gray-500">Ingresa un monto para ver la comparación</p>
               </div>
             )}
           </div>
