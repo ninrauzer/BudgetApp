@@ -14,6 +14,15 @@ export default function EnvironmentBadge() {
   useEffect(() => {
     const checkEnvironment = async () => {
       try {
+        // Check if we're running locally (127.0.0.1 or localhost port 8000)
+        const isLocalBackend = window.location.hostname === 'localhost' || 
+                               window.location.hostname === '127.0.0.1';
+        
+        if (isLocalBackend) {
+          setEnvironment('development');
+          return;
+        }
+
         const response = await fetch('/api/health', {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },

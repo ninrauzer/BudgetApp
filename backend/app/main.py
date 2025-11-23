@@ -7,10 +7,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from .env file in the backend directory
+env_path = Path(__file__).parent.parent / ".env"
+load_dotenv(env_path)
 
 # Application metadata
 APP_NAME = os.getenv("APP_NAME", "BudgetApp")
@@ -48,6 +50,27 @@ app.add_middleware(
 )
 
 
+# Environment debug endpoint (always shows environment info)
+@app.get("/api/env-debug", tags=["Debug"])
+async def env_debug():
+    """
+    Debug endpoint to see what environment variables are loaded.
+    """
+    db_url = os.getenv("DATABASE_URL", "")
+    debug_mode = os.getenv("DEBUG", "false")
+    app_name = os.getenv("APP_NAME", "")
+    
+    return JSONResponse(
+        content={
+            "DATABASE_URL": db_url,
+            "DEBUG": debug_mode,
+            "APP_NAME": app_name,
+            "DEBUG_FLAG": DEBUG,
+            "env_path_checked": str(Path(__file__).parent.parent / ".env"),
+        }
+    )
+
+
 # Health check endpoint
 @app.get("/api/health", tags=["Health"])
 @app.get("/health", tags=["Health"])
@@ -56,15 +79,17 @@ async def health_check():
     Health check endpoint to verify API is running.
     Available at both /health and /api/health for Docker compatibility.
     """
-    # Detect environment from DATABASE_URL
-    db_url = os.getenv("DATABASE_URL", "")
-    environment = "unknown"
-    if "budgetapp_dev" in db_url:
-        environment = "development"
-    elif "budgetapp_prod" in db_url:
+    # For local development, always return development
+    # Production will be detected by DATABASE_URL in Docker container
+    
+    db_url = os.getenv("DATABASE_URL", "").lower()
+    
+    # If DATABASE_URL contains prod, it's production
+    if "budgetapp_prod" in db_url:
         environment = "production"
-    elif "sqlite" in db_url:
-        environment = "sqlite"
+    else:
+        # Everything else is development (local, dev db, sqlite, etc)
+        environment = "development"
     
     return JSONResponse(
         content={
