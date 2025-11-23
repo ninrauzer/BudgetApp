@@ -43,7 +43,9 @@ git push origin master  # Render despliega automáticamente
 
 | Necesito | Ver |
 |----------|-----|
-| **Empezar rápido** | [QUICKSTART.md](QUICKSTART.md) |
+| **Empezar rápido (Windows/Docker)** | [QUICKSTART.md](QUICKSTART.md) |
+| **Desarrollo en Mac** | [MAC_QUICKSTART.md](MAC_QUICKSTART.md) |
+| **Setup detallado Mac** | [MAC_SETUP.md](MAC_SETUP.md) |
 | **Desplegar a producción** | [RENDER.md](RENDER.md) |
 | **Entender la arquitectura** | [docs/adr/](docs/adr/) |
 | **Decisiones técnicas** | [docs/rfc/](docs/rfc/) |
