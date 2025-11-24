@@ -1,7 +1,8 @@
 """Utility functions for calculating billing cycles."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta
 from calendar import monthrange
+from sqlalchemy.orm import Session
 
 # Spanish month names
 MONTH_NAMES = [
@@ -96,6 +97,41 @@ def get_cycle_by_offset(start_day: int, offset: int = 0) -> dict:
     """
     reference_date = datetime.now() + relativedelta(months=offset)
     return get_cycle_for_date(start_day, reference_date)
+
+
+def get_cycle_by_offset_with_overrides(billing_cycle_id: int, start_day: int, offset: int = 0, db: Session = None) -> dict:
+    """
+    Get billing cycle relative to current cycle, considering database overrides.
+    
+    Args:
+        billing_cycle_id: ID of the billing cycle
+        start_day: Day of month when cycle starts
+        offset: Months offset (0=current, -1=previous, 1=next)
+        db: Database session to query overrides
+    
+    Returns:
+        dict with cycle_name, start_date, end_date
+    """
+    reference_date = datetime.now() + relativedelta(months=offset)
+    
+    # If no DB session, fall back to simple calculation
+    if db is None:
+        return get_cycle_for_date(start_day, reference_date)
+    
+    # Import here to avoid circular dependency
+    from app.models.billing_cycle_override import BillingCycleOverride
+    
+    # Query override for the target month
+    override = db.query(BillingCycleOverride).filter(
+        BillingCycleOverride.billing_cycle_id == billing_cycle_id,
+        BillingCycleOverride.year == reference_date.year,
+        BillingCycleOverride.month == reference_date.month
+    ).first()
+    
+    override_date = override.override_start_date if override else None
+    
+    return get_cycle_for_date(start_day, reference_date, override_date)
+
 
 def get_cycle_range(start_day: int, num_cycles: int = 3) -> list[dict]:
     """

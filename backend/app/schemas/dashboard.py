@@ -92,6 +92,7 @@ class DailyDataPoint(BaseModel):
     cumulative_income: float  # Ingreso acumulado hasta ese día
     cumulative_expense: float  # Gasto acumulado hasta ese día
     balance: float  # Balance del día (income - expense)
+    is_projected: bool = False  # True si es proyección futura, False si es dato real
 
 
 class MonthlyCashflow(BaseModel):

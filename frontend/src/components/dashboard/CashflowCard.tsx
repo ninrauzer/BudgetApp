@@ -25,14 +25,34 @@ export function CashflowCard() {
     ? 'bg-gradient-to-br from-cyan-400/90 to-cyan-500/90' 
     : 'bg-gradient-to-br from-rose-400/90 to-rose-500/90';
 
+  // Separar datos reales vs proyectados
+  const realData = (data.daily_data || []).filter((d: any) => !d.is_projected);
+  const projectedData = (data.daily_data || []).filter((d: any) => d.is_projected);
+  
   // Preparar datos para Nivo (sin useMemo para evitar React error #310)
-  const chartData = [{
-    id: 'balance',
-    data: (data.daily_data || []).map((d: any) => ({
-      x: String(d.day || 0),
-      y: d.balance || 0
-    }))
-  }];
+  const chartData = [
+    {
+      id: 'real',
+      data: realData.map((d: any) => ({
+        x: d.date,
+        y: d.balance || 0
+      }))
+    },
+    {
+      id: 'projected',
+      data: projectedData.length > 0 ? [
+        // Conectar último real con primero proyectado
+        ...( realData.length > 0 ? [{
+          x: realData[realData.length - 1].date,
+          y: realData[realData.length - 1].balance
+        }] : []),
+        ...projectedData.map((d: any) => ({
+          x: d.date,
+          y: d.balance || 0
+        }))
+      ] : []
+    }
+  ];
 
   return (
     <div className={`rounded-2xl p-4 text-white shadow-lg backdrop-blur-md ${gradient} transition-all duration-200 hover:-translate-y-1 hover:shadow-xl`}>
@@ -53,14 +73,55 @@ export function CashflowCard() {
           xScale={{ type: 'point' }}
           yScale={{ type: 'linear' }}
           curve="monotoneX"
-          colors={['rgba(255,255,255,0.8)']}
+          colors={(d) => d.id === 'real' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)'}
           lineWidth={2}
-          pointSize={0}
+          enablePoints={false}
           enableArea={false}
           enableGridX={false}
           enableGridY={false}
           enableCrosshair={false}
           motionConfig="stiff"
+          defs={[
+            {
+              id: 'dashed',
+              type: 'patternLines',
+              background: 'transparent',
+              color: 'rgba(255,255,255,0.4)',
+              lineWidth: 2,
+              spacing: 4,
+              rotation: 0
+            }
+          ]}
+          layers={[
+            'grid',
+            'markers',
+            'axes',
+            'areas',
+            'crosshair',
+            ({ series, lineGenerator, xScale, yScale }) => {
+              return series.map((serie) => {
+                const lineData = serie.data.map((d: any) => ({
+                  x: xScale(d.data.x),
+                  y: yScale(d.data.y)
+                }));
+                
+                return (
+                  <path
+                    key={serie.id}
+                    d={lineGenerator(lineData) || ''}
+                    fill="none"
+                    stroke={serie.id === 'real' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)'}
+                    strokeWidth={2}
+                    strokeDasharray={serie.id === 'projected' ? '4 4' : '0'}
+                  />
+                );
+              });
+            },
+            'slices',
+            'points',
+            'mesh',
+            'legends'
+          ]}
         />
       </div>
 

@@ -38,6 +38,7 @@ export interface DailyDataPoint {
   cumulative_income: number;
   cumulative_expense: number;
   balance: number;
+  is_projected: boolean;
 }
 
 export interface MonthlyCashflow {

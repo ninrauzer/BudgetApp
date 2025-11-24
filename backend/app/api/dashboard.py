@@ -21,7 +21,7 @@ from app.schemas.dashboard import (
     MonthlyCashflow, DailyDataPoint, DebtSummary,
     UpcomingPayments, UpcomingPayment, MonthProjection, ProblemCategory
 )
-from app.services.billing_cycle import get_cycle_for_date, get_cycle_by_offset
+from app.services.billing_cycle import get_cycle_for_date, get_cycle_by_offset, get_cycle_by_offset_with_overrides
 from calendar import monthrange
 from datetime import timedelta
 
@@ -136,8 +136,9 @@ def get_monthly_available(
         db.add(billing_cycle)
         db.commit()
     
-    # Obtener ciclo (actual o con offset)
-    cycle_info = get_cycle_by_offset(billing_cycle.start_day, cycle_offset)
+    # Obtener ciclo (actual o con offset) CONSIDERANDO OVERRIDES
+    from app.services.billing_cycle import get_cycle_by_offset_with_overrides
+    cycle_info = get_cycle_by_offset_with_overrides(billing_cycle.id, billing_cycle.start_day, cycle_offset, db)
     period_start = datetime.strptime(cycle_info["start_date"], "%Y-%m-%d").date()
     period_end = datetime.strptime(cycle_info["end_date"], "%Y-%m-%d").date()
     
@@ -158,15 +159,16 @@ def get_monthly_available(
         )
     ).scalar() or 0.0
     
-    # 2. GASTOS FIJOS PRESUPUESTADOS (budget_plans con expense_type='fixed')
-    # Buscar budget_plans cuyo end_date coincida con el end_date del ciclo
-    fixed_expenses_budgeted = db.query(func.sum(BudgetPlan.amount)).join(
-        Category, BudgetPlan.category_id == Category.id
+    # 2. GASTOS FIJOS REALIZADOS (transacciones reales con expense_type='fixed')
+    fixed_expenses_spent = db.query(func.sum(Transaction.amount_pen)).join(
+        Category, Transaction.category_id == Category.id
     ).filter(
         and_(
+            Transaction.date >= period_start,
+            Transaction.date <= period_end,
+            Transaction.type == "expense",
             Category.expense_type == 'fixed',
-            Category.type == 'expense',
-            BudgetPlan.end_date == period_end
+            Transaction.transaction_type != 'transfer'
         )
     ).scalar() or 0.0
     
@@ -184,7 +186,7 @@ def get_monthly_available(
     ).scalar() or 0.0
     
     # CÁLCULO FINAL
-    available_amount = monthly_income - fixed_expenses_budgeted - variable_expenses_spent
+    available_amount = monthly_income - fixed_expenses_spent - variable_expenses_spent
     
     # Límite diario sugerido
     daily_limit = available_amount / days_remaining if days_remaining > 0 else 0.0
@@ -206,7 +208,7 @@ def get_monthly_available(
         days_remaining=days_remaining,
         daily_limit=round(daily_limit, 2),
         monthly_income=round(monthly_income, 2),
-        fixed_expenses_budgeted=round(fixed_expenses_budgeted, 2),
+        fixed_expenses_budgeted=round(fixed_expenses_spent, 2),
         variable_expenses_spent=round(variable_expenses_spent, 2),
         health_status=health_status,
         period_start=period_start.isoformat(),
@@ -234,8 +236,8 @@ def get_spending_status(
         db.add(billing_cycle)
         db.commit()
     
-    # Obtener ciclo
-    cycle_info = get_cycle_by_offset(billing_cycle.start_day, cycle_offset)
+    # Obtener ciclo con overrides
+    cycle_info = get_cycle_by_offset_with_overrides(billing_cycle.id, billing_cycle.start_day, cycle_offset, db)
     period_start = datetime.strptime(cycle_info["start_date"], "%Y-%m-%d").date()
     period_end = datetime.strptime(cycle_info["end_date"], "%Y-%m-%d").date()
     
@@ -304,8 +306,8 @@ def get_monthly_cashflow(
         db.add(billing_cycle)
         db.commit()
     
-    # Obtener ciclo
-    cycle_info = get_cycle_by_offset(billing_cycle.start_day, cycle_offset)
+    # Obtener ciclo con overrides
+    cycle_info = get_cycle_by_offset_with_overrides(billing_cycle.id, billing_cycle.start_day, cycle_offset, db)
     period_start = datetime.strptime(cycle_info["start_date"], "%Y-%m-%d").date()
     period_end = datetime.strptime(cycle_info["end_date"], "%Y-%m-%d").date()
     
@@ -333,39 +335,75 @@ def get_monthly_cashflow(
     balance = total_income - total_expense
     is_positive = balance >= 0
     
-    # Generar datos diarios para sparkline
+    # Generar datos diarios para sparkline (reales + proyectados)
     daily_data = []
     current_date = period_start
     cumulative_income = 0.0
     cumulative_expense = 0.0
+    today = date.today()
+    
+    # Calcular promedio de gasto diario para proyección (usando mediana si <7 días)
+    days_elapsed = (min(today, period_end) - period_start).days + 1
+    
+    if days_elapsed > 0:
+        daily_expenses = []
+        temp_date = period_start
+        while temp_date <= min(today, period_end):
+            day_expense = db.query(func.sum(Transaction.amount_pen)).filter(
+                and_(
+                    Transaction.date == temp_date,
+                    Transaction.type == "expense",
+                    Transaction.transaction_type != 'transfer'
+                )
+            ).scalar() or 0.0
+            daily_expenses.append(day_expense)
+            temp_date += timedelta(days=1)
+        
+        # Usar mediana si hay menos de 7 días
+        if days_elapsed < 7 and len(daily_expenses) > 0:
+            from statistics import median
+            daily_avg_expense = median(daily_expenses)
+        else:
+            daily_avg_expense = total_expense / days_elapsed
+    else:
+        daily_avg_expense = 0.0
     
     while current_date <= period_end:
-        # Sumar transacciones del día
-        day_income = db.query(func.sum(Transaction.amount_pen)).filter(
-            and_(
-                Transaction.date == current_date,
-                Transaction.type == "income",
-                Transaction.transaction_type != 'transfer'
-            )
-        ).scalar() or 0.0
-        
-        day_expense = db.query(func.sum(Transaction.amount_pen)).filter(
-            and_(
-                Transaction.date == current_date,
-                Transaction.type == "expense",
-                Transaction.transaction_type != 'transfer'
-            )
-        ).scalar() or 0.0
-        
-        cumulative_income += day_income
-        cumulative_expense += day_expense
-        day_balance = cumulative_income - cumulative_expense
+        if current_date <= today:
+            # DATOS REALES
+            day_income = db.query(func.sum(Transaction.amount_pen)).filter(
+                and_(
+                    Transaction.date == current_date,
+                    Transaction.type == "income",
+                    Transaction.transaction_type != 'transfer'
+                )
+            ).scalar() or 0.0
+            
+            day_expense = db.query(func.sum(Transaction.amount_pen)).filter(
+                and_(
+                    Transaction.date == current_date,
+                    Transaction.type == "expense",
+                    Transaction.transaction_type != 'transfer'
+                )
+            ).scalar() or 0.0
+            
+            cumulative_income += day_income
+            cumulative_expense += day_expense
+            day_balance = cumulative_income - cumulative_expense
+            is_projected = False
+        else:
+            # PROYECCIÓN FUTURA
+            days_from_today = (current_date - today).days
+            projected_expense = cumulative_expense + (daily_avg_expense * days_from_today)
+            day_balance = cumulative_income - projected_expense
+            is_projected = True
         
         daily_data.append(DailyDataPoint(
             date=current_date.isoformat(),
             cumulative_income=round(cumulative_income, 2),
-            cumulative_expense=round(cumulative_expense, 2),
-            balance=round(day_balance, 2)
+            cumulative_expense=round(cumulative_expense if not is_projected else projected_expense, 2),
+            balance=round(day_balance, 2),
+            is_projected=is_projected
         ))
         
         current_date += timedelta(days=1)
@@ -421,7 +459,7 @@ def get_debt_summary(
         db.add(billing_cycle)
         db.commit()
     
-    cycle_info = get_cycle_by_offset(billing_cycle.start_day, cycle_offset)
+    cycle_info = get_cycle_by_offset_with_overrides(billing_cycle.id, billing_cycle.start_day, cycle_offset, db)
     period_start = datetime.strptime(cycle_info["start_date"], "%Y-%m-%d").date()
     period_end = datetime.strptime(cycle_info["end_date"], "%Y-%m-%d").date()
     
@@ -617,7 +655,7 @@ def get_month_projection(
         db.add(billing_cycle)
         db.commit()
     
-    cycle_info = get_cycle_by_offset(billing_cycle.start_day, cycle_offset)
+    cycle_info = get_cycle_by_offset_with_overrides(billing_cycle.id, billing_cycle.start_day, cycle_offset, db)
     period_start = datetime.strptime(cycle_info["start_date"], "%Y-%m-%d").date()
     period_end = datetime.strptime(cycle_info["end_date"], "%Y-%m-%d").date()
     
@@ -632,7 +670,7 @@ def get_month_projection(
         days_elapsed = (period_end - period_start).days + 1
         days_remaining = 0
     
-    # Ingresos del ciclo
+    # Ingresos reales del ciclo hasta hoy
     total_income = db.query(func.sum(Transaction.amount_pen)).filter(
         and_(
             Transaction.date >= period_start,
@@ -641,6 +679,19 @@ def get_month_projection(
             Transaction.transaction_type != 'transfer'
         )
     ).scalar() or 0.0
+    
+    # Ingresos presupuestados del ciclo (lo que se espera recibir)
+    budgeted_income = db.query(func.sum(BudgetPlan.amount)).join(
+        Category, BudgetPlan.category_id == Category.id
+    ).filter(
+        and_(
+            BudgetPlan.end_date == period_end,
+            Category.type == 'income'
+        )
+    ).scalar() or 0.0
+    
+    # Ingresos pendientes de recibir (presupuesto - real)
+    pending_income = max(0.0, budgeted_income - total_income)
     
     # Gastos del ciclo hasta hoy
     total_expense = db.query(func.sum(Transaction.amount_pen)).filter(
@@ -652,24 +703,52 @@ def get_month_projection(
         )
     ).scalar() or 0.0
     
-    # Promedio de gasto diario
+    # Calcular gasto diario usando mediana (más robusto contra outliers)
     if days_elapsed > 0:
-        daily_average_spending = total_expense / days_elapsed
+        # Obtener gastos por día
+        daily_expenses = []
+        current_date = period_start
+        
+        while current_date <= min(today, period_end):
+            daily_spent = db.query(func.sum(Transaction.amount_pen)).filter(
+                and_(
+                    Transaction.date == current_date,
+                    Transaction.type == "expense",
+                    Transaction.transaction_type != 'transfer'
+                )
+            ).scalar() or 0.0
+            
+            daily_expenses.append(daily_spent)
+            current_date += timedelta(days=1)
+        
+        # Usar mediana si hay menos de 7 días (más resistente a outliers)
+        # Usar promedio si hay 7+ días (más datos, promedio más estable)
+        if days_elapsed < 7 and len(daily_expenses) > 0:
+            from statistics import median
+            daily_average_spending = median(daily_expenses)
+        else:
+            daily_average_spending = total_expense / days_elapsed
     else:
         daily_average_spending = 0.0
     
     # Proyección de gastos restantes
     projected_remaining_expenses = daily_average_spending * days_remaining
     
-    # Balance proyectado
-    projected_balance = total_income - total_expense - projected_remaining_expenses
+    # Balance proyectado considerando ingresos futuros esperados
+    projected_balance = total_income + pending_income - total_expense - projected_remaining_expenses
     is_positive = projected_balance >= 0
     
     # Mensaje
-    if is_positive:
-        message = f"Si sigues gastando así, cerrarás el ciclo con +S/ {abs(projected_balance):.2f}"
+    if pending_income > 0:
+        if is_positive:
+            message = f"Considerando ingresos pendientes (S/ {pending_income:.2f}), cerrarás con +S/ {abs(projected_balance):.2f}"
+        else:
+            message = f"Aún con ingresos pendientes (S/ {pending_income:.2f}), cerrarás con -S/ {abs(projected_balance):.2f}"
     else:
-        message = f"Si sigues gastando así, cerrarás el ciclo con -S/ {abs(projected_balance):.2f}"
+        if is_positive:
+            message = f"Si sigues gastando así, cerrarás el ciclo con +S/ {abs(projected_balance):.2f}"
+        else:
+            message = f"Si sigues gastando así, cerrarás el ciclo con -S/ {abs(projected_balance):.2f}"
     
     return MonthProjection(
         projected_balance=round(projected_balance, 2),
@@ -697,7 +776,7 @@ def get_problem_category(
         db.add(billing_cycle)
         db.commit()
     
-    cycle_info = get_cycle_by_offset(billing_cycle.start_day, cycle_offset)
+    cycle_info = get_cycle_by_offset_with_overrides(billing_cycle.id, billing_cycle.start_day, cycle_offset, db)
     period_start = datetime.strptime(cycle_info["start_date"], "%Y-%m-%d").date()
     period_end = datetime.strptime(cycle_info["end_date"], "%Y-%m-%d").date()
     
