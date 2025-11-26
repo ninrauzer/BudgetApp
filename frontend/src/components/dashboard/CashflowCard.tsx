@@ -100,7 +100,7 @@ export function CashflowCard() {
             'crosshair',
             ({ series, lineGenerator, xScale, yScale }) => {
               return series.map((serie) => {
-                const lineData = serie.data.map((d: any) => ({
+                const lineData: Array<{x: number; y: number}> = serie.data.map((d: any) => ({
                   x: xScale(d.data.x) as number,
                   y: yScale(d.data.y) as number
                 }));
