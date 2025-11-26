@@ -17,10 +17,6 @@ cd ..
 echo "🐍 Installing backend dependencies..."
 cd backend
 pip install -r requirements.txt
-
-# Create database tables if they don't exist (non-critical)
-echo "🗄️  Ensuring database tables exist..."
-python create_tables_supabase.py || echo "⚠️  Could not verify tables (may already exist)"
 cd ..
 
 echo "✅ Build complete!"
