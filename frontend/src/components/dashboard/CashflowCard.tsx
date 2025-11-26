@@ -100,9 +100,11 @@ export function CashflowCard() {
             'crosshair',
             ({ series, lineGenerator, xScale, yScale }) => {
               return series.map((serie) => {
-                // @ts-ignore - Nivo types issue with serie.data
-                const lineData = serie.data.map((d: any) => ({
+                // @ts-expect-error - Nivo internal types conflict
+                const lineData = serie.data.map((d) => ({
+                  // @ts-expect-error
                   x: xScale(d.data.x),
+                  // @ts-expect-error
                   y: yScale(d.data.y)
                 }));
                 
