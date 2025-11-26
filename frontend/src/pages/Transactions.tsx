@@ -68,23 +68,6 @@ export default function Transactions() {
     return amountPEN;
   };
 
-  // Global keyboard shortcut: Ctrl+N to focus quick add
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === 'n') {
-        e.preventDefault();
-        // Trigger click on quick add row
-        const quickAddButton = document.querySelector('[data-quick-add-trigger]') as HTMLButtonElement;
-        if (quickAddButton) {
-          quickAddButton.click();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   // Queries
   const { data: transactionsResponse, isLoading: transactionsLoading } = useTransactions(filters);
   const { data: categories = [] } = useCategories();
@@ -241,20 +224,16 @@ export default function Transactions() {
   };
 
   return (
-    <div className="w-full space-y-6">
-        {/* Header with Collapse Button */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-text-primary">Transacciones</h1>
-            {currentCycle && (
-              <CycleInfo cycleData={currentCycle} isLoading={rateLoading} />
-            )}
-          </div>
-          <div className="flex gap-3 items-center">
-            {/* Collapse Toggle Button */}
+    <div className="w-full space-y-4 md:space-y-6">
+        {/* Header - Responsive */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="text-2xl md:text-3xl font-bold text-text-primary">Transacciones</h1>
+            
+            {/* Mobile: Collapse Toggle */}
             <button
               onClick={() => setIsHeaderCollapsed(!isHeaderCollapsed)}
-              className="p-3 bg-surface border border-border hover:bg-surface-soft hover:border-primary/50 text-text-secondary hover:text-primary rounded-xl transition-all"
+              className="md:hidden p-2 bg-surface border border-border hover:bg-surface-soft hover:border-primary/50 text-text-secondary hover:text-primary rounded-xl transition-all"
               title={isHeaderCollapsed ? "Expandir filtros" : "Colapsar filtros"}
             >
               {isHeaderCollapsed ? (
@@ -263,39 +242,63 @@ export default function Transactions() {
                 <ChevronUp className="w-5 h-5" />
               )}
             </button>
-
-            {/* Currency Toggle */}
-            <div className="flex items-center gap-2 bg-surface border border-border rounded-xl p-1">
+          </div>
+          
+          {currentCycle && (
+            <CycleInfo cycleData={currentCycle} isLoading={rateLoading} />
+          )}
+          
+          {/* Controls - Horizontal scroll on mobile */}
+          <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 mt-3">
+            <div className="flex gap-2 md:gap-3 items-center pb-2 min-w-max md:min-w-0">
+              {/* Desktop: Collapse Toggle */}
               <button
-                onClick={() => setDisplayCurrency('PEN')}
-                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                  displayCurrency === 'PEN'
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'text-text-secondary hover:text-text-primary'
-                }`}
+                onClick={() => setIsHeaderCollapsed(!isHeaderCollapsed)}
+                className="hidden md:flex p-3 bg-surface border border-border hover:bg-surface-soft hover:border-primary/50 text-text-secondary hover:text-primary rounded-xl transition-all"
+                title={isHeaderCollapsed ? "Expandir filtros" : "Colapsar filtros"}
               >
-                PEN
+                {isHeaderCollapsed ? (
+                  <ChevronDown className="w-5 h-5" />
+                ) : (
+                  <ChevronUp className="w-5 h-5" />
+                )}
               </button>
+
+              {/* Currency Toggle */}
+              <div className="flex items-center gap-1.5 bg-surface border border-border rounded-xl p-1">
+                <button
+                  onClick={() => setDisplayCurrency('PEN')}
+                  className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                    displayCurrency === 'PEN'
+                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
+                  }`}
+                >
+                  PEN
+                </button>
+                <button
+                  onClick={() => setDisplayCurrency('USD')}
+                  disabled={rateLoading}
+                  className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                    displayCurrency === 'USD'
+                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
+                  } disabled:opacity-50`}
+                >
+                  {rateLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> : 'USD'}
+                </button>
+              </div>
+
+              {/* New Transaction Button */}
               <button
-                onClick={() => setDisplayCurrency('USD')}
-                disabled={rateLoading}
-                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                  displayCurrency === 'USD'
-                    ? 'bg-blue-500 text-white shadow-sm'
-                    : 'text-text-secondary hover:text-text-primary'
-                } disabled:opacity-50`}
+                onClick={handleNewTransaction}
+                className="flex px-4 md:px-6 py-2 md:py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-xl md:rounded-2xl font-bold text-xs md:text-sm shadow-lg shadow-purple-500/30 hover:shadow-xl transition-all items-center gap-2 whitespace-nowrap"
               >
-                {rateLoading ? <Loader2 className="w-3 h-3 animate-spin inline" /> : 'USD'}
+                <Plus className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="hidden sm:inline">Nueva Transacción</span>
+                <span className="sm:hidden">Nueva</span>
               </button>
             </div>
-
-            <button
-              onClick={handleNewTransaction}
-              className="px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-2xl font-bold shadow-button hover:shadow-lg transition-all flex items-center gap-2"
-            >
-              <Plus className="w-5 h-5" />
-              Nueva Transacción
-            </button>
           </div>
         </div>
 
@@ -304,10 +307,11 @@ export default function Transactions() {
           "overflow-hidden transition-all duration-300",
           isHeaderCollapsed ? "max-h-0 opacity-0" : "max-h-[1000px] opacity-100"
         )}>
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            {/* Income Card */}
-            <div className="bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-3xl p-8 shadow-card text-white">
+          {/* Summary Cards - Carousel on mobile, grid on desktop */}
+          <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 mb-6">
+            <div className="flex md:grid md:grid-cols-3 gap-4 md:gap-6 pb-2 md:pb-0">
+              {/* Income Card */}
+              <div className="flex-shrink-0 w-[280px] md:w-auto bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-3xl p-6 md:p-8 shadow-card text-white">
               <div className="flex items-center justify-between mb-6">
                 <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
                   <TrendingUp className="w-7 h-7 text-white" />
@@ -322,8 +326,8 @@ export default function Transactions() {
               </p>
             </div>
 
-            {/* Expense Card */}
-            <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-3xl p-8 shadow-card text-white">
+              {/* Expense Card */}
+              <div className="flex-shrink-0 w-[280px] md:w-auto bg-gradient-to-br from-red-400 to-red-500 rounded-3xl p-6 md:p-8 shadow-card text-white">
               <div className="flex items-center justify-between mb-6">
                 <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
                   <TrendingDown className="w-7 h-7 text-white" />
@@ -338,24 +342,25 @@ export default function Transactions() {
               </p>
             </div>
 
-            {/* Balance Card */}
-            <div className={`rounded-3xl p-8 shadow-card text-white ${
-              balance >= 0 
-                ? 'bg-gradient-to-br from-blue-500 to-blue-600' 
-                : 'bg-gradient-to-br from-orange-400 to-orange-500'
-            }`}>
-              <div className="flex items-center justify-between mb-6">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
-                  <TrendingUp className="w-7 h-7 text-white" />
+              {/* Balance Card */}
+              <div className={`flex-shrink-0 w-[280px] md:w-auto rounded-3xl p-6 md:p-8 shadow-card text-white ${
+                balance >= 0 
+                  ? 'bg-gradient-to-br from-blue-500 to-blue-600' 
+                  : 'bg-gradient-to-br from-orange-400 to-orange-500'
+              }`}>
+                <div className="flex items-center justify-between mb-6">
+                  <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
+                    <TrendingUp className="w-7 h-7 text-white" />
+                  </div>
+                  <span className="text-white/90 text-sm font-bold bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-pill">
+                    {transactions.length} total
+                  </span>
                 </div>
-                <span className="text-white/90 text-sm font-bold bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-pill">
-                  {transactions.length} total
-                </span>
+                <p className="text-white/80 text-sm mb-3 font-semibold uppercase tracking-wide">Balance Neto</p>
+                <p className="text-4xl font-extrabold text-white tracking-tight">
+                  {balance >= 0 ? '' : '-'}{formatCurrencyISO(convertAmount(applyDemoScale(Math.abs(balance))), displayCurrency)}
+                </p>
               </div>
-              <p className="text-white/80 text-sm mb-3 font-semibold uppercase tracking-wide">Balance Neto</p>
-              <p className="text-4xl font-extrabold text-white tracking-tight">
-                {balance >= 0 ? '' : '-'}{formatCurrencyISO(convertAmount(applyDemoScale(Math.abs(balance))), displayCurrency)}
-              </p>
             </div>
           </div>
 

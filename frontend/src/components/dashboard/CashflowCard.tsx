@@ -55,18 +55,18 @@ export function CashflowCard() {
   ];
 
   return (
-    <div className={`rounded-2xl p-4 text-white shadow-lg backdrop-blur-md ${gradient} transition-all duration-200 hover:-translate-y-1 hover:shadow-xl`}>
-      <div className="flex items-center justify-between mb-3">
-        <Icon className="w-6 h-6 text-white/80" strokeWidth={2} />
+    <div className={`min-h-full md:h-auto rounded-2xl p-4 md:p-6 text-white shadow-lg backdrop-blur-md ${gradient} transition-all duration-200 hover:-translate-y-1 hover:shadow-xl`}>
+      <div className="flex items-center justify-between mb-2 md:mb-3">
+        <Icon className="w-4 h-4 md:w-5 md:h-5 text-white/80" strokeWidth={2} />
       </div>
       
-      <p className="text-white/70 text-xs mb-1 font-medium uppercase tracking-wider">Cashflow del Ciclo</p>
-      <p className="text-2xl font-black text-white tracking-tight mb-1">
+      <p className="text-white/70 text-[10px] md:text-xs mb-1 font-medium uppercase tracking-wider">Cashflow del Ciclo</p>
+      <p className="text-xl md:text-2xl font-black text-white tracking-tight mb-1">
         {data.is_positive ? '+' : '-'}{formatCurrencyISO(Math.abs(data.balance), 'PEN')}
       </p>
 
       {/* Sparkline con Nivo */}
-      <div className="mb-2 mt-2" style={{ width: '100%', height: '48px' }}>
+      <div className="mb-2 mt-1 md:mt-2" style={{ width: '100%', height: '40px' }}>
         <ResponsiveLine
           data={chartData}
           margin={{ top: 0, right: 0, bottom: 0, left: 0 }}

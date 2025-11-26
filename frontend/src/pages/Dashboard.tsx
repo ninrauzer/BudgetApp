@@ -39,15 +39,23 @@ export default function Dashboard() {
       </div>
 
       {/* ZONA DE DECISIÓN - 5 Métricas Críticas */}
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         {/* 1. Disponible del Ciclo - Tarjeta Hero */}
         <AvailableBalanceCard />
 
-        {/* 2-4. Grid de métricas clave */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <SpendingStatusCard />
-          <CashflowCard />
-          <DebtRiskCard />
+        {/* 2-4. Carrusel de métricas en mobile, grid en desktop */}
+        <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 md:overflow-visible">
+          <div className="flex md:grid md:grid-cols-3 gap-4 md:gap-6 pb-2 md:pb-0">
+            <div className="flex-shrink-0 w-[280px] md:w-auto">
+              <SpendingStatusCard />
+            </div>
+            <div className="flex-shrink-0 w-[280px] md:w-auto">
+              <CashflowCard />
+            </div>
+            <div className="flex-shrink-0 w-[280px] md:w-auto">
+              <DebtRiskCard />
+            </div>
+          </div>
         </div>
 
         {/* 5. Próximos Pagos - Ancho completo */}
@@ -55,21 +63,27 @@ export default function Dashboard() {
       </div>
 
       {/* CONTEXTO - Para tomar decisiones */}
-      <div className="space-y-6">
-        <h2 className="text-h2 font-extrabold text-text-primary">Contexto para Decidir</h2>
+      <div className="space-y-4 md:space-y-6">
+        <h2 className="text-lg md:text-2xl font-extrabold text-text-primary">Contexto para Decidir</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* 6. Proyección del Mes */}
-          <MonthProjectionCard />
+        <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 md:overflow-visible">
+          <div className="flex md:grid md:grid-cols-2 gap-4 md:gap-6 pb-2 md:pb-0">
+            {/* 6. Proyección del Mes */}
+            <div className="flex-shrink-0 w-[280px] md:w-auto">
+              <MonthProjectionCard />
+            </div>
 
-          {/* 7. Categoría Problema */}
-          <ProblemCategoryCard />
+            {/* 7. Categoría Problema */}
+            <div className="flex-shrink-0 w-[280px] md:w-auto">
+              <ProblemCategoryCard />
+            </div>
+          </div>
         </div>
       </div>
 
       {/* OPERACIONES - Acceso rápido */}
-      <div className="space-y-6">
-        <h2 className="text-h2 font-extrabold text-text-primary">Últimas Transacciones</h2>
+      <div className="space-y-4 md:space-y-6">
+        <h2 className="text-lg md:text-2xl font-extrabold text-text-primary">Últimas Transacciones</h2>
         
         {/* Últimas Transacciones - Full Width */}
         <div className="bg-white border-2 border-border rounded-xl hover:border-primary/30 hover:shadow-md transition-all">

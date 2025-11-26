@@ -33,42 +33,44 @@ export default function DebtManagement() {
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="bg-surface border border-border rounded-2xl p-2 shadow-sm">
-        <div className="flex gap-2">
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
-              activeTab === 'dashboard'
-                ? 'bg-primary text-white shadow-button'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
-            }`}
-          >
-            <PiggyBank className="w-4 h-4" strokeWidth={2.5} />
-            RESUMEN
-          </button>
-          <button
-            onClick={() => setActiveTab('loans')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
-              activeTab === 'loans'
-                ? 'bg-primary text-white shadow-button'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
-            }`}
-          >
-            <ListChecks className="w-4 h-4" strokeWidth={2.5} />
-            MIS PRÉSTAMOS
-          </button>
-          <button
-            onClick={() => setActiveTab('simulator')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
-              activeTab === 'simulator'
-                ? 'bg-primary text-white shadow-button'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
-            }`}
-          >
-            <Calculator className="w-4 h-4" strokeWidth={2.5} />
-            SIMULADOR
-          </button>
+      {/* Tab Navigation - Horizontal scroll on mobile */}
+      <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+        <div className="bg-surface border border-border rounded-2xl p-2 shadow-sm">
+          <div className="flex gap-2 pb-1 md:pb-0">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+                activeTab === 'dashboard'
+                  ? 'bg-primary text-white shadow-button'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
+              }`}
+            >
+              <PiggyBank className="w-4 h-4" strokeWidth={2.5} />
+              RESUMEN
+            </button>
+            <button
+              onClick={() => setActiveTab('loans')}
+              className={`flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+                activeTab === 'loans'
+                  ? 'bg-primary text-white shadow-button'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
+              }`}
+            >
+              <ListChecks className="w-4 h-4" strokeWidth={2.5} />
+              MIS PRÉSTAMOS
+            </button>
+            <button
+              onClick={() => setActiveTab('simulator')}
+              className={`flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+                activeTab === 'simulator'
+                  ? 'bg-primary text-white shadow-button'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
+              }`}
+            >
+              <Calculator className="w-4 h-4" strokeWidth={2.5} />
+              SIMULADOR
+            </button>
+          </div>
         </div>
       </div>
 

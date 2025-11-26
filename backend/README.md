@@ -7,8 +7,7 @@ Backend FastAPI para la aplicación de gestión presupuestal personal BudgetApp.
 - **FastAPI** - Framework web moderno y rápido
 - **SQLAlchemy** - ORM para manejo de base de datos
 - **Pydantic** - Validación de datos y schemas
-- **SQLite** - Base de datos (desarrollo)
-- **PostgreSQL** - Base de datos (producción)
+- **PostgreSQL** - Base de datos (desarrollo y producción)
 - **Python 3.12+**
 
 ## 📁 Estructura
@@ -163,9 +162,34 @@ pytest tests/
 
 ## 🗄️ Base de Datos
 
-### SQLite (Desarrollo)
-- Archivo: `budget.db` en raíz del proyecto
-- Inicializar: `python scripts/init_db.py`
+### PostgreSQL (Desarrollo y Producción)
+
+**Desarrollo Local (WSL2):**
+- Host: `192.168.126.127:5432`
+- Database Dev: `budgetapp_dev` (para testing y desarrollo)
+- Database Prod-like: `budgetapp_prod` (usado por Docker)
+- User: `postgres`
+- Password: `postgres`
+
+**Producción (Supabase):**
+- URL configurada vía variable de entorno
+- Backups automáticos incluidos
+- Free tier: 500MB
+
+**Inicializar:**
+```bash
+# Asegurarse de tener DATABASE_URL configurado
+python scripts/init_db.py
+```
+
+**Ejemplo .env:**
+```bash
+# Desarrollo
+DATABASE_URL=postgresql://postgres:postgres@192.168.126.127:5432/budgetapp_dev
+
+# Producción (Supabase)
+DATABASE_URL=postgresql://postgres:<PASSWORD>@db.<PROJECT_ID>.supabase.co:5432/postgres
+```
 
 ### Migrations
 

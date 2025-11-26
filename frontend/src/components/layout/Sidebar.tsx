@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   LayoutDashboard, 
   Receipt, 
@@ -11,7 +11,8 @@ import {
   PanelLeftOpen,
   CreditCard,
   Palette,
-  ChevronDown
+  ChevronDown,
+  X
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/contexts/SidebarContext'
@@ -35,10 +36,22 @@ const bottomNavigation = [
   { name: 'Configuración', href: '/settings', icon: Settings, id: 'settings' },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  isMobileOpen?: boolean
+  onMobileClose?: () => void
+}
+
+export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
   const { isCollapsed, toggleCollapse } = useSidebar()
   const [isBankingOpen, setIsBankingOpen] = useState(true)
   const { isModuleHidden } = useHiddenModules()
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    if (isMobileOpen && onMobileClose) {
+      onMobileClose()
+    }
+  }, [window.location.pathname])
 
   // Filter visible items - will re-render when hiddenModules changes
   const visibleMainNav = mainNavigation.filter(item => !isModuleHidden(item.id))
@@ -47,10 +60,24 @@ export function Sidebar() {
   const hasBankingItems = visibleBankingGroup.length > 0
 
   return (
-    <aside className={cn(
-      "fixed left-0 top-0 h-screen bg-surface border-r border-border shadow-lg transition-all duration-300",
-      isCollapsed ? "w-20" : "w-60"
-    )}>
+    <>
+      {/* Mobile Backdrop */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-40 md:hidden"
+          onClick={onMobileClose}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={cn(
+        "fixed left-0 top-0 h-screen bg-surface border-r border-border shadow-lg transition-all duration-300 z-50",
+        // Desktop: fixed positioning
+        "md:z-30",
+        // Mobile: drawer behavior
+        isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+        isCollapsed ? "w-20" : "w-60"
+      )}>
       {/* Logo/Brand Header */}
       <div className={cn(
         "flex h-16 items-center justify-between border-b border-border px-4 transition-all duration-300",
@@ -67,6 +94,17 @@ export function Sidebar() {
             </div>
             <span className="text-xl font-extrabold text-text-primary">BudgetApp</span>
           </div>
+        )}
+
+        {/* Close button (mobile only) */}
+        {isMobileOpen && (
+          <button
+            onClick={onMobileClose}
+            className="md:hidden flex h-10 w-10 items-center justify-center rounded-lg hover:bg-surface-soft transition-colors"
+            aria-label="Cerrar menú"
+          >
+            <X className="h-6 w-6 text-text-secondary" strokeWidth={2} />
+          </button>
         )}
       </div>
       
@@ -171,8 +209,8 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* Collapse Button */}
-      <div className="absolute bottom-4 left-4 right-4">
+      {/* Collapse Button (desktop only) */}
+      <div className="absolute bottom-4 left-4 right-4 hidden md:block">
         <button
           onClick={toggleCollapse}
           className={cn(
@@ -193,5 +231,6 @@ export function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   )
 }

@@ -73,51 +73,52 @@ export default function DebtDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Métricas principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-surface/90 backdrop-blur-md border border-border rounded-2xl p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-text-secondary text-sm">Deuda Total Actual</p>
-              <p className="text-2xl font-bold text-text-primary mt-1">
-                S/ {summary.total_current_debt.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="bg-red-500/10 p-3 rounded-xl">
-              <Wallet className="w-6 h-6 text-red-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-surface/90 backdrop-blur-md border border-border rounded-2xl p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-text-secondary text-sm">Pago Mensual Total</p>
-              <p className="text-2xl font-bold text-text-primary mt-1">
-                S/ {summary.total_monthly_payment.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="bg-orange-500/10 p-3 rounded-xl">
-              <TrendingDown className="w-6 h-6 text-orange-400" />
+      {/* Métricas principales - Carousel on mobile */}
+      <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+        <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 pb-2 md:pb-0">
+          <div className="flex-shrink-0 w-[280px] md:w-auto bg-surface/90 backdrop-blur-md border border-border rounded-2xl p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-text-secondary text-sm">Deuda Total Actual</p>
+                <p className="text-2xl font-bold text-text-primary mt-1">
+                  S/ {summary.total_current_debt.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+              <div className="bg-red-500/10 p-3 rounded-xl">
+                <Wallet className="w-6 h-6 text-red-400" />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="bg-surface/90 backdrop-blur-md border border-border rounded-2xl p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-text-secondary text-sm">TCEA Promedio Ponderada</p>
-              <p className="text-2xl font-bold text-text-primary mt-1">
-                {summary.weighted_avg_rate.toFixed(2)}%
-              </p>
-            </div>
-            <div className="bg-yellow-500/10 p-3 rounded-xl">
-              <Percent className="w-6 h-6 text-yellow-400" />
+          <div className="flex-shrink-0 w-[280px] md:w-auto bg-surface/90 backdrop-blur-md border border-border rounded-2xl p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-text-secondary text-sm">Pago Mensual Total</p>
+                <p className="text-2xl font-bold text-text-primary mt-1">
+                  S/ {summary.total_monthly_payment.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+              <div className="bg-orange-500/10 p-3 rounded-xl">
+                <TrendingDown className="w-6 h-6 text-orange-400" />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="bg-surface/90 backdrop-blur-md border border-border rounded-2xl p-6">
+          <div className="flex-shrink-0 w-[280px] md:w-auto bg-surface/90 backdrop-blur-md border border-border rounded-2xl p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-text-secondary text-sm">TCEA Promedio Ponderada</p>
+                <p className="text-2xl font-bold text-text-primary mt-1">
+                  {summary.weighted_avg_rate.toFixed(2)}%
+                </p>
+              </div>
+              <div className="bg-yellow-500/10 p-3 rounded-xl">
+                <Percent className="w-6 h-6 text-yellow-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-shrink-0 w-[280px] md:w-auto bg-surface/90 backdrop-blur-md border border-border rounded-2xl p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-text-secondary text-sm">Fecha Proyectada de Pago</p>
@@ -135,6 +136,7 @@ export default function DebtDashboard() {
               <Calendar className="w-6 h-6 text-green-400" />
             </div>
           </div>
+        </div>
         </div>
       </div>
 

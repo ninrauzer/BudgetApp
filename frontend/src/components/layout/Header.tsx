@@ -2,6 +2,8 @@ import { Bell, Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { useSidebar } from '@/contexts/SidebarContext'
+import { cn } from '@/lib/utils'
 import ThemeToggle from '../ThemeToggle'
 import EnvironmentBadge from '../EnvironmentBadge'
 import ExchangeRateDisplay from '../ExchangeRateDisplay'
@@ -15,8 +17,13 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 export function Header() {
+  const { isCollapsed } = useSidebar()
+  
   return (
-    <header className="fixed left-60 right-0 top-0 z-10 h-16 border-b border-border bg-surface shadow-sm backdrop-blur supports-[backdrop-filter]:bg-surface/95">
+    <header className={cn(
+      "hidden md:block fixed right-0 top-0 z-10 h-16 border-b border-border bg-surface shadow-sm backdrop-blur supports-[backdrop-filter]:bg-surface/95 transition-all duration-300",
+      isCollapsed ? "left-20" : "left-60"
+    )}>
       <div className="flex h-full items-center justify-between px-8">
         {/* Search */}
         <div className="flex w-96 items-center gap-2">

@@ -159,52 +159,60 @@ export default function Accounts() {
           </div>
       </div>
 
-      {/* Resumen de saldos */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard
-          variant="success"
-          icon={Wallet}
-          label="Saldo Total"
-          value={new Intl.NumberFormat('es-PE', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          }).format(isDemoMode 
-            ? applyDemoScale(accounts.reduce((sum, acc) => sum + acc.current_balance, 0))
-            : accounts.reduce((sum, acc) => sum + acc.current_balance, 0)
-          )}
-          currency="PEN"
-          subtitle={`${accounts.length} cuentas activas`}
-        />
+      {/* Resumen de saldos - Carousel on mobile */}
+      <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+        <div className="flex md:grid md:grid-cols-3 gap-4 md:gap-6 pb-2 md:pb-0">
+          <div className="flex-shrink-0 w-[280px] md:w-auto">
+            <StatCard
+              variant="success"
+              icon={Wallet}
+              label="Saldo Total"
+              value={new Intl.NumberFormat('es-PE', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              }).format(isDemoMode 
+                ? applyDemoScale(accounts.reduce((sum, acc) => sum + acc.current_balance, 0))
+                : accounts.reduce((sum, acc) => sum + acc.current_balance, 0)
+              )}
+              currency="PEN"
+              subtitle={`${accounts.length} cuentas activas`}
+            />
+          </div>
 
-        <StatCard
-          variant="info"
-          icon={TrendingUp}
-          label="Cuentas Bancarias"
-          value={new Intl.NumberFormat('es-PE', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          }).format(isDemoMode
-            ? applyDemoScale(accounts.filter(a => a.type === 'bank').reduce((sum, acc) => sum + acc.current_balance, 0))
-            : accounts.filter(a => a.type === 'bank').reduce((sum, acc) => sum + acc.current_balance, 0)
-          )}
-          currency="PEN"
-          subtitle={`${accounts.filter(a => a.type === 'bank').length} cuentas`}
-        />
+          <div className="flex-shrink-0 w-[280px] md:w-auto">
+            <StatCard
+              variant="info"
+              icon={TrendingUp}
+              label="Cuentas Bancarias"
+              value={new Intl.NumberFormat('es-PE', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              }).format(isDemoMode
+                ? applyDemoScale(accounts.filter(a => a.type === 'bank').reduce((sum, acc) => sum + acc.current_balance, 0))
+                : accounts.filter(a => a.type === 'bank').reduce((sum, acc) => sum + acc.current_balance, 0)
+              )}
+              currency="PEN"
+              subtitle={`${accounts.filter(a => a.type === 'bank').length} cuentas`}
+            />
+          </div>
 
-        <StatCard
-          variant="purple"
-          icon={TrendingDown}
-          label="Efectivo"
-          value={new Intl.NumberFormat('es-PE', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          }).format(isDemoMode
-            ? applyDemoScale(accounts.filter(a => a.type === 'cash').reduce((sum, acc) => sum + acc.current_balance, 0))
-            : accounts.filter(a => a.type === 'cash').reduce((sum, acc) => sum + acc.current_balance, 0)
-          )}
-          currency="PEN"
-          subtitle={`${accounts.filter(a => a.type === 'cash').length} cuentas`}
-        />
+          <div className="flex-shrink-0 w-[280px] md:w-auto">
+            <StatCard
+              variant="purple"
+              icon={TrendingDown}
+              label="Efectivo"
+              value={new Intl.NumberFormat('es-PE', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              }).format(isDemoMode
+                ? applyDemoScale(accounts.filter(a => a.type === 'cash').reduce((sum, acc) => sum + acc.current_balance, 0))
+                : accounts.filter(a => a.type === 'cash').reduce((sum, acc) => sum + acc.current_balance, 0)
+              )}
+              currency="PEN"
+              subtitle={`${accounts.filter(a => a.type === 'cash').length} cuentas`}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Lista de cuentas */}

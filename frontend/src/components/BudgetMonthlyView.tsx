@@ -186,43 +186,45 @@ export default function BudgetMonthlyView({ cycleName, displayCurrency = 'PEN', 
 
   return (
     <div className="space-y-5">
-      {/* Summary Cards - Glass Premium */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Ingresos */}
-        <div className="group relative rounded-2xl p-5 text-white shadow-lg backdrop-blur-md bg-gradient-to-br from-emerald-400/90 to-emerald-500/90 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
-          <TrendingUp className="w-7 h-7 text-white/80 mb-3" strokeWidth={2} />
-          <p className="text-white/70 text-xs mb-1 font-medium uppercase tracking-wider">Ingresos</p>
-          <p className="text-2xl font-black text-white tracking-tight">{formatBudget(convertAmount(totalIncome), displayCurrency)}</p>
-        </div>
-
-        {/* Gastos */}
-        <div className="group relative rounded-2xl p-5 text-white shadow-lg backdrop-blur-md bg-gradient-to-br from-rose-400/90 to-rose-500/90 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
-          <TrendingDown className="w-7 h-7 text-white/80 mb-3" strokeWidth={2} />
-          <p className="text-white/70 text-xs mb-1 font-medium uppercase tracking-wider">Gastos</p>
-          <p className="text-2xl font-black text-white tracking-tight">{formatBudget(convertAmount(totalExpense), displayCurrency)}</p>
-        </div>
-
-        {/* Ahorro - Principal con glow */}
-        <div className={cn(
-          "group relative rounded-2xl p-5 text-white shadow-lg backdrop-blur-md transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl",
-          totalSaving >= 0 
-            ? "bg-gradient-to-br from-amber-400/90 to-orange-500/90 shadow-[0_0_20px_rgba(251,191,36,0.3)]"
-            : "bg-gradient-to-br from-red-500/90 to-red-600/90 shadow-[0_0_20px_rgba(239,68,68,0.3)]"
-        )}>
-          <Wallet className="w-7 h-7 text-white/80 mb-3" strokeWidth={2} />
-          <p className="text-white/70 text-xs mb-1 font-medium uppercase tracking-wider">Ahorro</p>
-          <p className="text-2xl font-black text-white tracking-tight">
-            {totalSaving >= 0 ? '' : '-'}{formatBudget(convertAmount(Math.abs(totalSaving)), displayCurrency)}
-          </p>
-        </div>
-
-        {/* Tasa */}
-        <div className="group relative rounded-2xl p-5 text-white shadow-lg backdrop-blur-md bg-gradient-to-br from-blue-400/90 to-blue-500/90 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
-          <div className="w-7 h-7 flex items-center justify-center text-xl font-black text-white/80 mb-3">
-            %
+      {/* Summary Cards - Carousel on mobile, grid on desktop */}
+      <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+        <div className="flex md:grid md:grid-cols-4 gap-4 md:gap-4 pb-2 md:pb-0">
+          {/* Ingresos */}
+          <div className="flex-shrink-0 w-[280px] md:w-auto group relative rounded-2xl p-4 md:p-5 text-white shadow-lg backdrop-blur-md bg-gradient-to-br from-emerald-400/90 to-emerald-500/90 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
+            <TrendingUp className="w-6 h-6 md:w-7 md:h-7 text-white/80 mb-3" strokeWidth={2} />
+            <p className="text-white/70 text-xs mb-1 font-medium uppercase tracking-wider">Ingresos</p>
+            <p className="text-2xl font-black text-white tracking-tight">{formatBudget(convertAmount(totalIncome), displayCurrency)}</p>
           </div>
-          <p className="text-white/70 text-xs mb-1 font-medium uppercase tracking-wider">Tasa Ahorro</p>
-          <p className="text-2xl font-black text-white tracking-tight">{savingRate.toFixed(1)}%</p>
+
+          {/* Gastos */}
+          <div className="flex-shrink-0 w-[280px] md:w-auto group relative rounded-2xl p-4 md:p-5 text-white shadow-lg backdrop-blur-md bg-gradient-to-br from-rose-400/90 to-rose-500/90 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
+            <TrendingDown className="w-6 h-6 md:w-7 md:h-7 text-white/80 mb-3" strokeWidth={2} />
+            <p className="text-white/70 text-xs mb-1 font-medium uppercase tracking-wider">Gastos</p>
+            <p className="text-2xl font-black text-white tracking-tight">{formatBudget(convertAmount(totalExpense), displayCurrency)}</p>
+          </div>
+
+          {/* Ahorro - Principal con glow */}
+          <div className={cn(
+            "flex-shrink-0 w-[280px] md:w-auto group relative rounded-2xl p-4 md:p-5 text-white shadow-lg backdrop-blur-md transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl",
+            totalSaving >= 0 
+              ? "bg-gradient-to-br from-amber-400/90 to-orange-500/90 shadow-[0_0_20px_rgba(251,191,36,0.3)]"
+              : "bg-gradient-to-br from-red-500/90 to-red-600/90 shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+          )}>
+            <Wallet className="w-6 h-6 md:w-7 md:h-7 text-white/80 mb-3" strokeWidth={2} />
+            <p className="text-white/70 text-xs mb-1 font-medium uppercase tracking-wider">Ahorro</p>
+            <p className="text-2xl font-black text-white tracking-tight">
+              {totalSaving >= 0 ? '' : '-'}{formatBudget(convertAmount(Math.abs(totalSaving)), displayCurrency)}
+            </p>
+          </div>
+
+          {/* Tasa */}
+          <div className="flex-shrink-0 w-[280px] md:w-auto group relative rounded-2xl p-4 md:p-5 text-white shadow-lg backdrop-blur-md bg-gradient-to-br from-blue-400/90 to-blue-500/90 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
+            <div className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center text-xl font-black text-white/80 mb-3">
+              %
+            </div>
+            <p className="text-white/70 text-xs mb-1 font-medium uppercase tracking-wider">Tasa Ahorro</p>
+            <p className="text-2xl font-black text-white tracking-tight">{savingRate.toFixed(1)}%</p>
+          </div>
         </div>
       </div>
 

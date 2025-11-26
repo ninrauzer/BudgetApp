@@ -140,12 +140,14 @@ export default function CreditCardsPage() {
         </div>
 
       {/* Cards List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+        <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-2 md:pb-0">
         {cards.map((card) => (
           <button
             key={card.id}
             onClick={() => setSelectedCardId(card.id)}
             className={`
+              flex-shrink-0 w-[280px] md:w-auto
               bg-white rounded-2xl border-2 p-6 text-left transition-all
               ${activeCardId === card.id 
                 ? 'border-purple-500 shadow-lg shadow-purple-500/20' 
@@ -196,7 +198,7 @@ export default function CreditCardsPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 border-t border-gray-200 pt-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Disponible:</span>
                 <span className="text-sm font-bold text-emerald-600">
@@ -209,6 +211,25 @@ export default function CreditCardsPage() {
                   {formatCurrency(card.current_balance)}
                 </span>
               </div>
+
+              {/* Desglose de deuda */}
+              {card.current_balance > 0 && (
+                <div className="bg-orange-50 rounded-lg p-3 space-y-1 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-orange-700 font-medium">Deuda Revolvente:</span>
+                    <span className="font-bold text-orange-600">
+                      {formatCurrency(card.revolving_debt)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-orange-700 font-medium">En Cuotas:</span>
+                    <span className="font-bold text-orange-600">
+                      {formatCurrency(card.current_balance - card.revolving_debt)}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Límite:</span>
                 <span className="text-sm font-medium text-gray-600">
@@ -218,6 +239,7 @@ export default function CreditCardsPage() {
             </div>
           </button>
         ))}
+        </div>
       </div>
 
       {/* Timeline - Full Width */}
@@ -274,6 +296,46 @@ export default function CreditCardsPage() {
 
             {advisor ? (
               <div className="space-y-6">
+                {/* ⚠️ ADVERTENCIA: Crédito Insuficiente */}
+                {advisor.error && advisor.warning ? (
+                  <div className="rounded-lg p-5 border-2 border-red-300 bg-red-50">
+                    <div className="flex items-start gap-3">
+                      <div className="text-3xl">❌</div>
+                      <div className="flex-1">
+                        <p className="text-lg font-bold text-red-900 mb-2">
+                          {advisor.warning.title}
+                        </p>
+                        <p className="text-sm text-red-800 mb-3">
+                          {advisor.warning.message}
+                        </p>
+                        <div className="bg-white rounded p-3 space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Monto solicitado:</span>
+                            <span className="font-bold text-red-600">
+                              {formatCurrency(advisor.warning.details.requested_amount)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Crédito disponible:</span>
+                            <span className="font-bold text-emerald-600">
+                              {formatCurrency(advisor.warning.details.available_credit)}
+                            </span>
+                          </div>
+                          <div className="border-t pt-2 flex justify-between bg-red-50">
+                            <span className="text-gray-700 font-medium">Te falta:</span>
+                            <span className="font-black text-red-600">
+                              {formatCurrency(advisor.warning.details.short_by)}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-red-700 mt-3 italic">
+                          💡 {advisor.warning.details.action}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
                 {/* Recomendación */}
                 <div className={`
                   rounded-lg p-4 border-2
@@ -394,6 +456,8 @@ export default function CreditCardsPage() {
                     </div>
                   </div>
                 </div>
+                  </>
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">

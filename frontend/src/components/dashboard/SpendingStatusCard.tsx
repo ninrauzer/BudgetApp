@@ -38,25 +38,25 @@ export function SpendingStatusCard() {
   const Icon = config.icon;
 
   return (
-    <div className={`rounded-2xl p-4 text-white shadow-lg backdrop-blur-md ${config.gradient} transition-all duration-200 hover:-translate-y-1 hover:shadow-xl`}>
-      <div className="flex items-center justify-between mb-3">
-        <Icon className="w-6 h-6 text-white/80" strokeWidth={2} />
+    <div className={`min-h-full md:h-auto rounded-2xl p-4 md:p-6 text-white shadow-lg backdrop-blur-md ${config.gradient} transition-all duration-200 hover:-translate-y-1 hover:shadow-xl`}>
+      <div className="flex items-center justify-between mb-2 md:mb-3">
+        <Icon className="w-4 h-4 md:w-5 md:h-5 text-white/80" strokeWidth={2} />
       </div>
       
-      <p className="text-white/70 text-xs mb-1 font-medium uppercase tracking-wider">Estado de Gasto</p>
-      <p className="text-2xl font-black text-white tracking-tight mb-1">
+      <p className="text-white/70 text-[10px] md:text-xs mb-1 font-medium uppercase tracking-wider">Estado de Gasto</p>
+      <p className="text-xl md:text-2xl font-black text-white tracking-tight mb-1">
         {config.label}
       </p>
-      <p className="text-white/60 text-xs mb-3">{data.message}</p>
+      <p className="text-white/60 text-[11px] md:text-xs mb-2 md:mb-3">{data.message}</p>
       
       {/* Progress bar */}
-      <div className="pt-3 border-t border-white/20">
-        <div className="flex justify-between text-xs mb-2 text-white/70">
-          <span>{formatCurrencyISO(data.total_spent, 'PEN', { decimals: 0 })}</span>
+      <div className="pt-2 md:pt-3 border-t border-white/20">
+        <div className="flex justify-between text-[10px] md:text-xs mb-1.5 md:mb-2 text-white/70">
+          <span>{formatCurrencyISO(data.total_spent / 1000, 'PEN', { decimals: 1 })}k</span>
           <span className="font-bold text-white">{((data.total_spent / data.total_budgeted) * 100).toFixed(0)}%</span>
-          <span>{formatCurrencyISO(data.total_budgeted, 'PEN', { decimals: 0 })}</span>
+          <span>{formatCurrencyISO(data.total_budgeted / 1000, 'PEN', { decimals: 1 })}k</span>
         </div>
-        <div className="h-2 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+        <div className="h-1.5 md:h-2 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
           <div 
             className="h-full bg-white"
             style={{ width: `${Math.min(100, (data.total_spent / data.total_budgeted) * 100)}%` }}

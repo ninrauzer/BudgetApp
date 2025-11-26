@@ -732,12 +732,27 @@ async def get_purchase_advisor(
     if not card:
         raise HTTPException(status_code=404, detail="Tarjeta no encontrada")
     
-    # Validar que haya crédito disponible
+    # ⚠️ VALIDACIÓN: Si el monto excede disponible
     if amount > card.available_credit:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Crédito insuficiente. Disponible: S/ {card.available_credit}"
-        )
+        return {
+            "error": True,
+            "warning": {
+                "type": "insufficient_credit",
+                "title": "❌ Crédito Insuficiente",
+                "message": f"No tienes suficiente disponible para esta compra",
+                "details": {
+                    "requested_amount": float(amount),
+                    "available_credit": float(card.available_credit),
+                    "short_by": float(amount - card.available_credit),
+                    "action": "Reduce el monto o realiza un pago previo"
+                }
+            },
+            "purchase_amount": None,
+            "revolvente_option": None,
+            "installments_option": None,
+            "recommendation": None,
+            "impact_on_credit": None
+        }
     
     # OPCIÓN REVOLVENTE (pago total siguiente corte)
     revolvente_total = amount

@@ -49,64 +49,66 @@ export default function Settings() {
         <p className="text-text-secondary">Gestiona tus preferencias y datos de la aplicación</p>
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="bg-surface border border-border rounded-2xl p-2 shadow-sm">
-        <div className="flex gap-2">
-          <button
-            onClick={() => setActiveTab('general')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
-              activeTab === 'general'
-                ? 'bg-primary text-white shadow-button'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
-            }`}
-          >
-            <SettingsIcon className="w-4 h-4" strokeWidth={2.5} />
-            GENERAL
-          </button>
-          <button
-            onClick={() => setActiveTab('categories')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
-              activeTab === 'categories'
-                ? 'bg-primary text-white shadow-button'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
-            }`}
-          >
-            <Tag className="w-4 h-4" strokeWidth={2.5} />
-            CATEGORÍAS
-          </button>
-          <button
-            onClick={() => setActiveTab('billing-cycle')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
-              activeTab === 'billing-cycle'
-                ? 'bg-primary text-white shadow-button'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
-            }`}
-          >
-            <Calendar className="w-4 h-4" strokeWidth={2.5} />
-            CICLO
-          </button>
-          <button
-            onClick={() => setActiveTab('templates')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
-              activeTab === 'templates'
-                ? 'bg-primary text-white shadow-button'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
-            }`}
-          >
-            <Zap className="w-4 h-4" strokeWidth={2.5} />
-            PLANTILLAS
-          </button>
-          <button
-            onClick={() => setActiveTab('modules')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
-              activeTab === 'modules'
-                ? 'bg-primary text-white shadow-button'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
-            }`}
-          >
-            <LayoutDashboard className="w-4 h-4" strokeWidth={2.5} />
-            MÓDULOS
-          </button>
+      {/* Tabs Navigation - Horizontal scroll on mobile */}
+      <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+        <div className="bg-surface border border-border rounded-2xl p-2 shadow-sm">
+          <div className="flex gap-2 pb-1 md:pb-0">
+            <button
+              onClick={() => setActiveTab('general')}
+              className={`flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+                activeTab === 'general'
+                  ? 'bg-primary text-white shadow-button'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
+              }`}
+            >
+              <SettingsIcon className="w-4 h-4" strokeWidth={2.5} />
+              GENERAL
+            </button>
+            <button
+              onClick={() => setActiveTab('categories')}
+              className={`flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+                activeTab === 'categories'
+                  ? 'bg-primary text-white shadow-button'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
+              }`}
+            >
+              <Tag className="w-4 h-4" strokeWidth={2.5} />
+              CATEGORÍAS
+            </button>
+            <button
+              onClick={() => setActiveTab('billing-cycle')}
+              className={`flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+                activeTab === 'billing-cycle'
+                  ? 'bg-primary text-white shadow-button'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
+              }`}
+            >
+              <Calendar className="w-4 h-4" strokeWidth={2.5} />
+              CICLO
+            </button>
+            <button
+              onClick={() => setActiveTab('templates')}
+              className={`flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+                activeTab === 'templates'
+                  ? 'bg-primary text-white shadow-button'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
+              }`}
+            >
+              <Zap className="w-4 h-4" strokeWidth={2.5} />
+              PLANTILLAS
+            </button>
+            <button
+              onClick={() => setActiveTab('modules')}
+              className={`flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+                activeTab === 'modules'
+                  ? 'bg-primary text-white shadow-button'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4" strokeWidth={2.5} />
+              MÓDULOS
+            </button>
+          </div>
         </div>
       </div>
 

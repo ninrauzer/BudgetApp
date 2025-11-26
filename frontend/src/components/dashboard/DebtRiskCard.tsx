@@ -38,30 +38,30 @@ export function DebtRiskCard() {
   const Icon = config.icon;
 
   return (
-    <div className={`rounded-2xl p-4 text-white shadow-lg backdrop-blur-md ${config.gradient} transition-all duration-200 hover:-translate-y-1 hover:shadow-xl`}>
-      <div className="flex items-center justify-between mb-3">
-        <CreditCard className="w-6 h-6 text-white/80" strokeWidth={2} />
-        <Icon className="w-5 h-5 text-white/90" strokeWidth={2.5} />
+    <div className={`min-h-full md:h-auto rounded-2xl p-4 md:p-6 text-white shadow-lg backdrop-blur-md ${config.gradient} transition-all duration-200 hover:-translate-y-1 hover:shadow-xl`}>
+      <div className="flex items-center justify-between mb-2 md:mb-3">
+        <CreditCard className="w-4 h-4 md:w-5 md:h-5 text-white/80" strokeWidth={2} />
+        <Icon className="w-4 h-4 md:w-5 md:h-5 text-white/90" strokeWidth={2.5} />
       </div>
 
-      <p className="text-white/70 text-xs mb-1 font-medium uppercase tracking-wider">Deuda Bancaria</p>
-      <p className="text-2xl font-black text-white tracking-tight mb-1">
+      <p className="text-white/70 text-[10px] md:text-xs mb-1 font-medium uppercase tracking-wider">Deuda Bancaria</p>
+      <p className="text-xl md:text-2xl font-black text-white tracking-tight mb-1">
         {formatCurrencyISO(data.total_debt / 1000, 'PEN', { decimals: 1 })}k
       </p>
-      <p className="text-white/60 text-xs mb-3">
-        Cuota: {formatCurrencyISO(data.total_monthly_payment, 'PEN')}
+      <p className="text-white/60 text-[11px] md:text-xs mb-2 md:mb-3">
+        Cuota: {formatCurrencyISO(data.total_monthly_payment / 1000, 'PEN', { decimals: 1 })}k
       </p>
 
-      <div className="grid grid-cols-2 gap-2 pt-3 border-t border-white/20">
+      <div className="grid grid-cols-2 gap-2 md:gap-3 pt-2 md:pt-3 border-t border-white/20">
         <div>
-          <p className="text-xs text-white/70 mb-0.5">% Ingresos</p>
-          <p className="text-sm font-bold text-white">
+          <p className="text-[10px] md:text-xs text-white/70 mb-0.5">% Ingresos</p>
+          <p className="text-xs md:text-sm font-bold text-white">
             {data.monthly_income_percentage.toFixed(1)}%
           </p>
         </div>
         <div>
-          <p className="text-xs text-white/70 mb-0.5">Préstamos</p>
-          <p className="text-sm font-bold text-white">
+          <p className="text-[10px] md:text-xs text-white/70 mb-0.5">Préstamos</p>
+          <p className="text-xs md:text-sm font-bold text-white">
             {data.active_loans_count}
           </p>
         </div>

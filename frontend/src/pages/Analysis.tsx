@@ -662,37 +662,74 @@ export default function Analysis() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-h1 font-bold text-text-primary">Análisis Financiero</h1>
-          {cycleParams ? (
-            <CycleInfo 
-              cycleData={{
-                cycle_name: cycleParams.cycleName,
-                start_date: cycleParams.startDate,
-                end_date: cycleParams.endDate
-              }} 
-              isLoading={rateLoadingState} 
-            />
-          ) : (
-            <p className="text-body-sm text-text-secondary mt-1">
-              Visualiza tus patrones de gasto e ingresos
-            </p>
-          )}
-        </div>
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold text-text-primary">Análisis Financiero</h1>
+        {cycleParams ? (
+          <CycleInfo 
+            cycleData={{
+              cycle_name: cycleParams.cycleName,
+              start_date: cycleParams.startDate,
+              end_date: cycleParams.endDate
+            }} 
+            isLoading={rateLoadingState} 
+          />
+        ) : (
+          <p className="text-sm md:text-base text-text-secondary mt-1">
+            Visualiza tus patrones de gasto e ingresos
+          </p>
+        )}
+      </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-3">
-          {/* Currency Toggle */}
-          <div className="flex items-center gap-2 bg-surface border border-border rounded-xl p-1">
+      {/* Controls: Tabs + Currency + Cycle - Horizontal scroll on mobile */}
+      <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+        <div className="flex items-center gap-2 md:gap-3 pb-2 min-w-max">
+          {/* Tabs */}
+          <div className="flex items-center gap-1.5 bg-surface border border-border rounded-xl p-1">
+            <button
+              onClick={() => setActiveTab('summary')}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg font-bold text-xs transition-all whitespace-nowrap ${
+                activeTab === 'summary'
+                  ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg shadow-purple-500/30'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
+              }`}
+            >
+              <BarChart3 className="w-3.5 h-3.5" strokeWidth={2.5} />
+              <span className="hidden sm:inline">RESUMEN</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('charts')}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg font-bold text-xs transition-all whitespace-nowrap ${
+                activeTab === 'charts'
+                  ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg shadow-purple-500/30'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
+              }`}
+            >
+              <PieChartIcon className="w-3.5 h-3.5" strokeWidth={2.5} />
+              <span className="hidden sm:inline">GRÁFICOS</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('details')}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg font-bold text-xs transition-all whitespace-nowrap ${
+                activeTab === 'details'
+                  ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg shadow-purple-500/30'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
+              }`}
+            >
+              <ListChecks className="w-3.5 h-3.5" strokeWidth={2.5} />
+              <span className="hidden sm:inline">DETALLE</span>
+            </button>
+          </div>
+
+          {/* Currency Selector */}
+          <div className="flex items-center gap-1.5 bg-surface border border-border rounded-xl p-1">
             <button
               onClick={() => setDisplayCurrency('PEN')}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              className={`px-3 py-2 rounded-lg font-bold text-xs transition-all ${
                 displayCurrency === 'PEN'
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-text-secondary hover:text-text-primary'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
               }`}
             >
               PEN
@@ -700,88 +737,52 @@ export default function Analysis() {
             <button
               onClick={() => setDisplayCurrency('USD')}
               disabled={rateLoading}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              className={`px-3 py-2 rounded-lg font-bold text-xs transition-all ${
                 displayCurrency === 'USD'
-                  ? 'bg-blue-500 text-white shadow-sm'
-                  : 'text-text-secondary hover:text-text-primary'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
               } disabled:opacity-50`}
             >
-              {rateLoading ? <Loader2 className="w-4 h-4 animate-spin inline" /> : 'USD'}
+              {rateLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> : 'USD'}
             </button>
           </div>
 
           {/* Cycle Selector */}
-          <div className="flex items-center gap-2 bg-surface border border-border rounded-xl p-1">
+          <div className="flex items-center gap-1.5 bg-surface border border-border rounded-xl p-1">
             <button
               onClick={() => setSelectedCycleOffset(0)}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              className={`px-3 py-2 rounded-lg font-bold text-xs transition-all whitespace-nowrap ${
                 selectedCycleOffset === 0
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-text-secondary hover:text-text-primary'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
               }`}
             >
-              Este ciclo
+              <span className="hidden sm:inline">Este ciclo</span>
+              <span className="sm:hidden">Actual</span>
             </button>
             <button
               onClick={() => setSelectedCycleOffset(-1)}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              className={`px-3 py-2 rounded-lg font-bold text-xs transition-all whitespace-nowrap ${
                 selectedCycleOffset === -1
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-text-secondary hover:text-text-primary'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
               }`}
             >
-              Anterior
+              <span className="hidden sm:inline">Anterior</span>
+              <span className="sm:hidden">Ant</span>
             </button>
             <button
               onClick={() => setSelectedCycleOffset(-2)}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              className={`px-3 py-2 rounded-lg font-bold text-xs transition-all whitespace-nowrap ${
                 selectedCycleOffset === -2
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-text-secondary hover:text-text-primary'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
               }`}
             >
-              Hace 2 ciclos
+              <span className="hidden sm:inline">Hace 2 ciclos</span>
+              <span className="sm:hidden">-2</span>
             </button>
           </div>
-        </div>
-      </div>
-
-      {/* Tabs Navigation */}
-      <div className="bg-surface border border-border rounded-2xl p-2 shadow-sm">
-        <div className="flex gap-2">
-          <button
-            onClick={() => setActiveTab('summary')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
-              activeTab === 'summary'
-                ? 'bg-primary text-white shadow-button'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
-            }`}
-          >
-            <BarChart3 className="w-4 h-4" strokeWidth={2.5} />
-            RESUMEN
-          </button>
-          <button
-            onClick={() => setActiveTab('charts')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
-              activeTab === 'charts'
-                ? 'bg-primary text-white shadow-button'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
-            }`}
-          >
-            <PieChartIcon className="w-4 h-4" strokeWidth={2.5} />
-            GRÁFICOS
-          </button>
-          <button
-            onClick={() => setActiveTab('details')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
-              activeTab === 'details'
-                ? 'bg-primary text-white shadow-button'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-soft'
-            }`}
-          >
-            <ListChecks className="w-4 h-4" strokeWidth={2.5} />
-            DETALLE
-          </button>
         </div>
       </div>
 
@@ -794,80 +795,82 @@ export default function Analysis() {
             </div>
           ) : (
             <>
-          {/* Summary Cards */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {/* Total Income */}
-        <div className="bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-3xl p-8 shadow-card text-white">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold uppercase tracking-wide opacity-90">Ingresos</h3>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-              <ArrowUpRight className="h-6 w-6" strokeWidth={2.5} />
-            </div>
-          </div>
-          <div className="space-y-3">
-            <div className="text-4xl font-extrabold">
-              {formatAmount(summary?.total_income || 0)}
-            </div>
-            <div className="text-sm font-bold bg-white/20 backdrop-blur-sm rounded-pill px-3 py-1 w-fit">
-              Total del ciclo
-            </div>
-          </div>
-        </div>
+          {/* Summary Cards - Carousel on mobile, grid on desktop */}
+          <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+            <div className="flex md:grid md:gap-6 md:grid-cols-2 lg:grid-cols-4 gap-4 pb-2 md:pb-0">
+              {/* Total Income */}
+              <div className="flex-shrink-0 w-[280px] md:w-auto bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-3xl p-6 md:p-8 shadow-card text-white">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold uppercase tracking-wide opacity-90">Ingresos</h3>
+                  <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                    <ArrowUpRight className="h-5 w-5 md:h-6 md:w-6" strokeWidth={2.5} />
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="text-3xl md:text-4xl font-extrabold">
+                    {formatAmount(summary?.total_income || 0)}
+                  </div>
+                  <div className="text-xs md:text-sm font-bold bg-white/20 backdrop-blur-sm rounded-pill px-3 py-1 w-fit">
+                    Total del ciclo
+                  </div>
+                </div>
+              </div>
 
-        {/* Total Expense */}
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-3xl p-8 shadow-card text-white">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold uppercase tracking-wide opacity-90">Gastos</h3>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-              <ArrowDownRight className="h-6 w-6" strokeWidth={2.5} />
-            </div>
-          </div>
-          <div className="space-y-3">
-            <div className="text-4xl font-extrabold">
-              {formatAmount(summary?.total_expense || 0)}
-            </div>
-            <div className="text-sm font-bold bg-white/20 backdrop-blur-sm rounded-pill px-3 py-1 w-fit">
-              {summary?.transaction_count || 0} transacciones
-            </div>
-          </div>
-        </div>
+              {/* Total Expense */}
+              <div className="flex-shrink-0 w-[280px] md:w-auto bg-gradient-to-br from-orange-500 to-orange-600 rounded-3xl p-6 md:p-8 shadow-card text-white">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold uppercase tracking-wide opacity-90">Gastos</h3>
+                  <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                    <ArrowDownRight className="h-5 w-5 md:h-6 md:w-6" strokeWidth={2.5} />
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="text-3xl md:text-4xl font-extrabold">
+                    {formatAmount(summary?.total_expense || 0)}
+                  </div>
+                  <div className="text-xs md:text-sm font-bold bg-white/20 backdrop-blur-sm rounded-pill px-3 py-1 w-fit">
+                    {summary?.transaction_count || 0} transacciones
+                  </div>
+                </div>
+              </div>
 
-        {/* Balance */}
-        <div className={`bg-gradient-to-br ${(summary?.balance || 0) >= 0 ? 'from-blue-500 to-blue-600' : 'from-orange-400 to-orange-500'} rounded-3xl p-8 shadow-card text-white`}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold uppercase tracking-wide opacity-90">Balance</h3>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-              <DollarSign className="h-6 w-6" strokeWidth={2.5} />
-            </div>
-          </div>
-          <div className="space-y-3">
-            <div className="text-4xl font-extrabold">
-              {formatAmount(summary?.balance || 0)}
-            </div>
-            <div className="text-sm font-bold bg-white/20 backdrop-blur-sm rounded-pill px-3 py-1 w-fit">
-              Ingresos - Gastos
-            </div>
-          </div>
-        </div>
+              {/* Balance */}
+              <div className={`flex-shrink-0 w-[280px] md:w-auto bg-gradient-to-br ${(summary?.balance || 0) >= 0 ? 'from-blue-500 to-blue-600' : 'from-orange-400 to-orange-500'} rounded-3xl p-6 md:p-8 shadow-card text-white`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold uppercase tracking-wide opacity-90">Balance</h3>
+                  <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                    <DollarSign className="h-5 w-5 md:h-6 md:w-6" strokeWidth={2.5} />
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="text-3xl md:text-4xl font-extrabold">
+                    {formatAmount(summary?.balance || 0)}
+                  </div>
+                  <div className="text-xs md:text-sm font-bold bg-white/20 backdrop-blur-sm rounded-pill px-3 py-1 w-fit">
+                    Ingresos - Gastos
+                  </div>
+                </div>
+              </div>
 
-        {/* Avg Daily Expense */}
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-3xl p-8 shadow-card text-white">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold uppercase tracking-wide opacity-90">Gasto Diario</h3>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-              <TrendingUp className="h-6 w-6" strokeWidth={2.5} />
+              {/* Avg Daily Expense */}
+              <div className="flex-shrink-0 w-[280px] md:w-auto bg-gradient-to-br from-purple-500 to-purple-600 rounded-3xl p-6 md:p-8 shadow-card text-white">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold uppercase tracking-wide opacity-90">Gasto Diario</h3>
+                  <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                    <TrendingUp className="h-5 w-5 md:h-6 md:w-6" strokeWidth={2.5} />
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="text-3xl md:text-4xl font-extrabold">
+                    {formatAmount(summary?.avg_daily_expense || 0)}
+                  </div>
+                  <div className="text-xs md:text-sm font-bold bg-white/20 backdrop-blur-sm rounded-pill px-3 py-1 w-fit">
+                    Promedio por día
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="space-y-3">
-            <div className="text-4xl font-extrabold">
-              {formatAmount(summary?.avg_daily_expense || 0)}
-            </div>
-            <div className="text-sm font-bold bg-white/20 backdrop-blur-sm rounded-pill px-3 py-1 w-fit">
-              Promedio por día
-            </div>
-          </div>
-        </div>
-      </div>
 
           {/* Top 5 Categories by Spending */}
           <div className="bg-surface border border-border rounded-3xl p-8 shadow-card">
