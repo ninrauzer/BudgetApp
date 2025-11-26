@@ -13,7 +13,8 @@ import {
   useCreateTransaction,
   useUpdateTransaction,
   useDeleteTransaction,
-  useCurrentCycle
+  useCurrentCycle,
+  useQuickTemplates
 } from '@/lib/hooks/useApi';
 import type { TransactionFilters, Transaction } from '@/lib/api';
 import { exchangeRateApi } from '@/lib/api';
@@ -176,37 +177,8 @@ export default function Transactions() {
     }
   };
 
-  // Quick templates - common expenses with category icons from database
-  const quickTemplates = [
-    { 
-      name: 'Almuerzo', 
-      icon: categories.find(c => c.name === 'Alimentación')?.icon || 'utensils',
-      amount: 25, 
-      category_id: categories.find(c => c.name === 'Alimentación')?.id || 1, 
-      description: 'Almuerzo' 
-    },
-    { 
-      name: 'Transporte', 
-      icon: categories.find(c => c.name === 'Transporte')?.icon || 'car',
-      amount: 15, 
-      category_id: categories.find(c => c.name === 'Transporte')?.id || 2, 
-      description: 'Transporte público' 
-    },
-    { 
-      name: 'Café', 
-      icon: categories.find(c => c.name === 'Alimentación')?.icon || 'coffee',
-      amount: 8, 
-      category_id: categories.find(c => c.name === 'Alimentación')?.id || 1, 
-      description: 'Café' 
-    },
-    { 
-      name: 'Mercado', 
-      icon: categories.find(c => c.name === 'Alimentación')?.icon || 'shopping-cart',
-      amount: 100, 
-      category_id: categories.find(c => c.name === 'Alimentación')?.id || 1, 
-      description: 'Compras de mercado' 
-    },
-  ];
+  // Quick templates from database
+  const { data: quickTemplates = [] } = useQuickTemplates();
 
   const handleTemplateSelect = async (template: any) => {
     try {

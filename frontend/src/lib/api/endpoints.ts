@@ -276,12 +276,12 @@ export const exchangeRateApi = {
 // Quick Templates
 export const quickTemplatesApi = {
   getAll: async (): Promise<QuickTemplate[]> => {
-    const { data } = await apiClient.get<QuickTemplate[]>('/quick-templates');
+    const { data } = await apiClient.get<QuickTemplate[]>('/quick-templates/');
     return data;
   },
 
   getById: async (id: number): Promise<QuickTemplate> => {
-    const { data } = await apiClient.get<QuickTemplate>(`/quick-templates/${id}`);
+    const { data } = await apiClient.get<QuickTemplate>(`/quick-templates/${id}/`);
     return data;
   },
 
@@ -291,12 +291,12 @@ export const quickTemplatesApi = {
   },
 
   update: async (id: number, template: Partial<QuickTemplate>): Promise<QuickTemplate> => {
-    const { data } = await apiClient.put<QuickTemplate>(`/quick-templates/${id}`, template);
+    const { data } = await apiClient.put<QuickTemplate>(`/quick-templates/${id}/`, template);
     return data;
   },
 
   delete: async (id: number): Promise<void> => {
-    await apiClient.delete(`/quick-templates/${id}`);
+    await apiClient.delete(`/quick-templates/${id}/`);
   },
 };
 

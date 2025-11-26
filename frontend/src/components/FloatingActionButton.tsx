@@ -82,7 +82,7 @@ export default function FloatingActionButton({
                   className="w-full px-4 py-3 text-left hover:bg-purple-500/10 rounded-2xl transition-colors flex items-center gap-3 group"
                 >
                   <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
-                    <CategoryIcon iconName={template.icon} className="text-purple-500" size={20} />
+                    <CategoryIcon iconName={template.category_icon || 'HelpCircle'} className="text-purple-500" size={20} />
                   </div>
                   <div className="flex-1">
                     <p className="font-bold text-text-primary">{template.name}</p>
