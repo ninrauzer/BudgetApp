@@ -6,6 +6,7 @@ Main FastAPI application entry point.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -205,6 +206,13 @@ async def startup_event():
             db.close()
     except Exception as e:
         print(f"[startup] Warning: Could not fix sequences: {e}")
+
+
+# Mount static files (frontend) - must be AFTER all API routes
+static_path = Path(__file__).parent.parent.parent / "frontend" / "dist"
+if static_path.exists():
+    app.mount("/", StaticFiles(directory=str(static_path), html=True), name="static")
+    print(f"[static] Mounted from {static_path}")
 
 
 if __name__ == "__main__":
