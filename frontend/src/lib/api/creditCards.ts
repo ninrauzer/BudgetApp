@@ -116,8 +116,20 @@ export interface CycleTimeline {
 }
 
 export interface PurchaseAdvisor {
-  purchase_amount: number;
-  revolvente_option: {
+  error?: boolean;
+  warning?: {
+    type: string;
+    title: string;
+    message: string;
+    details: {
+      requested_amount: number;
+      available_credit: number;
+      short_by: number;
+      action: string;
+    };
+  };
+  purchase_amount: number | null;
+  revolvente_option?: {
     total_to_pay: number;
     interest: number;
     condition: string;
@@ -134,12 +146,12 @@ export interface PurchaseAdvisor {
     pros: string[];
     cons: string[];
   };
-  recommendation: {
+  recommendation?: {
     best_option: 'revolvente' | 'installments' | 'depends';
     reason: string;
     considerations: string[];
   };
-  impact_on_credit: {
+  impact_on_credit?: {
     current_available: number;
     after_purchase: number;
     utilization_before: number;
