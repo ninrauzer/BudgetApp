@@ -92,36 +92,6 @@ export function CashflowCard() {
               rotation: 0
             }
           ]}
-          layers={[
-            'grid',
-            'markers',
-            'axes',
-            'areas',
-            'crosshair',
-            ({ series, lineGenerator, xScale, yScale }) => {
-              return series.map((serie) => {
-                const lineData = (serie.data as any[]).map((d: any) => ({
-                  x: xScale(d.data.x),
-                  y: yScale(d.data.y)
-                })) as Array<{ x: number; y: number }>;
-                
-                return (
-                  <path
-                    key={serie.id}
-                    d={lineGenerator(lineData) || ''}
-                    fill="none"
-                    stroke={serie.id === 'real' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)'}
-                    strokeWidth={2}
-                    strokeDasharray={serie.id === 'projected' ? '4 4' : '0'}
-                  />
-                );
-              });
-            },
-            'slices',
-            'points',
-            'mesh',
-            'legends'
-          ]}
         />
       </div>
 
