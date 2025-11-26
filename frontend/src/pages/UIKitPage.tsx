@@ -142,7 +142,7 @@ export default function UIKitPage() {
           <div className="space-y-4 text-slate-400">
             <div>
               <p className="font-mono text-sm bg-slate-900 p-3 rounded text-emerald-400">
-                &lt;MascotBubble message="..." mood="happy" onClose={() => {}} /&gt;
+                &lt;MascotBubble message="..." mood="happy" onClose=&#123;() =&gt; &#123;&#125;&#125; /&gt;
               </p>
             </div>
 
