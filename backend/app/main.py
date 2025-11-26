@@ -103,24 +103,6 @@ async def health_check():
     )
 
 
-# API info endpoint (root)
-@app.get("/", tags=["Root"])
-async def root():
-    """
-    API information endpoint.
-    """
-    return JSONResponse(
-        content={
-            "message": f"Welcome to {APP_NAME} API",
-            "version": APP_VERSION,
-            "docs": "/docs",
-            "redoc": "/redoc",
-            "health": "/health",
-            "note": "This is a REST API. Frontend is served separately from /frontend",
-        }
-    )
-
-
 # Import and include routers
 from app.api import (
     categories, 
