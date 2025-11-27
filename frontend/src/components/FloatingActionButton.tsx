@@ -1,19 +1,12 @@
 import { Plus, Zap } from 'lucide-react';
 import { useState } from 'react';
 import CategoryIcon from './CategoryIcon';
-
-interface Template {
-  name: string;
-  icon: string;
-  amount: number;
-  category_id: number;
-  description: string;
-}
+import type { QuickTemplate } from '@/lib/api/types';
 
 interface FloatingActionButtonProps {
   onQuickAdd: () => void;
-  onTemplateSelect?: (template: Template) => void;
-  templates?: Template[];
+  onTemplateSelect?: (template: QuickTemplate) => void;
+  templates?: QuickTemplate[];
 }
 
 export default function FloatingActionButton({ 
