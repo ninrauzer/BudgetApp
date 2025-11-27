@@ -372,6 +372,8 @@ export const useQuickTemplates = () => {
   return useQuery({
     queryKey: ['quickTemplates'],
     queryFn: quickTemplatesApi.getAll,
+    refetchOnMount: true,
+    staleTime: 0,
   });
 };
 
