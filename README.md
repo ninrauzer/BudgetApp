@@ -100,15 +100,14 @@ Arquitectura **API-First** con separación clara entre frontend y backend:
 │            localhost:8000 | :8000 (Docker)             │
 │  - Python 3.12 + FastAPI                               │
 │  - SQLAlchemy ORM                                      │
-│  - PostgreSQL (WSL2 | Supabase)                        │
 │  - Uvicorn ASGI server                                 │
 └─────────────────────────────────────────────────────────┘
                      │
                      ↓
          ┌───────────────────────┐
-         │    PostgreSQL DB      │
-         │  budgetapp_dev (dev)  │
-         │  budgetapp_prod (prod)│
+         │  PostgreSQL (Neon.tech)│
+         │   budgetapp_prod      │
+         │   Cloud Database      │
          └───────────────────────┘
 ```
 
@@ -199,20 +198,19 @@ npm run dev
 ```
 
 ### Variables de Entorno
-```
-# backend/.env (desarrollo local)
-DATABASE_URL=postgresql://postgres:postgres@192.168.126.127:5432/budgetapp_dev
+```bash
+# backend/.env (desarrollo local y Docker)
+DATABASE_URL=postgresql://neondb_owner:PASSWORD@HOST.neon.tech/budgetapp_prod?sslmode=require
 
-# root/.env (Docker)
-DATABASE_URL=postgresql://postgres:postgres@192.168.126.127:5432/budgetapp_prod
+# Obtén tu URL desde: https://console.neon.tech
 ```
 
 ### Base de Datos
-- **Host**: 192.168.126.127:5432 (PostgreSQL en WSL2)
-- **User**: postgres
-- **Password**: postgres
-- **Dev DB**: budgetapp_dev (modificable)
-- **Prod DB**: budgetapp_prod (producción-like, cuidado!)
+- **Proveedor**: Neon.tech (PostgreSQL Cloud)
+- **Database**: budgetapp_prod
+- **Región**: US West (Oregon)
+- **Console**: https://console.neon.tech
+- **Backup**: Automático (Neon snapshots)
 
 ---
 

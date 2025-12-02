@@ -1,7 +1,8 @@
 # BudgetApp - QA Checklist Pre-Producción
-**Fecha**: 20 Noviembre 2025  
-**Ambiente**: Docker (192.168.126.127:8080)  
-**Backend**: http://192.168.126.127:8000
+**Fecha**: 2 Diciembre 2025 (Actualizado post-migración Neon.tech)  
+**Ambiente Local**: Docker (http://localhost:8080)  
+**Backend Local**: http://localhost:8000  
+**Database**: Neon.tech PostgreSQL (Cloud)
 
 ---
 
@@ -14,12 +15,14 @@
   ```
 - [ ] **Backend health**: `/api/health` responde 200 OK con estado "connected"
   ```bash
-  curl http://192.168.126.127:8000/api/health
+  curl http://localhost:8000/api/health
   ```
-- [ ] **Database**: PostgreSQL conectado y funcional
-  - [ ] `budgetapp_prod` accesible
-  - [ ] `budgetapp_dev` accesible (para testing)
-- [ ] **Network**: 192.168.126.127 alcanzable desde host
+- [ ] **Database**: Neon.tech PostgreSQL conectado y funcional
+  - [ ] `budgetapp_prod` accesible en Neon.tech
+  - [ ] 110+ transacciones migradas
+  - [ ] 36 categorías migradas
+  - [ ] Console: https://console.neon.tech
+- [ ] **Network**: localhost:8080 accesible desde navegador
 
 ---
 
