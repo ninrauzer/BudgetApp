@@ -335,29 +335,16 @@ async def reset_demo_database():
             session.flush()
             print(f"[RESET-DEMO] {len(accounts)} accounts created")
             
-            print(f"[RESET-DEMO] Creating billing cycles...")
-            # Create billing cycles using ORM
-            today = datetime.now()
-            start_date = datetime(today.year, today.month, 23)
-            if today.day < 23:
-                start_date = start_date.replace(month=today.month - 1 if today.month > 1 else 12)
-                if today.month == 1:
-                    start_date = start_date.replace(year=today.year - 1)
-            
-            billing_cycles = []
-            for i in range(-2, 3):
-                cycle_start = start_date + timedelta(days=30*i)
-                cycle_end = cycle_start + timedelta(days=29)
-                billing_cycles.append(
-                    BillingCycle(
-                        start_date=cycle_start.date(),
-                        end_date=cycle_end.date(),
-                        start_day=23
-                    )
-                )
-            session.add_all(billing_cycles)
+            print(f"[RESET-DEMO] Creating billing cycle...")
+            # Create single billing cycle with start_day=23
+            billing_cycle = BillingCycle(
+                name="Demo Cycle",
+                start_day=23,
+                is_active=True
+            )
+            session.add(billing_cycle)
             session.flush()
-            print(f"[RESET-DEMO] {len(billing_cycles)} billing cycles created")
+            print(f"[RESET-DEMO] Billing cycle created with start_day=23")
             
             print(f"[RESET-DEMO] Creating transactions...")
             # Create 50 sample transactions using ORM
@@ -411,7 +398,7 @@ async def reset_demo_database():
                 "user": demo_user.email,
                 "categories": len(categories),
                 "accounts": len(accounts),
-                "billing_cycles": len(billing_cycles),
+                "billing_cycle": "start_day=23",
                 "transactions": len(transactions)
             }
         
