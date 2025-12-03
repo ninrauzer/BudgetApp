@@ -71,6 +71,10 @@ def verify_token(token: str) -> dict:
         )
 
 
+# Alias for middleware usage
+decode_token = verify_token
+
+
 def get_or_create_user(db: Session, email: str, name: str, picture: str, provider: str, provider_id: str) -> User:
     """Get existing user or create new one."""
     # Try to find by provider_id first (most reliable)

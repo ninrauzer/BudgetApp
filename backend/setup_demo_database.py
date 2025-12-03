@@ -15,8 +15,8 @@ engine = create_engine(DEMO_DATABASE_URL)
 
 # Datos ficticios para demo
 DEMO_CATEGORIES = [
-    {"name": "Salario", "icon": "Briefcase", "type": "income", "color": "#10B981"},
-    {"name": "Freelance", "icon": "Laptop", "type": "income", "color": "#34D399"},
+    {"name": "Salario", "icon": "Briefcase", "type": "income", "color": "#10B981", "expense_type": None},
+    {"name": "Freelance", "icon": "Laptop", "type": "income", "color": "#34D399", "expense_type": None},
     {"name": "Supermercado", "icon": "ShoppingCart", "type": "expense", "color": "#EF4444", "expense_type": "variable"},
     {"name": "Restaurantes", "icon": "UtensilsCrossed", "type": "expense", "color": "#F97316", "expense_type": "variable"},
     {"name": "Transporte", "icon": "Car", "type": "expense", "color": "#F59E0B", "expense_type": "variable"},

@@ -14,6 +14,9 @@ from dotenv import load_dotenv
 # Import OAuth authentication (NEW - replaces HTTP Basic gradually)
 from app.oauth import get_current_user
 
+# Import Demo Context Middleware
+from app.middleware.demo_context import DemoContextMiddleware
+
 # Load environment variables from .env file in the backend directory
 env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path)
@@ -52,6 +55,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add Demo Context Middleware (detects demo users and switches database)
+app.add_middleware(DemoContextMiddleware)
 
 
 # Environment debug endpoint (always shows environment info)

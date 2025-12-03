@@ -238,14 +238,14 @@ export default function LoginPage() {
               Sign in with Apple (Próximamente)
             </button>
 
-            {/* Demo mode button - DISABLED until isolated database is ready */}
+            {/* Demo mode button */}
             <button
               type="button"
-              disabled
-              className="w-full py-3 bg-surface border-2 border-border text-text-muted rounded-xl font-semibold cursor-not-allowed opacity-60"
-              title="Modo demo temporalmente deshabilitado - En construcción con base de datos aislada"
+              onClick={handleDemoLogin}
+              disabled={isLoading}
+              className="w-full py-3 bg-surface border-2 border-border text-text-primary rounded-xl font-semibold hover:bg-surface-soft hover:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              🎭 Acceder como Demo (Próximamente)
+              🎭 Acceder como Demo
             </button>
           </div>
 
