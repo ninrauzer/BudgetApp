@@ -56,9 +56,9 @@ services:
         name: Cache-Control
         value: public, max-age=31536000, immutable
     routes:
-      - type: rewrite
+      - type: redirect
         source: /api/*
-        destination: https://budgetapp-backend.onrender.com/api/*
+        destination: https://budgetapp-backend.onrender.com/api/:splat
       - type: rewrite
         source: /*
         destination: /index.html
