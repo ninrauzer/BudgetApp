@@ -214,8 +214,8 @@ async def create_demo_session(db: Session = Depends(get_db)):
         db.commit()
         db.refresh(demo_user)
     
-    # Create JWT token
-    access_token = create_access_token(data={"sub": demo_user.id, "email": demo_user.email})
+    # Create JWT token - sub must be string
+    access_token = create_access_token(data={"sub": str(demo_user.id), "email": demo_user.email})
     
     return {
         "access_token": access_token,
