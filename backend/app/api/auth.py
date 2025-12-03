@@ -238,215 +238,63 @@ async def logout():
     return {"message": "Logged out successfully"}
 
 
-@router.post("/init-demo-db")
-async def init_demo_database():
-    """
-    Initialize demo database with all required tables.
-    TEMPORARY ENDPOINT - Should be removed after initial setup.
-    """
-    try:
-        from sqlalchemy import create_engine
-        from app.db.session_manager import Base
-        import os
-        
-        demo_url = os.getenv("DEMO_DATABASE_URL")
-        if not demo_url:
-            return {"error": "DEMO_DATABASE_URL not configured"}
-        
-        # Create engine for demo DB
-        demo_engine = create_engine(demo_url)
-        
-        # Create all tables
-        Base.metadata.create_all(bind=demo_engine)
-        
-        return {
-            "success": True,
-            "message": "Demo database tables created successfully",
-            "tables": [table.name for table in Base.metadata.sorted_tables]
-        }
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@router.post("/init-demo-db")
-async def init_demo_database():
-    """
-    Initialize demo database with tables and sample data.
-    This should be called once after deploying to create demo database structure.
-    """
+@router.post("/seed-demo-db")
+async def seed_demo_database():
+    """Seed demo database with initial data required for the app to work"""
     import os
-    from sqlalchemy import create_engine, text
     from datetime import datetime, timedelta
-    import random
     
     DEMO_DATABASE_URL = os.getenv("DEMO_DATABASE_URL")
     if not DEMO_DATABASE_URL:
         return {"error": "DEMO_DATABASE_URL not configured"}
     
     try:
-        engine = create_engine(DEMO_DATABASE_URL)
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+        from app.db.session_manager import Base
+        from app.models import BillingCycle
         
-        with engine.connect() as conn:
-            # Create tables (simplified version)
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS users (
-                    id SERIAL PRIMARY KEY,
-                    email VARCHAR(255) UNIQUE NOT NULL,
-                    name VARCHAR(255),
-                    picture VARCHAR(500),
-                    provider VARCHAR(50) NOT NULL,
-                    provider_id VARCHAR(255) UNIQUE NOT NULL,
-                    is_demo BOOLEAN DEFAULT FALSE,
-                    is_admin BOOLEAN DEFAULT FALSE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    last_login TIMESTAMP
-                );
-                
-                CREATE TABLE IF NOT EXISTS categories (
-                    id SERIAL PRIMARY KEY,
-                    name VARCHAR(255) NOT NULL,
-                    icon VARCHAR(50),
-                    type VARCHAR(20) NOT NULL,
-                    color VARCHAR(20),
-                    expense_type VARCHAR(20),
-                    user_id INTEGER,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-                
-                CREATE TABLE IF NOT EXISTS accounts (
-                    id SERIAL PRIMARY KEY,
-                    name VARCHAR(255) NOT NULL,
-                    type VARCHAR(50) NOT NULL,
-                    balance DECIMAL(15,2) DEFAULT 0,
-                    currency VARCHAR(10) DEFAULT 'PEN',
-                    user_id INTEGER,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-                
-                CREATE TABLE IF NOT EXISTS billing_cycle (
-                    id SERIAL PRIMARY KEY,
-                    start_date DATE NOT NULL,
-                    end_date DATE NOT NULL,
-                    start_day INTEGER NOT NULL,
-                    user_id INTEGER,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-                
-                CREATE TABLE IF NOT EXISTS transactions (
-                    id SERIAL PRIMARY KEY,
-                    description VARCHAR(500) NOT NULL,
-                    amount DECIMAL(15,2) NOT NULL,
-                    date DATE NOT NULL,
-                    type VARCHAR(20) NOT NULL,
-                    category_id INTEGER,
-                    account_id INTEGER,
-                    user_id INTEGER,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-            """))
-            conn.commit()
+        engine = create_engine(DEMO_DATABASE_URL)
+        Session = sessionmaker(bind=engine)
+        db = Session()
+        
+        try:
+            # Check if billing cycles exist
+            existing_cycles = db.query(BillingCycle).count()
+            if existing_cycles > 0:
+                return {"message": "Demo database already seeded", "cycles": existing_cycles}
             
-            # Check if demo data already exists
-            result = conn.execute(text("SELECT COUNT(*) FROM users WHERE email = 'demo@budgetapp.local'"))
-            if result.scalar() > 0:
-                return {"message": "Demo database already initialized"}
-            
-            # Insert demo user
-            conn.execute(text("""
-                INSERT INTO users (email, name, picture, provider, provider_id, is_demo, is_admin)
-                VALUES ('demo@budgetapp.local', 'Demo User', '', 'demo', 'demo', TRUE, FALSE)
-            """))
-            conn.commit()
-            
-            # Insert categories
-            categories = [
-                ("Salario", "Briefcase", "income", "#10B981", None),
-                ("Freelance", "Laptop", "income", "#34D399", None),
-                ("Supermercado", "ShoppingCart", "expense", "#EF4444", "variable"),
-                ("Restaurantes", "UtensilsCrossed", "expense", "#F97316", "variable"),
-                ("Transporte", "Car", "expense", "#F59E0B", "variable"),
-                ("Alquiler", "Home", "expense", "#DC2626", "fixed"),
-                ("Servicios", "Zap", "expense", "#7C3AED", "fixed"),
-                ("Entretenimiento", "Tv", "expense", "#EC4899", "variable"),
-                ("Salud", "Heart", "expense", "#EF4444", "variable"),
-                ("Educación", "GraduationCap", "expense", "#3B82F6", "variable"),
-            ]
-            
-            for cat in categories:
-                conn.execute(text("""
-                    INSERT INTO categories (name, icon, type, color, expense_type, user_id)
-                    VALUES (:name, :icon, :type, :color, :expense_type, 1)
-                """), {"name": cat[0], "icon": cat[1], "type": cat[2], "color": cat[3], "expense_type": cat[4]})
-            conn.commit()
-            
-            # Insert accounts
-            accounts = [
-                ("Efectivo", "cash", 1500.00, "PEN"),
-                ("Banco Nacional", "bank", 8500.00, "PEN"),
-                ("Ahorros USD", "savings", 2000.00, "USD"),
-            ]
-            
-            for acc in accounts:
-                conn.execute(text("""
-                    INSERT INTO accounts (name, type, balance, currency, user_id)
-                    VALUES (:name, :type, :balance, :currency, 1)
-                """), {"name": acc[0], "type": acc[1], "balance": acc[2], "currency": acc[3]})
-            conn.commit()
-            
-            # Insert billing cycles
+            # Create billing cycles
             today = datetime.now()
             start_date = datetime(today.year, today.month, 23)
             if today.day < 23:
-                start_date = datetime(today.year, today.month - 1, 23)
+                start_date = datetime(today.year, today.month - 1 if today.month > 1 else 12, 23)
+                if today.month == 1:
+                    start_date = start_date.replace(year=today.year - 1)
             
-            for i in range(-1, 2):
+            cycles_created = 0
+            for i in range(-2, 3):  # Create 5 cycles: 2 past, current, 2 future
                 cycle_start = start_date + timedelta(days=30*i)
                 cycle_end = cycle_start + timedelta(days=29)
-                conn.execute(text("""
-                    INSERT INTO billing_cycle (start_date, end_date, start_day, user_id)
-                    VALUES (:start_date, :end_date, 23, 1)
-                """), {"start_date": cycle_start.date(), "end_date": cycle_end.date()})
-            conn.commit()
+                
+                cycle = BillingCycle(
+                    start_date=cycle_start.date(),
+                    end_date=cycle_end.date(),
+                    start_day=23
+                )
+                db.add(cycle)
+                cycles_created += 1
             
-            # Insert 50 sample transactions
-            expense_categories = [3, 4, 5, 6, 7, 8, 9, 10]  # IDs of expense categories
-            income_categories = [1, 2]  # IDs of income categories
+            db.commit()
             
-            for i in range(50):
-                days_ago = random.randint(0, 90)
-                trans_date = today - timedelta(days=days_ago)
-                
-                is_income = random.random() < 0.2  # 20% income, 80% expense
-                
-                if is_income:
-                    cat_id = random.choice(income_categories)
-                    amount = random.uniform(1000, 5000)
-                    trans_type = "income"
-                else:
-                    cat_id = random.choice(expense_categories)
-                    amount = random.uniform(10, 500)
-                    trans_type = "expense"
-                
-                account_id = random.choice([1, 2, 3])
-                
-                conn.execute(text("""
-                    INSERT INTO transactions (description, amount, date, type, category_id, account_id, user_id)
-                    VALUES (:desc, :amount, :date, :type, :cat_id, :acc_id, 1)
-                """), {
-                    "desc": f"Demo {trans_type} {i+1}",
-                    "amount": round(amount, 2),
-                    "date": trans_date.date(),
-                    "type": trans_type,
-                    "cat_id": cat_id,
-                    "acc_id": account_id
-                })
-            conn.commit()
+            return {
+                "success": True,
+                "message": "Demo database seeded successfully",
+                "billing_cycles_created": cycles_created
+            }
             
-        return {
-            "message": "Demo database initialized successfully",
-            "tables_created": 5,
-            "demo_transactions": 50
-        }
-        
+        finally:
+            db.close()
+            
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": str(e), "trace": str(type(e).__name__)}
