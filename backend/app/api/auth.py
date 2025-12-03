@@ -240,11 +240,14 @@ async def logout():
 
 @router.post("/reset-demo-db")
 async def reset_demo_database():
-    """RESET and populate demo database with complete sample data"""
+    """RESET and populate demo database with complete sample data using SQLAlchemy models"""
     import os
     from sqlalchemy import create_engine, text
     from datetime import datetime, timedelta
     import random
+    
+    # Import Base to create all tables
+    from app.db.base import Base
     
     DEMO_DATABASE_URL = os.getenv("DEMO_DATABASE_URL")
     if not DEMO_DATABASE_URL:
@@ -253,95 +256,13 @@ async def reset_demo_database():
     try:
         engine = create_engine(DEMO_DATABASE_URL)
         
+        # Drop ALL tables using metadata
+        Base.metadata.drop_all(bind=engine)
+        
+        # Create ALL tables using SQLAlchemy models
+        Base.metadata.create_all(bind=engine)
+        
         with engine.connect() as conn:
-            # Drop all tables and recreate
-            conn.execute(text("DROP TABLE IF EXISTS transactions CASCADE"))
-            conn.execute(text("DROP TABLE IF EXISTS billing_cycle CASCADE"))
-            conn.execute(text("DROP TABLE IF EXISTS accounts CASCADE"))
-            conn.execute(text("DROP TABLE IF EXISTS categories CASCADE"))
-            conn.execute(text("DROP TABLE IF EXISTS users CASCADE"))
-            conn.commit()
-            
-            # Create users table
-            conn.execute(text("""
-                CREATE TABLE users (
-                    id SERIAL PRIMARY KEY,
-                    email VARCHAR(255) UNIQUE NOT NULL,
-                    name VARCHAR(255),
-                    picture VARCHAR(500),
-                    provider VARCHAR(50) NOT NULL,
-                    provider_id VARCHAR(255) UNIQUE NOT NULL,
-                    is_demo BOOLEAN DEFAULT FALSE,
-                    is_admin BOOLEAN DEFAULT FALSE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """))
-            
-            # Create categories table
-            conn.execute(text("""
-                CREATE TABLE categories (
-                    id SERIAL PRIMARY KEY,
-                    name VARCHAR(255) NOT NULL,
-                    icon VARCHAR(50),
-                    type VARCHAR(20) NOT NULL,
-                    color VARCHAR(20),
-                    expense_type VARCHAR(20)
-                )
-            """))
-            
-            # Create accounts table
-            conn.execute(text("""
-                CREATE TABLE accounts (
-                    id SERIAL PRIMARY KEY,
-                    name VARCHAR(255) NOT NULL,
-                    type VARCHAR(50) NOT NULL,
-                    balance DECIMAL(15,2) DEFAULT 0,
-                    currency VARCHAR(10) DEFAULT 'PEN'
-                )
-            """))
-            
-            # Create billing_cycle table
-            conn.execute(text("""
-                CREATE TABLE billing_cycle (
-                    id SERIAL PRIMARY KEY,
-                    start_date DATE NOT NULL,
-                    end_date DATE NOT NULL,
-                    start_day INTEGER NOT NULL
-                )
-            """))
-            
-            # Create transactions table
-            conn.execute(text("""
-                CREATE TABLE transactions (
-                    id SERIAL PRIMARY KEY,
-                    date DATE NOT NULL,
-                    category_id INTEGER REFERENCES categories(id),
-                    account_id INTEGER REFERENCES accounts(id),
-                    amount DECIMAL(15,2) NOT NULL,
-                    currency VARCHAR(10) NOT NULL DEFAULT 'PEN',
-                    exchange_rate DECIMAL(10,4),
-                    amount_pen DECIMAL(15,2) NOT NULL,
-                    type VARCHAR(20) NOT NULL,
-                    description VARCHAR(500),
-                    notes TEXT,
-                    status VARCHAR(20) NOT NULL DEFAULT 'completed',
-                    transaction_type VARCHAR(20) NOT NULL DEFAULT 'normal',
-                    transfer_id VARCHAR(50),
-                    related_transaction_id INTEGER REFERENCES transactions(id),
-                    loan_id INTEGER,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """))
-            conn.commit()
-            
-            # Insert demo user
-            conn.execute(text("""
-                INSERT INTO users (email, name, provider, provider_id, is_demo)
-                VALUES ('demo@budgetapp.local', 'Usuario Demo', 'demo', 'demo-001', TRUE)
-            """))
-            
-            # Insert categories
             categories = [
                 ("Salario", "Briefcase", "income", "#10B981", None),
                 ("Freelance", "Laptop", "income", "#34D399", None),
