@@ -314,12 +314,23 @@ async def reset_demo_database():
             conn.execute(text("""
                 CREATE TABLE transactions (
                     id SERIAL PRIMARY KEY,
-                    description VARCHAR(500) NOT NULL,
-                    amount DECIMAL(15,2) NOT NULL,
                     date DATE NOT NULL,
-                    type VARCHAR(20) NOT NULL,
                     category_id INTEGER REFERENCES categories(id),
-                    account_id INTEGER REFERENCES accounts(id)
+                    account_id INTEGER REFERENCES accounts(id),
+                    amount DECIMAL(15,2) NOT NULL,
+                    currency VARCHAR(10) NOT NULL DEFAULT 'PEN',
+                    exchange_rate DECIMAL(10,4),
+                    amount_pen DECIMAL(15,2) NOT NULL,
+                    type VARCHAR(20) NOT NULL,
+                    description VARCHAR(500),
+                    notes TEXT,
+                    status VARCHAR(20) NOT NULL DEFAULT 'completed',
+                    transaction_type VARCHAR(20) NOT NULL DEFAULT 'normal',
+                    transfer_id VARCHAR(50),
+                    related_transaction_id INTEGER REFERENCES transactions(id),
+                    loan_id INTEGER,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """))
             conn.commit()
@@ -398,8 +409,12 @@ async def reset_demo_database():
                 account_id = random.choice([1, 2, 3])
                 
                 conn.execute(text("""
-                    INSERT INTO transactions (description, amount, date, type, category_id, account_id)
-                    VALUES (:d, :a, :dt, :t, :c, :ac)
+                    INSERT INTO transactions (
+                        description, amount, currency, exchange_rate, amount_pen, 
+                        date, type, category_id, account_id, 
+                        status, transaction_type
+                    )
+                    VALUES (:d, :a, 'PEN', 1.0, :a, :dt, :t, :c, :ac, 'completed', 'normal')
                 """), {
                     "d": f"Demo {trans_type} #{i+1}",
                     "a": round(amount, 2),
