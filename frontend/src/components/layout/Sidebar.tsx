@@ -46,6 +46,21 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
   const { isCollapsed, toggleCollapse } = useSidebar()
   const [isBankingOpen, setIsBankingOpen] = useState(true)
   const { isModuleHidden } = useHiddenModules()
+  
+  // Check if user is admin (from OAuth user data in localStorage)
+  const [isAdmin, setIsAdmin] = useState(false)
+  
+  useEffect(() => {
+    const userStr = localStorage.getItem('user')
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr)
+        setIsAdmin(user.is_admin === true)
+      } catch (e) {
+        console.error('Failed to parse user data:', e)
+      }
+    }
+  }, [])
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -57,7 +72,14 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
   // Filter visible items - will re-render when hiddenModules changes
   const visibleMainNav = mainNavigation.filter(item => !isModuleHidden(item.id))
   const visibleBankingGroup = bankingGroup.filter(item => !isModuleHidden(item.id))
-  const visibleBottomNav = bottomNavigation.filter(item => !isModuleHidden(item.id))
+  
+  // Filter bottom navigation: only show admin items if user is admin
+  const visibleBottomNav = bottomNavigation.filter(item => {
+    if (isModuleHidden(item.id)) return false
+    if (item.id === 'admin-users' && !isAdmin) return false
+    return true
+  })
+  
   const hasBankingItems = visibleBankingGroup.length > 0
 
   return (

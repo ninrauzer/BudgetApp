@@ -15,6 +15,7 @@ import Settings from './pages/Settings'
 import DebtManagement from './pages/DebtManagement'
 import CreditCards from './pages/CreditCards'
 import AdminUsers from './pages/AdminUsers'
+import AdminRoute from './components/AdminRoute'
 import UIKitPage from './pages/UIKitPage'
 
 function App() {
@@ -45,7 +46,7 @@ function App() {
                   <Route path="credit-cards" element={<CreditCards />} />
                   <Route path="accounts" element={<Accounts />} />
                   <Route path="settings" element={<Settings />} />
-                  <Route path="admin/users" element={<AdminUsers />} />
+                  <Route path="admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
                   <Route path="ui-kit" element={<UIKitPage />} />
                 </Route>
 
