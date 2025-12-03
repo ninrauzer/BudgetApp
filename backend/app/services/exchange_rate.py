@@ -44,8 +44,16 @@ async def get_exchange_rate(target_date: Optional[date] = None) -> float:
         end_date = target_date.strftime("%Y-%m-%d")
         url = f"https://estadisticas.bcrp.gob.pe/estadisticas/series/api/PD04639PD/json/{start_date}/{end_date}"
         
+        # Headers para evitar bloqueo 403
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "application/json",
+            "Accept-Language": "es-PE,es;q=0.9,en;q=0.8",
+            "Referer": "https://estadisticas.bcrp.gob.pe/"
+        }
+        
         async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(url)
+            response = await client.get(url, headers=headers)
             response.raise_for_status()
             data = response.json()
         
