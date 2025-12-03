@@ -3,13 +3,16 @@ BudgetApp - Personal Budget Management Application
 Main FastAPI application entry point.
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+
+# Import OAuth authentication (NEW - replaces HTTP Basic gradually)
+from app.oauth import get_current_user
 
 # Load environment variables from .env file in the backend directory
 env_path = Path(__file__).parent.parent / ".env"
@@ -72,13 +75,14 @@ async def env_debug():
     )
 
 
-# Health check endpoint
+# Health check endpoint (NO AUTH REQUIRED - used by Docker healthcheck)
 @app.get("/api/health", tags=["Health"])
 @app.get("/health", tags=["Health"])
 async def health_check():
     """
     Health check endpoint to verify API is running.
     Available at both /health and /api/health for Docker compatibility.
+    NO AUTHENTICATION REQUIRED.
     """
     # For local development, always return development
     # Production will be detected by DATABASE_URL in Docker container
@@ -102,9 +106,10 @@ async def health_check():
         }
     )
 
-
 # Import and include routers
 from app.api import (
+    auth,  # OAuth authentication (NEW)
+    admin,  # Admin API for user management (NEW)
     categories, 
     accounts, 
     transactions, 
@@ -122,20 +127,30 @@ from app.api import (
     credit_cards
 )
 
-app.include_router(categories.router, prefix="/api")
-app.include_router(accounts.router, prefix="/api")
-app.include_router(transactions.router, prefix="/api")
-app.include_router(transfers.router, prefix="/api")
-app.include_router(budget_plans.router, prefix="/api")
-app.include_router(dashboard.router, prefix="/api")
-app.include_router(exchange_rate.router, prefix="/api")
-app.include_router(import_data.router, prefix="/api")
-app.include_router(data_management.router, prefix="/api")
-app.include_router(quick_templates.router, prefix="/api")
-app.include_router(billing_cycle.router, prefix="/api")
-app.include_router(analysis.router, prefix="/api")
-app.include_router(loans.router, prefix="/api")  # Debt management
-app.include_router(credit_cards.router, prefix="/api")  # Credit card management (ADR-004)
+# Auth routes (no authentication required)
+app.include_router(auth.router, prefix="/api")
+
+# Admin routes (requires admin privileges)
+app.include_router(admin.router)
+
+# Include all routers with authentication dependency
+# NOTE: Authentication now supports both OAuth JWT and HTTP Basic (fallback)
+auth_dependency = [Depends(get_current_user)]
+
+app.include_router(categories.router, prefix="/api", dependencies=auth_dependency)
+app.include_router(accounts.router, prefix="/api", dependencies=auth_dependency)
+app.include_router(transactions.router, prefix="/api", dependencies=auth_dependency)
+app.include_router(transfers.router, prefix="/api", dependencies=auth_dependency)
+app.include_router(budget_plans.router, prefix="/api", dependencies=auth_dependency)
+app.include_router(dashboard.router, prefix="/api", dependencies=auth_dependency)
+app.include_router(exchange_rate.router, prefix="/api", dependencies=auth_dependency)
+app.include_router(import_data.router, prefix="/api", dependencies=auth_dependency)
+app.include_router(data_management.router, prefix="/api", dependencies=auth_dependency)
+app.include_router(quick_templates.router, prefix="/api", dependencies=auth_dependency)
+app.include_router(billing_cycle.router, prefix="/api", dependencies=auth_dependency)
+app.include_router(analysis.router, prefix="/api", dependencies=auth_dependency)
+app.include_router(loans.router, prefix="/api", dependencies=auth_dependency)  # Debt management
+app.include_router(credit_cards.router, prefix="/api", dependencies=auth_dependency)  # Credit card management (ADR-004)
 app.include_router(frontend.router)  # Keep for legacy HTMX if needed
 
 

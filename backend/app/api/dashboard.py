@@ -24,6 +24,8 @@ from app.schemas.dashboard import (
 from app.services.billing_cycle import get_cycle_for_date, get_cycle_by_offset, get_cycle_by_offset_with_overrides
 from calendar import monthrange
 from datetime import timedelta
+from app.oauth import get_current_user
+from app.models.user import User
 
 router = APIRouter(
     prefix="/dashboard",
@@ -35,7 +37,8 @@ router = APIRouter(
 def get_dashboard_summary(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Obtener resumen completo del dashboard para un período específico.
@@ -116,7 +119,8 @@ def get_dashboard_summary(
 @router.get("/monthly-available", response_model=MonthlyAvailable)
 def get_monthly_available(
     cycle_offset: Optional[int] = Query(0, description="Offset de ciclo (0=actual, -1=anterior, 1=siguiente)"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Calcula el saldo disponible hasta fin del ciclo presupuestal.
@@ -219,7 +223,8 @@ def get_monthly_available(
 @router.get("/spending-status", response_model=SpendingStatus)
 def get_spending_status(
     cycle_offset: Optional[int] = Query(0, description="Offset de ciclo (0=actual, -1=anterior, 1=siguiente)"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Semáforo financiero: compara gasto real vs presupuestado del ciclo.
@@ -293,7 +298,8 @@ def get_spending_status(
 @router.get("/monthly-cashflow", response_model=MonthlyCashflow)
 def get_monthly_cashflow(
     cycle_offset: Optional[int] = Query(0, description="Offset de ciclo (0=actual, -1=anterior, 1=siguiente)"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Cashflow del ciclo: Ingresos - Gastos = Balance
@@ -422,7 +428,8 @@ def get_monthly_cashflow(
 @router.get("/debt-summary", response_model=DebtSummary)
 def get_debt_summary(
     cycle_offset: Optional[int] = Query(0, description="Offset de ciclo para calcular ingresos"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Resumen de deuda bancaria activa.
@@ -497,7 +504,10 @@ def get_debt_summary(
 
 
 @router.get("/upcoming-payments", response_model=UpcomingPayments)
-def get_upcoming_payments(db: Session = Depends(get_db)):
+def get_upcoming_payments(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
     Próximos pagos en los siguientes 7 días:
     - Pagos de préstamos (loan.payment_day)
@@ -642,7 +652,8 @@ def get_upcoming_payments(db: Session = Depends(get_db)):
 @router.get("/month-projection", response_model=MonthProjection)
 def get_month_projection(
     cycle_offset: Optional[int] = Query(0, description="Offset de ciclo"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Proyección de cierre del ciclo basado en gasto promedio diario.
@@ -763,7 +774,8 @@ def get_month_projection(
 @router.get("/problem-category", response_model=ProblemCategory)
 def get_problem_category(
     cycle_offset: Optional[int] = Query(0, description="Offset de ciclo"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Detecta la categoría con mayor desviación del presupuesto.

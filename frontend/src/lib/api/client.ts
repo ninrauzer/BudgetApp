@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getStoredCredentials } from '@/contexts/AuthContext';
 
 // Use relative paths so requests go through the nginx proxy
 // In production/docker: /api/... goes through nginx to localhost:8000
@@ -17,11 +18,21 @@ export const apiClient = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
   (config) => {
-    // Aquí puedes agregar tokens de autenticación si los necesitas
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    // Try JWT token first (OAuth)
+    const token = localStorage.getItem('token');
+    if (token) {
+      console.log('[apiClient] Using JWT token:', token.substring(0, 20) + '...');
+      config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      // Fallback to HTTP Basic Auth (development mode)
+      const credentials = getStoredCredentials();
+      if (credentials) {
+        console.log('[apiClient] Using Basic Auth');
+        config.headers.Authorization = `Basic ${credentials}`;
+      } else {
+        console.log('[apiClient] No authentication found');
+      }
+    }
     return config;
   },
   (error) => {

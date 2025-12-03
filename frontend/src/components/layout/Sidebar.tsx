@@ -12,7 +12,8 @@ import {
   CreditCard,
   Palette,
   ChevronDown,
-  X
+  X,
+  Shield
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSidebar } from '@/contexts/SidebarContext'
@@ -32,8 +33,8 @@ const bankingGroup = [
 ]
 
 const bottomNavigation = [
+  { name: 'Administración', href: '/admin/users', icon: Shield, id: 'admin-users' },
   { name: 'UI Kit', href: '/ui-kit', icon: Palette, id: 'ui-kit' },
-  { name: 'Configuración', href: '/settings', icon: Settings, id: 'settings' },
 ]
 
 interface SidebarProps {

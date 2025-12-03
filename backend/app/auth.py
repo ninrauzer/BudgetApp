@@ -1,29 +1,96 @@
 """
 HTTP Basic Authentication Middleware for BudgetApp
 
-Users:
-- admin: Real data from Supabase
-- demo: Obfuscated demo data
+Security Features:
+- Passwords hashed with bcrypt
+- Users stored in JSON file (not in code)
+- Environment variables for production override  
+- Secure password comparison
 
-Environment Variables Required:
-- ADMIN_USERNAME (default: admin)
-- ADMIN_PASSWORD (default: changeme)
-- DEMO_USERNAME (default: demo)  
-- DEMO_PASSWORD (default: demo123)
+Users file: backend/.users.json (gitignored)
 """
 import os
+import json
 import secrets
-from typing import Optional
+from pathlib import Path
+from typing import Optional, Dict
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+import bcrypt
 
 security = HTTPBasic()
 
-# Load credentials from environment
-ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "changeme")
-DEMO_USERNAME = os.getenv("DEMO_USERNAME", "demo")
-DEMO_PASSWORD = os.getenv("DEMO_PASSWORD", "demo123")
+# Users file path (gitignored)
+USERS_FILE = Path(__file__).parent.parent / ".users.json"
+
+# In-memory cache of users
+_users_cache: Optional[Dict] = None
+
+
+def hash_password(password: str) -> str:
+    """Hash a password using bcrypt."""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a password against its hash."""
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+
+
+def load_users() -> Dict:
+    """
+    Load users from file or create default users.
+    Priority:
+    1. .users.json file (production)
+    2. Environment variables (Render.com)
+    3. Default demo users (development only)
+    """
+    global _users_cache
+    
+    # Return cached users if available
+    if _users_cache is not None:
+        return _users_cache
+    
+    # Try to load from file first
+    if USERS_FILE.exists():
+        try:
+            with open(USERS_FILE, 'r') as f:
+                _users_cache = json.load(f)
+                print("[auth] ✓ Loaded credentials from .users.json")
+                return _users_cache
+        except Exception as e:
+            print(f"[auth] Warning: Could not load {USERS_FILE}: {e}")
+    
+    # Try environment variables (for Render.com)
+    env_admin_pass = os.getenv("ADMIN_PASSWORD_HASH")
+    env_demo_pass = os.getenv("DEMO_PASSWORD_HASH")
+    
+    if env_admin_pass and env_demo_pass:
+        _users_cache = {
+            "admin": {
+                "password_hash": env_admin_pass,
+                "type": "admin"
+            },
+            "demo": {
+                "password_hash": env_demo_pass,
+                "type": "demo"
+            }
+        }
+        print("[auth] ✓ Using environment variable credentials (Render)")
+        return _users_cache
+    
+    # Development fallback: create default users
+    _users_cache = {
+        "admin": {
+            "password_hash": hash_password("admin123"),
+            "type": "admin"
+        },
+        "demo": {
+            "password_hash": hash_password("demo123"),
+            "type": "demo"
+        }
+    }
+    return _users_cache
 
 
 def verify_credentials(
@@ -38,28 +105,28 @@ def verify_credentials(
     Raises:
         HTTPException: 401 if credentials are invalid
     """
-    # Check admin credentials
-    is_admin_correct = (
-        secrets.compare_digest(credentials.username, ADMIN_USERNAME) and
-        secrets.compare_digest(credentials.password, ADMIN_PASSWORD)
-    )
+    users = load_users()
+    username = credentials.username
+    password = credentials.password
     
-    # Check demo credentials
-    is_demo_correct = (
-        secrets.compare_digest(credentials.username, DEMO_USERNAME) and
-        secrets.compare_digest(credentials.password, DEMO_PASSWORD)
-    )
-    
-    if is_admin_correct:
-        return "admin"
-    elif is_demo_correct:
-        return "demo"
-    else:
+    # Check if user exists
+    if username not in users:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",
             headers={"WWW-Authenticate": "Basic"},
         )
+    
+    # Verify password
+    user = users[username]
+    if not verify_password(password, user["password_hash"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    
+    return user["type"]
 
 
 def get_current_user(user_type: str = Depends(verify_credentials)) -> str:

@@ -5,7 +5,7 @@ import ExchangeRateDisplay from './ExchangeRateDisplay';
 import CategorySelect from './CategorySelect';
 import { useDefaultAccount } from '../contexts/DefaultAccountContext';
 import { useDefaultCurrency } from '../contexts/DefaultCurrencyContext';
-import axios from 'axios';
+import { apiClient } from '@/lib/api/client';
 
 interface Loan {
   id: number;
@@ -94,7 +94,7 @@ export default function TransactionModal({
   useEffect(() => {
     if (isOpen) {
       setLoansLoading(true);
-      axios.get<Loan[]>('/api/loans?status=active')
+      apiClient.get<Loan[]>('/loans?status=active')
         .then(response => setLoans(response.data))
         .catch(err => console.error('Error fetching loans:', err))
         .finally(() => setLoansLoading(false));

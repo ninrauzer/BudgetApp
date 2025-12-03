@@ -4,6 +4,7 @@ import { ResponsiveBar } from '@nivo/bar';
 import { ResponsiveLine } from '@nivo/line';
 import { useCurrentCycle, useCategoryAnalysis, useTrends, useAnalysisSummary, useBudgetComparison, useTransactions, useExchangeRate } from '@/lib/hooks/useApi';
 import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api/client';
 import { CycleInfo } from '@/components/ui/cycle-info';
 import CategoryIcon from '../components/CategoryIcon';
 import BudgetComparisonSection from '../components/BudgetComparisonSection';
@@ -59,9 +60,8 @@ export default function Analysis() {
   const { data: yearCycles } = useQuery<YearCyclesResponse>({
     queryKey: ['billing-cycle-year', currentYear],
     queryFn: async () => {
-      const response = await fetch(`/api/settings/billing-cycle/year/${currentYear}`);
-      if (!response.ok) throw new Error('Failed to fetch billing cycles');
-      return response.json();
+      const { data } = await apiClient.get(`/settings/billing-cycle/year/${currentYear}`);
+      return data;
     },
   });
   

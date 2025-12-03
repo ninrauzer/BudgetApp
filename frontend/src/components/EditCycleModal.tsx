@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { X, Calendar, AlertCircle, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatLocalDate } from '@/lib/utils/dateParser';
+import { apiClient } from '@/lib/api/client';
 
 interface MonthCycleInfo {
   month: number;
@@ -51,18 +52,13 @@ export default function EditCycleModal({ isOpen, onClose, month, year, cycleInfo
   // Create/Update override mutation
   const saveOverrideMutation = useMutation({
     mutationFn: async (data: OverrideFormData & { year: number; month: number }) => {
-      const response = await fetch(`/api/settings/billing-cycle/year/${data.year}/month/${data.month}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          year: data.year,
-          month: data.month,
-          override_start_date: data.override_start_date,
-          reason: data.reason || null,
-        }),
+      const { data: result } = await apiClient.put(`/settings/billing-cycle/year/${data.year}/month/${data.month}`, {
+        year: data.year,
+        month: data.month,
+        override_start_date: data.override_start_date,
+        reason: data.reason || null,
       });
-      if (!response.ok) throw new Error('Failed to save override');
-      return response.json();
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['billing-cycle-year', year] });
@@ -76,11 +72,8 @@ export default function EditCycleModal({ isOpen, onClose, month, year, cycleInfo
   // Delete override mutation
   const deleteOverrideMutation = useMutation({
     mutationFn: async ({ year, month }: { year: number; month: number }) => {
-      const response = await fetch(`/api/settings/billing-cycle/year/${year}/month/${month}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) throw new Error('Failed to delete override');
-      return response.json();
+      const { data } = await apiClient.delete(`/settings/billing-cycle/year/${year}/month/${month}`);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['billing-cycle-year', year] });

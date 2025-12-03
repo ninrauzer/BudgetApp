@@ -1,6 +1,10 @@
 # Environment variables
 .env
 
+# Security - User credentials (NEVER commit)
+.users.json
+backend/.users.json
+
 # Python
 __pycache__/
 *.py[cod]

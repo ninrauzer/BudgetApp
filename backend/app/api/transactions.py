@@ -23,7 +23,8 @@ from app.schemas.transaction import (
     TransactionCategorySummary,
 )
 from app.services.exchange_rate import get_exchange_rate, convert_to_pen
-from app.auth import get_current_user
+from app.oauth import get_current_user
+from app.models.user import User
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
@@ -39,7 +40,7 @@ def list_transactions(
     limit: int = Query(default=100, le=1000),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
-    current_user: str = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """
     List transactions with optional filters.

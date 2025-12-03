@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import date, datetime, timedelta
 from app.db.database import get_db
+from app.oauth import get_current_user
+from app.models.user import User
 from app.models.billing_cycle import BillingCycle
 from app.models.billing_cycle_override import BillingCycleOverride
 from app.schemas.billing_cycle import (
@@ -20,7 +22,10 @@ from app.services.billing_cycle import get_cycle_for_date
 router = APIRouter(prefix="/settings", tags=["Billing Cycle"])
 
 @router.get("/billing-cycle", response_model=BillingCycleResponse)
-def get_billing_cycle(db: Session = Depends(get_db)):
+def get_billing_cycle(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Get the current billing cycle configuration"""
     cycle = db.query(BillingCycle).filter(BillingCycle.is_active == True).first()
     
@@ -36,7 +41,8 @@ def get_billing_cycle(db: Session = Depends(get_db)):
 @router.put("/billing-cycle", response_model=BillingCycleResponse)
 def update_billing_cycle(
     cycle_update: BillingCycleUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Update the billing cycle start day"""
     cycle = db.query(BillingCycle).filter(BillingCycle.is_active == True).first()

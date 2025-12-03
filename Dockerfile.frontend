@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy entire frontend directory
 COPY frontend/ .
 
+# Copy Docker environment variables
+COPY frontend/.env.docker .env
+
 # Install dependencies
 RUN npm ci
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { TrendingDown, Calendar, Percent, Wallet } from 'lucide-react'
+import { apiClient } from '@/lib/api/client';
 
 interface DebtSummary {
   total_current_debt: number
@@ -34,13 +35,12 @@ export default function DebtDashboard() {
     try {
       // Add timestamp to avoid cache
       const timestamp = new Date().getTime()
-      const response = await fetch(`/api/loans/dashboard/summary?_t=${timestamp}`, {
+      const { data } = await apiClient.get(`/loans/dashboard/summary?_t=${timestamp}`, {
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
         }
       })
-      const data = await response.json()
       setSummary(data)
     } catch (error) {
       console.error('Error fetching debt dashboard:', error)

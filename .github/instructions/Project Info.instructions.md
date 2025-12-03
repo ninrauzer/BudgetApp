@@ -133,6 +133,10 @@ git push origin master
 
 ### Configuración de Conexión
 
+**Producción (Render.com)**:
+
+```
+
 **Docker (compose.yml)**:
 ```yaml
 environment:

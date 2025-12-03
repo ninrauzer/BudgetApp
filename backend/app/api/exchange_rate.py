@@ -1,18 +1,21 @@
 """
 Exchange Rate API router
 """
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from datetime import date
 from typing import Optional
 
 from app.services.exchange_rate import get_exchange_rate
+from app.oauth import get_current_user
+from app.models.user import User
 
 router = APIRouter(tags=["exchange-rate"])
 
 
 @router.get("/exchange-rate")
 async def get_current_exchange_rate(
-    date_param: Optional[str] = Query(None, alias="date")
+    date_param: Optional[str] = Query(None, alias="date"),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Get USD/PEN exchange rate from BCRP for a specific date.

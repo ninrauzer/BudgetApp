@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Calendar, Edit2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatLocalDate } from '@/lib/utils/dateParser';
 import { cn } from '@/lib/utils';
+import { apiClient } from '@/lib/api/client';
 
 interface MonthCycleInfo {
   month: number;
@@ -34,9 +35,8 @@ export default function BillingCycleGrid({ onEditMonth }: BillingCycleGridProps)
   const { data: yearCycles, isLoading, error, refetch } = useQuery<YearCyclesResponse>({
     queryKey: ['billing-cycle-year', selectedYear],
     queryFn: async () => {
-      const response = await fetch(`/api/settings/billing-cycle/year/${selectedYear}`);
-      if (!response.ok) throw new Error('Failed to fetch billing cycles');
-      return response.json();
+      const { data } = await apiClient.get(`/settings/billing-cycle/year/${selectedYear}`);
+      return data;
     },
   });
 

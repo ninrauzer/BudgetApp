@@ -2,12 +2,10 @@
  * React Query hooks for new dashboard metrics
  */
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import { apiClient } from '@/lib/api/client';
 
-// Use relative paths so requests go through the nginx proxy in production
-// In production/docker: /api/dashboard/... goes through nginx to backend
-// In development: set VITE_API_URL to http://localhost:8000
-const API_BASE = '/api/dashboard';
+// API base path (without /api prefix - apiClient handles that via nginx proxy)
+const API_BASE = '/dashboard';
 
 // Types
 export interface MonthlyAvailable {
@@ -101,7 +99,7 @@ export function useMonthlyAvailable(cycleOffset: number = 0) {
   return useQuery<MonthlyAvailable>({
     queryKey: ['monthly-available', cycleOffset],
     queryFn: async () => {
-      const { data } = await axios.get(`${API_BASE}/monthly-available`, {
+      const { data } = await apiClient.get(`${API_BASE}/monthly-available`, {
         params: { cycle_offset: cycleOffset }
       });
       return data;
@@ -114,7 +112,7 @@ export function useSpendingStatus(cycleOffset: number = 0) {
   return useQuery<SpendingStatus>({
     queryKey: ['spending-status', cycleOffset],
     queryFn: async () => {
-      const { data } = await axios.get(`${API_BASE}/spending-status`, {
+      const { data } = await apiClient.get(`${API_BASE}/spending-status`, {
         params: { cycle_offset: cycleOffset }
       });
       return data;
@@ -127,7 +125,7 @@ export function useMonthlyCashflow(cycleOffset: number = 0) {
   return useQuery<MonthlyCashflow>({
     queryKey: ['monthly-cashflow', cycleOffset],
     queryFn: async () => {
-      const { data } = await axios.get(`${API_BASE}/monthly-cashflow`, {
+      const { data } = await apiClient.get(`${API_BASE}/monthly-cashflow`, {
         params: { cycle_offset: cycleOffset }
       });
       return data;
@@ -140,7 +138,7 @@ export function useDebtSummary(cycleOffset: number = 0) {
   return useQuery<DebtSummary>({
     queryKey: ['debt-summary', cycleOffset],
     queryFn: async () => {
-      const { data } = await axios.get(`${API_BASE}/debt-summary`, {
+      const { data } = await apiClient.get(`${API_BASE}/debt-summary`, {
         params: { cycle_offset: cycleOffset }
       });
       return data;
@@ -153,7 +151,7 @@ export function useUpcomingPayments() {
   return useQuery<UpcomingPayments>({
     queryKey: ['upcoming-payments'],
     queryFn: async () => {
-      const { data } = await axios.get(`${API_BASE}/upcoming-payments`);
+      const { data } = await apiClient.get(`${API_BASE}/upcoming-payments`);
       return data;
     },
     refetchInterval: 300000,
@@ -164,7 +162,7 @@ export function useMonthProjection(cycleOffset: number = 0) {
   return useQuery<MonthProjection>({
     queryKey: ['month-projection', cycleOffset],
     queryFn: async () => {
-      const { data } = await axios.get(`${API_BASE}/month-projection`, {
+      const { data } = await apiClient.get(`${API_BASE}/month-projection`, {
         params: { cycle_offset: cycleOffset }
       });
       return data;
@@ -177,7 +175,7 @@ export function useProblemCategory(cycleOffset: number = 0) {
   return useQuery<ProblemCategory>({
     queryKey: ['problem-category', cycleOffset],
     queryFn: async () => {
-      const { data } = await axios.get(`${API_BASE}/problem-category`, {
+      const { data } = await apiClient.get(`${API_BASE}/problem-category`, {
         params: { cycle_offset: cycleOffset }
       });
       return data;
