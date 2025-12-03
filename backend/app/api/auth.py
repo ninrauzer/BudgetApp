@@ -238,63 +238,187 @@ async def logout():
     return {"message": "Logged out successfully"}
 
 
-@router.post("/seed-demo-db")
-async def seed_demo_database():
-    """Seed demo database with initial data required for the app to work"""
+@router.post("/reset-demo-db")
+async def reset_demo_database():
+    """RESET and populate demo database with complete sample data"""
     import os
+    from sqlalchemy import create_engine, text
     from datetime import datetime, timedelta
+    import random
     
     DEMO_DATABASE_URL = os.getenv("DEMO_DATABASE_URL")
     if not DEMO_DATABASE_URL:
         return {"error": "DEMO_DATABASE_URL not configured"}
     
     try:
-        from sqlalchemy import create_engine
-        from sqlalchemy.orm import sessionmaker
-        from app.db.session_manager import Base
-        from app.models import BillingCycle
-        
         engine = create_engine(DEMO_DATABASE_URL)
-        Session = sessionmaker(bind=engine)
-        db = Session()
         
-        try:
-            # Check if billing cycles exist
-            existing_cycles = db.query(BillingCycle).count()
-            if existing_cycles > 0:
-                return {"message": "Demo database already seeded", "cycles": existing_cycles}
+        with engine.connect() as conn:
+            # Drop all tables and recreate
+            conn.execute(text("DROP TABLE IF EXISTS transactions CASCADE"))
+            conn.execute(text("DROP TABLE IF EXISTS billing_cycle CASCADE"))
+            conn.execute(text("DROP TABLE IF EXISTS accounts CASCADE"))
+            conn.execute(text("DROP TABLE IF EXISTS categories CASCADE"))
+            conn.execute(text("DROP TABLE IF EXISTS users CASCADE"))
+            conn.commit()
             
-            # Create billing cycles
+            # Create users table
+            conn.execute(text("""
+                CREATE TABLE users (
+                    id SERIAL PRIMARY KEY,
+                    email VARCHAR(255) UNIQUE NOT NULL,
+                    name VARCHAR(255),
+                    picture VARCHAR(500),
+                    provider VARCHAR(50) NOT NULL,
+                    provider_id VARCHAR(255) UNIQUE NOT NULL,
+                    is_demo BOOLEAN DEFAULT FALSE,
+                    is_admin BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+            
+            # Create categories table
+            conn.execute(text("""
+                CREATE TABLE categories (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    icon VARCHAR(50),
+                    type VARCHAR(20) NOT NULL,
+                    color VARCHAR(20),
+                    expense_type VARCHAR(20)
+                )
+            """))
+            
+            # Create accounts table
+            conn.execute(text("""
+                CREATE TABLE accounts (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    type VARCHAR(50) NOT NULL,
+                    balance DECIMAL(15,2) DEFAULT 0,
+                    currency VARCHAR(10) DEFAULT 'PEN'
+                )
+            """))
+            
+            # Create billing_cycle table
+            conn.execute(text("""
+                CREATE TABLE billing_cycle (
+                    id SERIAL PRIMARY KEY,
+                    start_date DATE NOT NULL,
+                    end_date DATE NOT NULL,
+                    start_day INTEGER NOT NULL
+                )
+            """))
+            
+            # Create transactions table
+            conn.execute(text("""
+                CREATE TABLE transactions (
+                    id SERIAL PRIMARY KEY,
+                    description VARCHAR(500) NOT NULL,
+                    amount DECIMAL(15,2) NOT NULL,
+                    date DATE NOT NULL,
+                    type VARCHAR(20) NOT NULL,
+                    category_id INTEGER REFERENCES categories(id),
+                    account_id INTEGER REFERENCES accounts(id)
+                )
+            """))
+            conn.commit()
+            
+            # Insert demo user
+            conn.execute(text("""
+                INSERT INTO users (email, name, provider, provider_id, is_demo)
+                VALUES ('demo@budgetapp.local', 'Usuario Demo', 'demo', 'demo-001', TRUE)
+            """))
+            
+            # Insert categories
+            categories = [
+                ("Salario", "Briefcase", "income", "#10B981", None),
+                ("Freelance", "Laptop", "income", "#34D399", None),
+                ("Supermercado", "ShoppingCart", "expense", "#EF4444", "variable"),
+                ("Restaurantes", "UtensilsCrossed", "expense", "#F97316", "variable"),
+                ("Transporte", "Car", "expense", "#F59E0B", "variable"),
+                ("Alquiler", "Home", "expense", "#DC2626", "fixed"),
+                ("Servicios", "Zap", "expense", "#7C3AED", "fixed"),
+                ("Entretenimiento", "Tv", "expense", "#EC4899", "variable"),
+                ("Salud", "Heart", "expense", "#EF4444", "variable"),
+                ("Educación", "GraduationCap", "expense", "#3B82F6", "variable"),
+            ]
+            for cat in categories:
+                conn.execute(text("""
+                    INSERT INTO categories (name, icon, type, color, expense_type)
+                    VALUES (:n, :i, :t, :c, :e)
+                """), {"n": cat[0], "i": cat[1], "t": cat[2], "c": cat[3], "e": cat[4]})
+            
+            # Insert accounts
+            accounts = [
+                ("Efectivo", "cash", 1500.00, "PEN"),
+                ("Banco Nacional", "bank", 8500.00, "PEN"),
+                ("Ahorros USD", "savings", 2000.00, "USD"),
+            ]
+            for acc in accounts:
+                conn.execute(text("""
+                    INSERT INTO accounts (name, type, balance, currency)
+                    VALUES (:n, :t, :b, :c)
+                """), {"n": acc[0], "t": acc[1], "b": acc[2], "c": acc[3]})
+            
+            # Insert billing cycles
             today = datetime.now()
             start_date = datetime(today.year, today.month, 23)
             if today.day < 23:
-                start_date = datetime(today.year, today.month - 1 if today.month > 1 else 12, 23)
+                start_date = start_date.replace(month=today.month - 1 if today.month > 1 else 12)
                 if today.month == 1:
                     start_date = start_date.replace(year=today.year - 1)
             
-            cycles_created = 0
-            for i in range(-2, 3):  # Create 5 cycles: 2 past, current, 2 future
+            for i in range(-2, 3):
                 cycle_start = start_date + timedelta(days=30*i)
                 cycle_end = cycle_start + timedelta(days=29)
+                conn.execute(text("""
+                    INSERT INTO billing_cycle (start_date, end_date, start_day)
+                    VALUES (:s, :e, 23)
+                """), {"s": cycle_start.date(), "e": cycle_end.date()})
+            
+            # Insert 50 sample transactions
+            expense_cats = [3, 4, 5, 6, 7, 8, 9, 10]
+            income_cats = [1, 2]
+            
+            for i in range(50):
+                days_ago = random.randint(0, 90)
+                trans_date = today - timedelta(days=days_ago)
+                is_income = random.random() < 0.2
                 
-                cycle = BillingCycle(
-                    start_date=cycle_start.date(),
-                    end_date=cycle_end.date(),
-                    start_day=23
-                )
-                db.add(cycle)
-                cycles_created += 1
+                if is_income:
+                    cat_id = random.choice(income_cats)
+                    amount = random.uniform(1000, 5000)
+                    trans_type = "income"
+                else:
+                    cat_id = random.choice(expense_cats)
+                    amount = random.uniform(10, 500)
+                    trans_type = "expense"
+                
+                account_id = random.choice([1, 2, 3])
+                
+                conn.execute(text("""
+                    INSERT INTO transactions (description, amount, date, type, category_id, account_id)
+                    VALUES (:d, :a, :dt, :t, :c, :ac)
+                """), {
+                    "d": f"Demo {trans_type} #{i+1}",
+                    "a": round(amount, 2),
+                    "dt": trans_date.date(),
+                    "t": trans_type,
+                    "c": cat_id,
+                    "ac": account_id
+                })
             
-            db.commit()
+            conn.commit()
             
-            return {
-                "success": True,
-                "message": "Demo database seeded successfully",
-                "billing_cycles_created": cycles_created
-            }
-            
-        finally:
-            db.close()
-            
+        return {
+            "success": True,
+            "message": "Demo database reset and populated",
+            "categories": 10,
+            "accounts": 3,
+            "billing_cycles": 5,
+            "transactions": 50
+        }
+        
     except Exception as e:
-        return {"error": str(e), "trace": str(type(e).__name__)}
+        return {"error": str(e)}
