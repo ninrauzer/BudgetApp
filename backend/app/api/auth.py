@@ -151,19 +151,18 @@ async def google_token_login(
         # Create JWT token - sub must be string
         access_token = create_access_token(data={"sub": str(user.id), "email": user.email})
         
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "name": user.name,
-                "picture": user.picture,
-                "is_demo": user.is_demo
-            }
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "name": user.name,
+            "picture": user.picture,
+            "is_demo": user.is_demo,
+            "is_admin": user.is_admin
         }
-        
-    except ValueError as e:
+    }    except ValueError as e:
         # Invalid token
         print(f"[auth] Token verification error: {e}")
         raise HTTPException(status_code=401, detail="Invalid Google token")
@@ -222,7 +221,8 @@ async def create_demo_session(db: Session = Depends(get_db)):
         "user": {
             "email": demo_user.email,
             "name": demo_user.name,
-            "is_demo": True
+            "is_demo": True,
+            "is_admin": False
         }
     }
 

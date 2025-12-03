@@ -33,8 +33,31 @@ export default function LoginPage() {
     setError('');
     setIsLoading(true);
     try {
-      await login('demo', 'demo123');
-      navigate('/');
+      const apiUrl = import.meta.env.VITE_API_URL || '/api';
+      const response = await fetch(`${apiUrl}/auth/demo`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al crear sesión demo');
+      }
+
+      const data = await response.json();
+      
+      // Store JWT token and user data
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      console.log('[Login] Demo session created');
+      
+      // Small delay to ensure localStorage is written
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Navigate to home
+      navigate('/', { replace: true });
     } catch (err) {
       setError('Error al acceder al modo demo');
     } finally {
@@ -215,14 +238,14 @@ export default function LoginPage() {
               Sign in with Apple (Próximamente)
             </button>
 
-            {/* Demo mode button */}
+            {/* Demo mode button - DISABLED until isolated database is ready */}
             <button
               type="button"
-              onClick={handleDemoLogin}
-              disabled={isLoading}
-              className="w-full py-3 bg-surface border-2 border-border text-text-primary rounded-xl font-semibold hover:bg-surface-soft hover:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled
+              className="w-full py-3 bg-surface border-2 border-border text-text-muted rounded-xl font-semibold cursor-not-allowed opacity-60"
+              title="Modo demo temporalmente deshabilitado - En construcción con base de datos aislada"
             >
-              🎭 Acceder como Demo
+              🎭 Acceder como Demo (Próximamente)
             </button>
           </div>
 
