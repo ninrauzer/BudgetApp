@@ -242,6 +242,7 @@ async def logout():
 async def reset_demo_database():
     """RESET and populate demo database with complete sample data using SQLAlchemy models"""
     import os
+    import traceback
     from sqlalchemy import create_engine, text
     from sqlalchemy.orm import sessionmaker
     from datetime import datetime, timedelta
@@ -261,18 +262,25 @@ async def reset_demo_database():
     
     try:
         engine = create_engine(DEMO_DATABASE_URL)
+        print(f"[RESET-DEMO] Connected to database")
         
         # Drop ALL tables using metadata
+        print(f"[RESET-DEMO] Dropping all tables...")
         Base.metadata.drop_all(bind=engine)
+        print(f"[RESET-DEMO] Tables dropped")
         
         # Create ALL tables using SQLAlchemy models
+        print(f"[RESET-DEMO] Creating all tables...")
         Base.metadata.create_all(bind=engine)
+        print(f"[RESET-DEMO] Tables created")
         
         # Create ORM session
         SessionLocal = sessionmaker(bind=engine)
         session = SessionLocal()
+        print(f"[RESET-DEMO] Session created")
         
         try:
+            print(f"[RESET-DEMO] Creating demo user...")
             # Create demo user with ALL fields
             demo_user = User(
                 email="demo@budgetapp.local",
@@ -285,10 +293,10 @@ async def reset_demo_database():
                 last_login=None
             )
             session.add(demo_user)
-            session.flush()  # Get user ID
-            session.add(demo_user)
-            session.flush()  # Get user ID
+            session.flush()
+            print(f"[RESET-DEMO] Demo user created with ID: {demo_user.id}")
             
+            print(f"[RESET-DEMO] Creating categories...")
             # Create categories using ORM
             categories = [
                 Category(name="Salario", icon="Briefcase", type="income", color="#10B981", expense_type=None),
@@ -304,7 +312,9 @@ async def reset_demo_database():
             ]
             session.add_all(categories)
             session.flush()
+            print(f"[RESET-DEMO] {len(categories)} categories created")
             
+            print(f"[RESET-DEMO] Creating accounts...")
             # Create accounts using ORM
             accounts = [
                 Account(name="Efectivo", type="cash", balance=1500.00, currency="PEN"),
@@ -313,7 +323,9 @@ async def reset_demo_database():
             ]
             session.add_all(accounts)
             session.flush()
+            print(f"[RESET-DEMO] {len(accounts)} accounts created")
             
+            print(f"[RESET-DEMO] Creating billing cycles...")
             # Create billing cycles using ORM
             today = datetime.now()
             start_date = datetime(today.year, today.month, 23)
@@ -335,17 +347,14 @@ async def reset_demo_database():
                 )
             session.add_all(billing_cycles)
             session.flush()
+            print(f"[RESET-DEMO] {len(billing_cycles)} billing cycles created")
             
+            print(f"[RESET-DEMO] Creating transactions...")
             # Create 50 sample transactions using ORM
             expense_cats = [cat.id for cat in categories if cat.type == "expense"]
             income_cats = [cat.id for cat in categories if cat.type == "income"]
             account_ids = [acc.id for acc in accounts]
             
-            transactions = []
-            for i in range(50):
-                days_ago = random.randint(0, 90)
-                trans_date = today - timedelta(days=days_ago)
-                is_income = random.random() < 0.2
             transactions = []
             for i in range(50):
                 days_ago = random.randint(0, 90)
@@ -380,7 +389,11 @@ async def reset_demo_database():
                 )
             
             session.add_all(transactions)
+            print(f"[RESET-DEMO] {len(transactions)} transactions created")
+            
+            print(f"[RESET-DEMO] Committing all changes...")
             session.commit()
+            print(f"[RESET-DEMO] SUCCESS! Database populated")
             
             return {
                 "success": True,
@@ -393,10 +406,15 @@ async def reset_demo_database():
             }
         
         except Exception as e:
+            print(f"[RESET-DEMO] ERROR: {str(e)}")
+            print(f"[RESET-DEMO] Traceback: {traceback.format_exc()}")
             session.rollback()
-            raise e
+            return {"error": str(e), "traceback": traceback.format_exc()}
         finally:
             session.close()
         
     except Exception as e:
-        return {"error": str(e)}
+        print(f"[RESET-DEMO] FATAL ERROR: {str(e)}")
+        print(f"[RESET-DEMO] Traceback: {traceback.format_exc()}")
+        return {"error": str(e), "traceback": traceback.format_exc()}
+
