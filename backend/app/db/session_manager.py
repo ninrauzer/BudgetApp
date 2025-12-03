@@ -61,11 +61,15 @@ def get_db():
     """
     is_demo = is_demo_context.get()
     
-    if is_demo and DemoSession:
-        # Demo user - use demo database
-        db = DemoSession()
+    if is_demo:
+        if not DemoSession:
+            print("[DB] WARNING: Demo mode requested but DEMO_DATABASE_URL not configured, using production")
+            db = ProductionSession()
+        else:
+            print("[DB] Using demo database")
+            db = DemoSession()
     else:
-        # Regular user - use production database
+        print("[DB] Using production database")
         db = ProductionSession()
     
     try:
