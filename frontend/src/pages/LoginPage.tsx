@@ -215,15 +215,17 @@ export default function LoginPage() {
 
           {/* Google Sign In */}
           <div className="space-y-3">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError}
-              theme="outline"
-              size="large"
-              width={400}
-              text="continue_with"
-              locale="es"
-            />
+            <div className="flex items-center justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                theme="outline"
+                size="large"
+                width={400}
+                text="continue_with"
+                locale="es"
+              />
+            </div>
 
             {/* Apple Sign In (Coming Soon) */}
             <button
