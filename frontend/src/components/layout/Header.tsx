@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import ThemeToggle from '../ThemeToggle'
-import EnvironmentBadge from '../EnvironmentBadge'
 import ExchangeRateDisplay from '../ExchangeRateDisplay'
 import {
   DropdownMenu,
@@ -61,9 +60,6 @@ export function Header() {
         <div className="flex items-center gap-4">
           {/* Exchange Rate Display */}
           <ExchangeRateDisplay />
-          
-          {/* Environment Badge */}
-          <EnvironmentBadge />
           
           {/* Theme Toggle */}
           <ThemeToggle />
