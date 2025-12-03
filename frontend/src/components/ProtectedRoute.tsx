@@ -9,10 +9,16 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Check for JWT token (OAuth) or HTTP Basic Auth
+  // Check for JWT token (OAuth) - this persists across page refreshes
   const hasJWTToken = !!localStorage.getItem('token');
-  const isAuthenticatedViaOAuth = hasJWTToken;
+  
+  // If we have a JWT token, user is authenticated (OAuth/Google or Demo)
+  // No need to wait for AuthContext loading
+  if (hasJWTToken) {
+    return <>{children}</>;
+  }
 
+  // Otherwise, check HTTP Basic Auth (dev mode with username/password)
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface">
@@ -21,8 +27,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // Allow access if authenticated via HTTP Basic Auth OR has JWT token
-  if (!isAuthenticated && !isAuthenticatedViaOAuth) {
+  // No JWT token and not authenticated via Basic Auth - redirect to login
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
