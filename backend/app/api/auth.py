@@ -243,11 +243,17 @@ async def reset_demo_database():
     """RESET and populate demo database with complete sample data using SQLAlchemy models"""
     import os
     from sqlalchemy import create_engine, text
+    from sqlalchemy.orm import sessionmaker
     from datetime import datetime, timedelta
     import random
     
-    # Import Base to create all tables
+    # Import Base and models
     from app.db.base import Base
+    from app.models.user import User
+    from app.models.category import Category
+    from app.models.account import Account
+    from app.models.billing_cycle import BillingCycle
+    from app.models.transaction import Transaction
     
     DEMO_DATABASE_URL = os.getenv("DEMO_DATABASE_URL")
     if not DEMO_DATABASE_URL:
@@ -262,38 +268,53 @@ async def reset_demo_database():
         # Create ALL tables using SQLAlchemy models
         Base.metadata.create_all(bind=engine)
         
-        with engine.connect() as conn:
+        # Create ORM session
+        SessionLocal = sessionmaker(bind=engine)
+        session = SessionLocal()
+        
+        try:
+            # Create demo user with ALL fields
+            demo_user = User(
+                email="demo@budgetapp.local",
+                name="Usuario Demo",
+                provider="demo",
+                provider_id="demo-001",
+                is_demo=True,
+                is_admin=False,
+                created_at=datetime.utcnow(),
+                last_login=None
+            )
+            session.add(demo_user)
+            session.flush()  # Get user ID
+            session.add(demo_user)
+            session.flush()  # Get user ID
+            
+            # Create categories using ORM
             categories = [
-                ("Salario", "Briefcase", "income", "#10B981", None),
-                ("Freelance", "Laptop", "income", "#34D399", None),
-                ("Supermercado", "ShoppingCart", "expense", "#EF4444", "variable"),
-                ("Restaurantes", "UtensilsCrossed", "expense", "#F97316", "variable"),
-                ("Transporte", "Car", "expense", "#F59E0B", "variable"),
-                ("Alquiler", "Home", "expense", "#DC2626", "fixed"),
-                ("Servicios", "Zap", "expense", "#7C3AED", "fixed"),
-                ("Entretenimiento", "Tv", "expense", "#EC4899", "variable"),
-                ("Salud", "Heart", "expense", "#EF4444", "variable"),
-                ("Educación", "GraduationCap", "expense", "#3B82F6", "variable"),
+                Category(name="Salario", icon="Briefcase", type="income", color="#10B981", expense_type=None),
+                Category(name="Freelance", icon="Laptop", type="income", color="#34D399", expense_type=None),
+                Category(name="Supermercado", icon="ShoppingCart", type="expense", color="#EF4444", expense_type="variable"),
+                Category(name="Restaurantes", icon="UtensilsCrossed", type="expense", color="#F97316", expense_type="variable"),
+                Category(name="Transporte", icon="Car", type="expense", color="#F59E0B", expense_type="variable"),
+                Category(name="Alquiler", icon="Home", type="expense", color="#DC2626", expense_type="fixed"),
+                Category(name="Servicios", icon="Zap", type="expense", color="#7C3AED", expense_type="fixed"),
+                Category(name="Entretenimiento", icon="Tv", type="expense", color="#EC4899", expense_type="variable"),
+                Category(name="Salud", icon="Heart", type="expense", color="#EF4444", expense_type="variable"),
+                Category(name="Educación", icon="GraduationCap", type="expense", color="#3B82F6", expense_type="variable"),
             ]
-            for cat in categories:
-                conn.execute(text("""
-                    INSERT INTO categories (name, icon, type, color, expense_type)
-                    VALUES (:n, :i, :t, :c, :e)
-                """), {"n": cat[0], "i": cat[1], "t": cat[2], "c": cat[3], "e": cat[4]})
+            session.add_all(categories)
+            session.flush()
             
-            # Insert accounts
+            # Create accounts using ORM
             accounts = [
-                ("Efectivo", "cash", 1500.00, "PEN"),
-                ("Banco Nacional", "bank", 8500.00, "PEN"),
-                ("Ahorros USD", "savings", 2000.00, "USD"),
+                Account(name="Efectivo", type="cash", balance=1500.00, currency="PEN"),
+                Account(name="Banco Nacional", type="bank", balance=8500.00, currency="PEN"),
+                Account(name="Ahorros USD", type="savings", balance=2000.00, currency="USD"),
             ]
-            for acc in accounts:
-                conn.execute(text("""
-                    INSERT INTO accounts (name, type, balance, currency)
-                    VALUES (:n, :t, :b, :c)
-                """), {"n": acc[0], "t": acc[1], "b": acc[2], "c": acc[3]})
+            session.add_all(accounts)
+            session.flush()
             
-            # Insert billing cycles
+            # Create billing cycles using ORM
             today = datetime.now()
             start_date = datetime(today.year, today.month, 23)
             if today.day < 23:
@@ -301,18 +322,31 @@ async def reset_demo_database():
                 if today.month == 1:
                     start_date = start_date.replace(year=today.year - 1)
             
+            billing_cycles = []
             for i in range(-2, 3):
                 cycle_start = start_date + timedelta(days=30*i)
                 cycle_end = cycle_start + timedelta(days=29)
-                conn.execute(text("""
-                    INSERT INTO billing_cycle (start_date, end_date, start_day)
-                    VALUES (:s, :e, 23)
-                """), {"s": cycle_start.date(), "e": cycle_end.date()})
+                billing_cycles.append(
+                    BillingCycle(
+                        start_date=cycle_start.date(),
+                        end_date=cycle_end.date(),
+                        start_day=23
+                    )
+                )
+            session.add_all(billing_cycles)
+            session.flush()
             
-            # Insert 50 sample transactions
-            expense_cats = [3, 4, 5, 6, 7, 8, 9, 10]
-            income_cats = [1, 2]
+            # Create 50 sample transactions using ORM
+            expense_cats = [cat.id for cat in categories if cat.type == "expense"]
+            income_cats = [cat.id for cat in categories if cat.type == "income"]
+            account_ids = [acc.id for acc in accounts]
             
+            transactions = []
+            for i in range(50):
+                days_ago = random.randint(0, 90)
+                trans_date = today - timedelta(days=days_ago)
+                is_income = random.random() < 0.2
+            transactions = []
             for i in range(50):
                 days_ago = random.randint(0, 90)
                 trans_date = today - timedelta(days=days_ago)
@@ -327,34 +361,42 @@ async def reset_demo_database():
                     amount = random.uniform(10, 500)
                     trans_type = "expense"
                 
-                account_id = random.choice([1, 2, 3])
+                account_id = random.choice(account_ids)
                 
-                conn.execute(text("""
-                    INSERT INTO transactions (
-                        description, amount, currency, exchange_rate, amount_pen, 
-                        date, type, category_id, account_id, 
-                        status, transaction_type
+                transactions.append(
+                    Transaction(
+                        description=f"Demo {trans_type} #{i+1}",
+                        amount=round(amount, 2),
+                        currency="PEN",
+                        exchange_rate=1.0,
+                        amount_pen=round(amount, 2),
+                        date=trans_date.date(),
+                        type=trans_type,
+                        category_id=cat_id,
+                        account_id=account_id,
+                        status="completed",
+                        transaction_type="normal"
                     )
-                    VALUES (:d, :a, 'PEN', 1.0, :a, :dt, :t, :c, :ac, 'completed', 'normal')
-                """), {
-                    "d": f"Demo {trans_type} #{i+1}",
-                    "a": round(amount, 2),
-                    "dt": trans_date.date(),
-                    "t": trans_type,
-                    "c": cat_id,
-                    "ac": account_id
-                })
+                )
             
-            conn.commit()
+            session.add_all(transactions)
+            session.commit()
             
-        return {
-            "success": True,
-            "message": "Demo database reset and populated",
-            "categories": 10,
-            "accounts": 3,
-            "billing_cycles": 5,
-            "transactions": 50
-        }
+            return {
+                "success": True,
+                "message": "Demo database reset and populated using ORM",
+                "user": demo_user.email,
+                "categories": len(categories),
+                "accounts": len(accounts),
+                "billing_cycles": len(billing_cycles),
+                "transactions": len(transactions)
+            }
+        
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
         
     except Exception as e:
         return {"error": str(e)}
