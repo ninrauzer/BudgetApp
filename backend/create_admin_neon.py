@@ -28,7 +28,21 @@ with engine.connect() as conn:
     """))
     conn.commit()
     
-    # 2. Agregar columna is_admin si no existe
+    # 2. Crear tabla allowed_users (whitelist) si no existe
+    print("📋 Creando tabla allowed_users...")
+    conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS allowed_users (
+            id SERIAL PRIMARY KEY,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            name VARCHAR(255),
+            is_active BOOLEAN DEFAULT TRUE,
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            added_by VARCHAR(255)
+        )
+    """))
+    conn.commit()
+    
+    # 3. Agregar columna is_admin si no existe
     try:
         print("🔧 Verificando columna is_admin...")
         conn.execute(text("""
@@ -41,7 +55,23 @@ with engine.connect() as conn:
         print(f"⚠️  Columna ya existe o error: {e}")
         conn.rollback()
     
-    # 3. Verificar si ya existe el usuario
+    # 4. Agregar a allowed_users (whitelist)
+    print(f"🔐 Agregando {ADMIN_EMAIL} a whitelist...")
+    result = conn.execute(
+        text("SELECT id, email FROM allowed_users WHERE email = :email"),
+        {"email": ADMIN_EMAIL}
+    )
+    if not result.fetchone():
+        conn.execute(
+            text("INSERT INTO allowed_users (email, name, is_active, added_by) VALUES (:email, :name, TRUE, 'system')"),
+            {"email": ADMIN_EMAIL, "name": "Admin"}
+        )
+        conn.commit()
+        print(f"✅ Agregado a whitelist: {ADMIN_EMAIL}")
+    else:
+        print(f"✅ Ya está en whitelist: {ADMIN_EMAIL}")
+    
+    # 5. Verificar si ya existe el usuario
     result = conn.execute(
         text("SELECT id, email, is_admin FROM users WHERE email = :email"),
         {"email": ADMIN_EMAIL}
