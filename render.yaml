@@ -19,6 +19,21 @@ services:
         value: info
       - key: PYTHONUNBUFFERED
         value: 1
+      # OAuth - IMPORTANTE: Configurar en Dashboard como secretos
+      - key: GOOGLE_CLIENT_ID
+        sync: false  # Set manually in Render dashboard
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false  # Set manually in Render dashboard (SECRETO)
+      - key: JWT_SECRET_KEY
+        sync: false  # Set manually in Render dashboard (SECRETO)
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRATION_HOURS
+        value: 168  # 7 días
+      - key: FRONTEND_URL
+        value: https://budgetapp-frontend.onrender.com
+      - key: ALLOWED_ORIGINS
+        value: https://budgetapp-frontend.onrender.com,https://budgetapp-backend.onrender.com
     healthCheckPath: /api/health
 
   # Frontend React + Vite
