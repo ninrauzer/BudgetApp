@@ -249,7 +249,7 @@ async def reset_demo_database():
     import random
     
     # Import Base and models
-    from app.db.base import Base
+    from app.db.database import Base
     from app.models.user import User
     from app.models.category import Category
     from app.models.account import Account
@@ -263,6 +263,16 @@ async def reset_demo_database():
     try:
         engine = create_engine(DEMO_DATABASE_URL)
         print(f"[RESET-DEMO] Connected to database")
+        
+        # First, try to add last_login column if users table exists
+        try:
+            with engine.connect() as conn:
+                print(f"[RESET-DEMO] Attempting to add last_login column...")
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP"))
+                conn.commit()
+                print(f"[RESET-DEMO] last_login column added (or already exists)")
+        except Exception as e:
+            print(f"[RESET-DEMO] Could not add column (table may not exist yet): {e}")
         
         # Drop ALL tables using metadata
         print(f"[RESET-DEMO] Dropping all tables...")
