@@ -214,8 +214,23 @@ async def startup_event():
 # Mount static files (frontend) - must be AFTER all API routes
 static_path = Path(__file__).parent.parent.parent / "frontend" / "dist"
 if static_path.exists():
-    app.mount("/", StaticFiles(directory=str(static_path), html=True), name="static")
-    print(f"[static] Mounted from {static_path}")
+    from fastapi.responses import FileResponse
+    
+    # Mount static assets
+    app.mount("/assets", StaticFiles(directory=str(static_path / "assets")), name="assets")
+    
+    # SPA catch-all: serve index.html for all non-API routes
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        """Serve React SPA for all routes (except /api/*)"""
+        # If file exists (like favicon, manifest, etc), serve it
+        file_path = static_path / full_path
+        if file_path.is_file():
+            return FileResponse(file_path)
+        # Otherwise, serve index.html for client-side routing
+        return FileResponse(static_path / "index.html")
+    
+    print(f"[static] Mounted SPA from {static_path}")
 
 
 if __name__ == "__main__":
