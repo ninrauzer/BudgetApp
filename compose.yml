@@ -20,6 +20,7 @@ services:
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=info
       - DATABASE_URL=postgresql://postgres:postgres@192.168.126.127:5432/budgetapp_dev
+      - DEMO_DATABASE_URL=${DEMO_DATABASE_URL}
       # OAuth Configuration - IMPORTANTE: Usar .env para credenciales reales
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}

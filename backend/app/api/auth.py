@@ -348,6 +348,7 @@ async def reset_demo_database():
             
             print(f"[RESET-DEMO] Creating transactions...")
             # Create 50 sample transactions using ORM
+            today = datetime.now()
             expense_cats = [cat.id for cat in categories if cat.type == "expense"]
             income_cats = [cat.id for cat in categories if cat.type == "income"]
             account_ids = [acc.id for acc in accounts]
