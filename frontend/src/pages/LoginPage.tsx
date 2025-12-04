@@ -34,6 +34,8 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '/api';
+      console.log('[Login] Calling demo endpoint:', `${apiUrl}/auth/demo`);
+      
       const response = await fetch(`${apiUrl}/auth/demo`, {
         method: 'POST',
         headers: {
@@ -41,26 +43,33 @@ export default function LoginPage() {
         },
       });
 
+      console.log('[Login] Demo response status:', response.status);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Login] Demo error:', errorText);
         throw new Error('Error al crear sesión demo');
       }
 
       const data = await response.json();
+      console.log('[Login] Demo data received:', { 
+        hasToken: !!data.access_token, 
+        tokenLength: data.access_token?.length,
+        user: data.user 
+      });
       
       // Store JWT token and user data
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('user', JSON.stringify(data.user));
       
-      console.log('[Login] Demo session created');
+      console.log('[Login] Token stored in localStorage');
+      console.log('[Login] Verifying storage:', localStorage.getItem('token')?.substring(0, 20));
       
-      // Small delay to ensure localStorage is written
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Navigate to home
-      navigate('/', { replace: true });
+      // Force page reload to reinitialize apiClient with the new token
+      window.location.href = '/';
     } catch (err) {
+      console.error('[Login] Demo login error:', err);
       setError('Error al acceder al modo demo');
-    } finally {
       setIsLoading(false);
     }
   };

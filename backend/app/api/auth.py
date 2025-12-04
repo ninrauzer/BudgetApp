@@ -192,61 +192,123 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
 
 
 @router.post("/demo")
-async def create_demo_session(db: Session = Depends(get_db)):
+async def create_demo_session():
     """
     Create a demo session without authentication.
-    Generates a temporary JWT for demo mode.
+    Uses frozen demo database - changes are reverted on logout.
     """
-    # Create or get demo user
-    demo_user = db.query(User).filter(User.email == "demo@budgetapp.local").first()
+    from app.db.session_manager import DemoSession
     
-    if not demo_user:
-        demo_user = User(
-            email="demo@budgetapp.local",
-            name="Demo User",
-            picture="",
-            provider="demo",
-            provider_id="demo",
-            is_demo=True,
-            created_at=datetime.utcnow()
-        )
-        db.add(demo_user)
-        db.commit()
-        db.refresh(demo_user)
+    if not DemoSession:
+        raise HTTPException(status_code=503, detail="Demo mode not available")
     
-    # Create JWT token - sub must be string
-    access_token = create_access_token(data={"sub": str(demo_user.id), "email": demo_user.email})
-    
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": {
-            "email": demo_user.email,
-            "name": demo_user.name,
-            "is_demo": True,
-            "is_admin": False
+    # Use demo database session
+    db = DemoSession()
+    try:
+        # Get demo user from demo database
+        demo_user = db.query(User).filter(User.email == "demo@budgetapp.local").first()
+        
+        if not demo_user:
+            raise HTTPException(status_code=500, detail="Demo user not found. Run /reset-demo-db first")
+        
+        # Create JWT token - sub must be string
+        access_token = create_access_token(data={"sub": str(demo_user.id), "email": demo_user.email})
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "email": demo_user.email,
+                "name": demo_user.name,
+                "is_demo": True,
+                "is_admin": False
+            }
         }
-    }
+    finally:
+        db.close()
 
 
 @router.post("/logout")
 async def logout():
     """
     Logout endpoint.
+    For demo users, resets the demo database to revert all changes.
     Client should delete the JWT token.
     """
+    # Check if this is a demo logout (we can't easily get current user here without token parsing)
+    # So we'll create a separate endpoint for demo logout
     return {"message": "Logged out successfully"}
+
+
+@router.post("/demo/logout")
+async def demo_logout():
+    """
+    Demo logout - resets demo database to original state.
+    Reverts all changes made during the demo session.
+    """
+    try:
+        print("[DEMO-LOGOUT] Resetting demo database to revert changes...")
+        reset_result = await reset_demo_database()
+        
+        if reset_result.get("success"):
+            print(f"[DEMO-LOGOUT] Reset successful: {reset_result.get('message')}")
+            return {
+                "message": "Demo session ended, changes reverted",
+                "data_restored": {
+                    "categories": reset_result.get("categories"),
+                    "accounts": reset_result.get("accounts"),
+                    "transactions": reset_result.get("transactions"),
+                    "budget_plans": reset_result.get("budget_plans")
+                }
+            }
+        else:
+            print(f"[DEMO-LOGOUT] Reset failed: {reset_result.get('error')}")
+            return {"message": "Logged out (database reset failed)", "error": reset_result.get("error")}
+    
+    except Exception as e:
+        print(f"[DEMO-LOGOUT] Error: {e}")
+        return {"message": "Logged out (database reset error)", "error": str(e)}
 
 
 @router.post("/reset-demo-db")
 async def reset_demo_database():
-    """RESET and populate demo database with complete sample data using SQLAlchemy models"""
+    """RESET and populate demo database with obfuscated data from production using SQLAlchemy models"""
     import os
     import traceback
     from sqlalchemy import create_engine, text
     from sqlalchemy.orm import sessionmaker
-    from datetime import datetime, timedelta
+    from datetime import datetime, timedelta, date
     import random
+    import hashlib
+    
+    def obfuscate_description(text: str, category_name: str) -> str:
+        """Obfuscate transaction descriptions while keeping them realistic"""
+        if not text or len(text) < 3:
+            return f"Pago de {category_name}"
+        
+        # Hash the original text to generate consistent but anonymous descriptions
+        hash_obj = hashlib.md5(text.encode())
+        hash_num = int(hash_obj.hexdigest()[:8], 16) % 1000
+        
+        # Generate generic descriptions based on category
+        templates = {
+            "Salario": ["Ingreso mensual", "Pago de nómina", "Salario"],
+            "Freelance": ["Proyecto freelance", "Trabajo independiente", "Consultoría"],
+            "Supermercado": ["Compras del mes", "Supermercado", "Despensa"],
+            "Restaurantes": ["Comida fuera", "Restaurante", "Delivery"],
+            "Transporte": ["Transporte", "Movilidad", "Combustible"],
+            "Alquiler": ["Pago de alquiler", "Renta mensual", "Arriendo"],
+            "Servicios": ["Servicios del hogar", "Pago de servicios", "Facturas"],
+            "Entretenimiento": ["Ocio y diversión", "Entretenimiento", "Salida"],
+            "Salud": ["Gastos médicos", "Salud", "Consulta médica"],
+            "Educación": ["Gastos educativos", "Educación", "Curso"],
+        }
+        
+        category_templates = templates.get(category_name, [f"Pago de {category_name}"])
+        base_desc = category_templates[hash_num % len(category_templates)]
+        
+        # Add reference number for uniqueness
+        return f"{base_desc} #{hash_num}"
     
     # Import Base and models
     from app.db.database import Base
@@ -255,6 +317,7 @@ async def reset_demo_database():
     from app.models.account import Account
     from app.models.billing_cycle import BillingCycle
     from app.models.transaction import Transaction
+    from app.models.budget_plan import BudgetPlan
     
     DEMO_DATABASE_URL = os.getenv("DEMO_DATABASE_URL")
     if not DEMO_DATABASE_URL:
@@ -347,47 +410,264 @@ async def reset_demo_database():
             print(f"[RESET-DEMO] Billing cycle created with start_day=23")
             
             print(f"[RESET-DEMO] Creating transactions...")
-            # Create 50 sample transactions using ORM
-            today = datetime.now()
-            expense_cats = [cat.id for cat in categories if cat.type == "expense"]
-            income_cats = [cat.id for cat in categories if cat.type == "income"]
-            account_ids = [acc.id for acc in accounts]
+            # Read transactions from Neon PRODUCTION database (obfuscated)
+            PROD_DATABASE_URL = "postgresql://neondb_owner:npg_JiBThGbK03Rj@ep-delicate-math-afp2qxtf-pooler.c-2.us-west-2.aws.neon.tech/budgetapp_prod?sslmode=require"
+            prod_engine = create_engine(PROD_DATABASE_URL)
+            ProdSession = sessionmaker(bind=prod_engine)
+            prod_session = ProdSession()
             
             transactions = []
-            for i in range(50):
-                days_ago = random.randint(0, 90)
-                trans_date = today - timedelta(days=days_ago)
-                is_income = random.random() < 0.2
+            try:
+                print(f"[RESET-DEMO] Connected to production database for transactions")
                 
-                if is_income:
-                    cat_id = random.choice(income_cats)
-                    amount = random.uniform(1000, 5000)
-                    trans_type = "income"
-                else:
-                    cat_id = random.choice(expense_cats)
-                    amount = random.uniform(10, 500)
-                    trans_type = "expense"
+                # Read recent transactions from production (last 60 days, limit 20 for speed)
+                today = datetime.now()
+                sixty_days_ago = today - timedelta(days=60)
                 
-                account_id = random.choice(account_ids)
-                
-                transactions.append(
-                    Transaction(
-                        description=f"Demo {trans_type} #{i+1}",
-                        amount=round(amount, 2),
-                        currency="PEN",
-                        exchange_rate=1.0,
-                        amount_pen=round(amount, 2),
-                        date=trans_date.date(),
-                        type=trans_type,
-                        category_id=cat_id,
-                        account_id=account_id,
-                        status="completed",
-                        transaction_type="normal"
-                    )
+                prod_transactions = (
+                    prod_session.query(Transaction)
+                    .filter(Transaction.date >= sixty_days_ago.date())
+                    .order_by(Transaction.date.desc())
+                    .limit(20)
+                    .all()
                 )
+                
+                print(f"[RESET-DEMO] Found {len(prod_transactions)} transactions in production")
+                
+                if not prod_transactions:
+                    print(f"[RESET-DEMO] No transactions in production, creating random samples")
+                    # Fallback to random transactions (reduced to 20 for speed)
+                    expense_cats = [cat.id for cat in categories if cat.type == "expense"]
+                    income_cats = [cat.id for cat in categories if cat.type == "income"]
+                    account_ids = [acc.id for acc in accounts]
+                    
+                    for i in range(20):
+                        days_ago = random.randint(0, 90)
+                        trans_date = today - timedelta(days=days_ago)
+                        is_income = random.random() < 0.2
+                        
+                        if is_income:
+                            cat_id = random.choice(income_cats)
+                            amount = random.uniform(1000, 5000)
+                            trans_type = "income"
+                        else:
+                            cat_id = random.choice(expense_cats)
+                            amount = random.uniform(10, 500)
+                            trans_type = "expense"
+                        
+                        account_id = random.choice(account_ids)
+                        
+                        transactions.append(
+                            Transaction(
+                                description=f"Demo {trans_type} #{i+1}",
+                                amount=round(amount, 2),
+                                currency="PEN",
+                                exchange_rate=1.0,
+                                amount_pen=round(amount, 2),
+                                date=trans_date.date(),
+                                type=trans_type,
+                                category_id=cat_id,
+                                account_id=account_id,
+                                status="completed",
+                                transaction_type="normal"
+                            )
+                        )
+                else:
+                    # Create mapping of production categories to demo categories
+                    prod_categories = prod_session.query(Category).all()
+                    prod_cat_map = {cat.id: cat for cat in prod_categories}
+                    demo_cat_map = {cat.name: cat for cat in categories}
+                    
+                    # Map production accounts to demo accounts (by type)
+                    prod_accounts = prod_session.query(Account).all()
+                    prod_acc_map = {acc.id: acc for acc in prod_accounts}
+                    demo_acc_by_type = {acc.type: acc for acc in accounts}
+                    
+                    # Copy transactions with obfuscation
+                    for prod_trans in prod_transactions:
+                        prod_cat = prod_cat_map.get(prod_trans.category_id)
+                        if not prod_cat or prod_cat.name not in demo_cat_map:
+                            continue  # Skip if category doesn't exist in demo
+                        
+                        demo_cat = demo_cat_map[prod_cat.name]
+                        
+                        # Map account by type (fallback to first account)
+                        prod_acc = prod_acc_map.get(prod_trans.account_id)
+                        if prod_acc and prod_acc.type in demo_acc_by_type:
+                            demo_acc = demo_acc_by_type[prod_acc.type]
+                        else:
+                            demo_acc = accounts[0]  # Fallback to first account
+                        
+                        # Obfuscate description
+                        obfuscated_desc = obfuscate_description(
+                            prod_trans.description or "",
+                            prod_cat.name
+                        )
+                        
+                        # Scale amount by 0.7 (demo mode convention)
+                        scaled_amount = round(prod_trans.amount * 0.7, 2)
+                        scaled_amount_pen = round(prod_trans.amount_pen * 0.7, 2)
+                        
+                        transactions.append(
+                            Transaction(
+                                description=obfuscated_desc,
+                                amount=scaled_amount,
+                                currency=prod_trans.currency,
+                                exchange_rate=prod_trans.exchange_rate,
+                                amount_pen=scaled_amount_pen,
+                                date=prod_trans.date,
+                                type=prod_trans.type,
+                                category_id=demo_cat.id,
+                                account_id=demo_acc.id,
+                                status="completed",
+                                transaction_type=prod_trans.transaction_type or "normal"
+                            )
+                        )
+                
+                print(f"[RESET-DEMO] {len(transactions)} transactions prepared")
+            
+            finally:
+                # Don't close prod_session yet, needed for budgets
+                pass
             
             session.add_all(transactions)
-            print(f"[RESET-DEMO] {len(transactions)} transactions created")
+            print(f"[RESET-DEMO] {len(transactions)} transactions added")
+            
+            print(f"[RESET-DEMO] Creating budget plans...")
+            # Read budget plans from production (already connected above)
+            budget_plans = []
+            
+            # First, create manual budget for current cycle (Noviembre-Diciembre 2025)
+            # Cycle: Nov 23, 2025 - Dec 22, 2025
+            print(f"[RESET-DEMO] Creating manual budget for current cycle (Noviembre-Diciembre 2025)")
+            current_cycle_budgets = {
+                "Salario": 7056.7,      # Already scaled
+                "Freelance": 1400.0,
+                "Supermercado": 560.0,
+                "Restaurantes": 280.0,
+                "Transporte": 70.0,
+                "Alquiler": 1120.0,
+                "Servicios": 245.0,
+                "Entretenimiento": 70.0,
+                "Salud": 140.0,
+                "Educación": 105.0,
+            }
+            
+            current_cycle_start = date(2025, 11, 23)
+            current_cycle_end = date(2025, 12, 22)
+            current_cycle_name = "Diciembre"  # Named by end month
+            
+            for cat in categories:
+                if cat.name in current_cycle_budgets:
+                    budget_plans.append(
+                        BudgetPlan(
+                            cycle_name=current_cycle_name,
+                            start_date=current_cycle_start,
+                            end_date=current_cycle_end,
+                            category_id=cat.id,
+                            amount=current_cycle_budgets[cat.name],
+                            notes=f"Presupuesto demo para {cat.name}"
+                        )
+                    )
+            
+            print(f"[RESET-DEMO] Created {len([b for b in budget_plans if b.cycle_name == 'Diciembre'])} budget plans for Diciembre cycle")
+            
+            # Now read future cycles from production
+            try:
+                print(f"[RESET-DEMO] Reading future cycles from production database")
+                
+                # Read budget plans from production for next cycles (Enero, Febrero, Marzo)
+                jan_2026_start = date(2025, 12, 23)  # Enero cycle starts Dec 23
+                feb_2026_end = date(2026, 2, 28)
+                
+                prod_budgets = (
+                    prod_session.query(BudgetPlan)
+                    .filter(BudgetPlan.start_date >= jan_2026_start)
+                    .filter(BudgetPlan.start_date <= feb_2026_end)
+                    .order_by(BudgetPlan.start_date.asc())
+                    .all()
+                )
+                
+                print(f"[RESET-DEMO] Found {len(prod_budgets)} budget plans in production (Enero-Marzo 2026)")
+                print(f"[RESET-DEMO] Found {len(prod_budgets)} budget plans in production")
+                
+                if not prod_budgets:
+                    print(f"[RESET-DEMO] No budgets in production, using default templates")
+                    # Fallback to templates if no prod data
+                    budget_templates = {
+                        "Salario": 5000.00,
+                        "Freelance": 2000.00,
+                        "Supermercado": 800.00,
+                        "Restaurantes": 400.00,
+                        "Transporte": 300.00,
+                        "Alquiler": 1500.00,
+                        "Servicios": 350.00,
+                        "Entretenimiento": 250.00,
+                        "Salud": 200.00,
+                        "Educación": 150.00,
+                    }
+                    
+                    for month_offset in range(3):
+                        cycle_start = today.replace(day=23) + timedelta(days=30 * month_offset)
+                        next_cycle_start = cycle_start + timedelta(days=30)
+                        cycle_end = next_cycle_start - timedelta(days=1)
+                        cycle_name = cycle_start.strftime("%B %Y")
+                        
+                        for category in categories:
+                            budget_amount = budget_templates.get(category.name, 100.00)
+                            budget_plans.append(
+                                BudgetPlan(
+                                    cycle_name=cycle_name,
+                                    start_date=cycle_start.date(),
+                                    end_date=cycle_end.date(),
+                                    category_id=category.id,
+                                    amount=budget_amount,
+                                    notes=f"Presupuesto demo para {category.name}"
+                                )
+                            )
+                else:
+                    # Create mapping of production category names to demo category IDs
+                    prod_categories = prod_session.query(Category).all()
+                    prod_cat_map = {cat.name: cat.id for cat in prod_categories}
+                    demo_cat_map = {cat.name: cat.id for cat in categories}
+                    
+                    print(f"[RESET-DEMO] Production categories: {list(prod_cat_map.keys())}")
+                    print(f"[RESET-DEMO] Demo categories: {list(demo_cat_map.keys())}")
+                    
+                    # Copy budget plans from production with obfuscation
+                    for prod_budget in prod_budgets:
+                        # Find corresponding category in demo database
+                        prod_cat = prod_session.query(Category).get(prod_budget.category_id)
+                        if prod_cat and prod_cat.name in demo_cat_map:
+                            demo_cat_id = demo_cat_map[prod_cat.name]
+                            
+                            # Scale amount by 0.7 (demo mode convention)
+                            scaled_amount = round(prod_budget.amount * 0.7, 2)
+                            
+                            # Obfuscate notes
+                            obfuscated_notes = f"Presupuesto demo para {prod_cat.name}"
+                            
+                            budget_plans.append(
+                                BudgetPlan(
+                                    cycle_name=prod_budget.cycle_name,
+                                    start_date=prod_budget.start_date,
+                                    end_date=prod_budget.end_date,
+                                    category_id=demo_cat_id,
+                                    amount=scaled_amount,
+                                    notes=obfuscated_notes
+                                )
+                            )
+                            print(f"[RESET-DEMO]   Copied budget: {prod_budget.cycle_name} - {prod_cat.name}: {prod_budget.amount} → {scaled_amount} (scaled)")
+                        else:
+                            print(f"[RESET-DEMO]   Skipped budget for unknown category ID {prod_budget.category_id}")
+                    
+                    print(f"[RESET-DEMO] Copied {len(budget_plans)} budget plans from production (obfuscated & scaled)")
+            
+            finally:
+                prod_session.close()
+            
+            session.add_all(budget_plans)
+            print(f"[RESET-DEMO] {len(budget_plans)} budget plans added to demo database")
             
             print(f"[RESET-DEMO] Committing all changes...")
             session.commit()
@@ -400,7 +680,8 @@ async def reset_demo_database():
                 "categories": len(categories),
                 "accounts": len(accounts),
                 "billing_cycle": "start_day=23",
-                "transactions": len(transactions)
+                "transactions": len(transactions),
+                "budget_plans": len(budget_plans)
             }
         
         except Exception as e:

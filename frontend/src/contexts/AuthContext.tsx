@@ -75,11 +75,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Check if this is a demo session
+    const isDemoMode = localStorage.getItem('budgetapp_demo_mode') === 'true';
+    
+    if (isDemoMode) {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '/api';
+        console.log('[Logout] Calling demo logout to reset database...');
+        
+        // Call demo logout endpoint to reset database
+        await fetch(`${apiUrl}/auth/demo/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        console.log('[Logout] Demo database reset successful');
+      } catch (error) {
+        console.error('[Logout] Demo logout error:', error);
+        // Continue with logout even if reset fails
+      }
+    }
+    
     setAuthData(null);
     localStorage.removeItem(AUTH_STORAGE_KEY);
-    // Also clear demo mode
     localStorage.removeItem('budgetapp_demo_mode');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   };
 
   const value: AuthContextType = {
